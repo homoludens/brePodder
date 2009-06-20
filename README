@@ -1,3 +1,16 @@
-podcast clent writen in PyQt4
+podcast client writen in PyQt4
 
 highly unstable and unrecomended
+(except you want to help)
+
+curently using:
+
+- python
+- qt4
+- pyqt4
+- sqlite
+- sqlalchemy
+- elixir
+
+i will probably lose last two dependencies, they are getting to mine nerves
+
