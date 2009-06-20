@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/slike1" >
+        <file>images/build.png</file>
+        <file>images/mp3.png</file>
+        <file>images/musicstore.png</file>
+        <file>images/viewmag+.png</file>
+    </qresource>
+</RCC>

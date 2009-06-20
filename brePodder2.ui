@@ -1,0 +1,730 @@
+<ui version="4.0" >
+ <author>homoludens</author>
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>902</width>
+    <height>554</height>
+   </rect>
+  </property>
+  <property name="contextMenuPolicy" >
+   <enum>Qt::ActionsContextMenu</enum>
+  </property>
+  <property name="acceptDrops" >
+   <bool>true</bool>
+  </property>
+  <property name="windowTitle" >
+   <string>brePodder</string>
+  </property>
+  <property name="windowIcon" >
+   <iconset>images/musicstore.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget" >
+   <layout class="QGridLayout" >
+    <item row="0" column="0" >
+     <widget class="QTabWidget" name="tabWidget" >
+      <property name="currentIndex" >
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tab" >
+       <attribute name="title" >
+        <string>Channels</string>
+       </attribute>
+       <layout class="QGridLayout" >
+        <item row="0" column="0" >
+         <widget class="QSplitter" name="splitter_2" >
+          <property name="orientation" >
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <widget class="QWidget" name="layoutWidget" >
+           <layout class="QVBoxLayout" >
+            <item>
+             <widget class="QTreeWidget" name="treeWidget_3" >
+              <property name="sizePolicy" >
+               <sizepolicy vsizetype="Expanding" hsizetype="Preferred" >
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="acceptDrops" >
+               <bool>true</bool>
+              </property>
+              <property name="lineWidth" >
+               <number>5</number>
+              </property>
+              <property name="midLineWidth" >
+               <number>8</number>
+              </property>
+              <property name="dragEnabled" >
+               <bool>true</bool>
+              </property>
+              <property name="dragDropOverwriteMode" >
+               <bool>true</bool>
+              </property>
+              <property name="dragDropMode" >
+               <enum>QAbstractItemView::InternalMove</enum>
+              </property>
+              <property name="alternatingRowColors" >
+               <bool>true</bool>
+              </property>
+              <property name="iconSize" >
+               <size>
+                <width>18</width>
+                <height>-1</height>
+               </size>
+              </property>
+              <property name="indentation" >
+               <number>23</number>
+              </property>
+              <property name="rootIsDecorated" >
+               <bool>true</bool>
+              </property>
+              <property name="uniformRowHeights" >
+               <bool>true</bool>
+              </property>
+              <property name="sortingEnabled" >
+               <bool>true</bool>
+              </property>
+              <property name="animated" >
+               <bool>true</bool>
+              </property>
+              <column>
+               <property name="text" >
+                <string>Channels</string>
+               </property>
+              </column>
+              <item>
+               <property name="text" >
+                <string>New Item</string>
+               </property>
+               <property name="icon" >
+                <iconset>images/edit_add.png</iconset>
+               </property>
+              </item>
+              <item>
+               <property name="text" >
+                <string>New Item</string>
+               </property>
+               <property name="icon" >
+                <iconset>images/edit_add.png</iconset>
+               </property>
+               <item>
+                <property name="text" >
+                 <string>New Sub Item</string>
+                </property>
+                <property name="icon" >
+                 <iconset>images/mp3.png</iconset>
+                </property>
+               </item>
+              </item>
+              <item>
+               <property name="text" >
+                <string>New Item</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" >
+              <item>
+               <widget class="QLineEdit" name="QLineEdit1" >
+                <property name="sizePolicy" >
+                 <sizepolicy vsizetype="Fixed" hsizetype="MinimumExpanding" >
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize" >
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize" >
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text" >
+                 <string>add episode</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="QPushButton1" >
+                <property name="sizePolicy" >
+                 <sizepolicy vsizetype="Fixed" hsizetype="Maximum" >
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize" >
+                 <size>
+                  <width>20</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize" >
+                 <size>
+                  <width>50</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text" >
+                 <string>Add</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer>
+                <property name="orientation" >
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeType" >
+                 <enum>QSizePolicy::MinimumExpanding</enum>
+                </property>
+                <property name="sizeHint" >
+                 <size>
+                  <width>50</width>
+                  <height>26</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QSplitter" name="splitter" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Expanding" hsizetype="Expanding" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="orientation" >
+            <enum>Qt::Vertical</enum>
+           </property>
+           <widget class="QTreeWidget" name="treeWidget_2" >
+            <property name="sizePolicy" >
+             <sizepolicy vsizetype="Expanding" hsizetype="MinimumExpanding" >
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize" >
+             <size>
+              <width>200</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="baseSize" >
+             <size>
+              <width>200</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="font" >
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="cursor" stdset="0" >
+             <cursorShape>ArrowCursor</cursorShape>
+            </property>
+            <property name="contextMenuPolicy" >
+             <enum>Qt::CustomContextMenu</enum>
+            </property>
+            <property name="statusTip" >
+             <string comment="epizode statusTip comment" >epizode</string>
+            </property>
+            <property name="rootIsDecorated" >
+             <bool>true</bool>
+            </property>
+            <property name="uniformRowHeights" >
+             <bool>true</bool>
+            </property>
+            <property name="itemsExpandable" >
+             <bool>false</bool>
+            </property>
+            <property name="sortingEnabled" >
+             <bool>false</bool>
+            </property>
+            <property name="animated" >
+             <bool>true</bool>
+            </property>
+            <column>
+             <property name="text" >
+              <string>status</string>
+             </property>
+            </column>
+            <column>
+             <property name="text" >
+              <string>episode</string>
+             </property>
+            </column>
+            <column>
+             <property name="text" >
+              <string>size</string>
+             </property>
+            </column>
+            <item>
+             <property name="text" >
+              <string/>
+             </property>
+             <property name="icon" >
+              <iconset>images/build.png</iconset>
+             </property>
+             <property name="text" >
+              <string>naziv</string>
+             </property>
+             <property name="icon" >
+              <iconset>images/build.png</iconset>
+             </property>
+             <property name="text" >
+              <string>33 MB</string>
+             </property>
+            </item>
+           </widget>
+           <widget class="QTextBrowser" name="QTextBrowser1" >
+            <property name="sizePolicy" >
+             <sizepolicy vsizetype="Expanding" hsizetype="MinimumExpanding" >
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize" >
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="sizeIncrement" >
+             <size>
+              <width>4</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="baseSize" >
+             <size>
+              <width>400</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="contextMenuPolicy" >
+             <enum>Qt::DefaultContextMenu</enum>
+            </property>
+            <property name="statusTip" >
+             <string>opis</string>
+            </property>
+            <property name="html" >
+             <string>&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Luxi Sans'; font-size:8pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Sans Serif';">tekst u tekst browseru&lt;/p>&lt;/body>&lt;/html></string>
+            </property>
+            <property name="openExternalLinks" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_2" >
+       <attribute name="title" >
+        <string>Downloads</string>
+       </attribute>
+       <layout class="QGridLayout" >
+        <item row="0" column="0" >
+         <widget class="QTreeWidget" name="treeWidget" >
+          <property name="windowModality" >
+           <enum>Qt::NonModal</enum>
+          </property>
+          <property name="contextMenuPolicy" >
+           <enum>Qt::CustomContextMenu</enum>
+          </property>
+          <property name="toolTip" >
+           <string>&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:8pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">jn&lt;/p>&lt;/body>&lt;/html></string>
+          </property>
+          <property name="itemsExpandable" >
+           <bool>false</bool>
+          </property>
+          <property name="sortingEnabled" >
+           <bool>true</bool>
+          </property>
+          <property name="animated" >
+           <bool>true</bool>
+          </property>
+          <column>
+           <property name="text" >
+            <string>Channel</string>
+           </property>
+          </column>
+          <column>
+           <property name="text" >
+            <string>Episode</string>
+           </property>
+          </column>
+          <column>
+           <property name="text" >
+            <string>Size</string>
+           </property>
+          </column>
+          <column>
+           <property name="text" >
+            <string>%</string>
+           </property>
+          </column>
+          <column>
+           <property name="text" >
+            <string>Speed</string>
+           </property>
+          </column>
+          <column>
+           <property name="text" >
+            <string>Link</string>
+           </property>
+          </column>
+          <item>
+           <property name="text" >
+            <string>dl-ch</string>
+           </property>
+           <property name="text" >
+            <string>dl-ep</string>
+           </property>
+           <property name="text" >
+            <string>dl-size</string>
+           </property>
+           <property name="text" >
+            <string>dl-proc</string>
+           </property>
+           <property name="text" >
+            <string>dl-speed</string>
+           </property>
+           <property name="text" >
+            <string>dl-link</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_3" >
+       <attribute name="title" >
+        <string>Lastest downlods</string>
+       </attribute>
+       <layout class="QGridLayout" >
+        <item row="0" column="0" >
+         <widget class="QTreeWidget" name="treeWidget_4" >
+          <property name="windowModality" >
+           <enum>Qt::NonModal</enum>
+          </property>
+          <property name="contextMenuPolicy" >
+           <enum>Qt::CustomContextMenu</enum>
+          </property>
+          <property name="toolTip" >
+           <string>&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:8pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">jn&lt;/p>&lt;/body>&lt;/html></string>
+          </property>
+          <property name="itemsExpandable" >
+           <bool>false</bool>
+          </property>
+          <property name="sortingEnabled" >
+           <bool>true</bool>
+          </property>
+          <property name="animated" >
+           <bool>true</bool>
+          </property>
+          <column>
+           <property name="text" >
+            <string>Channel</string>
+           </property>
+          </column>
+          <column>
+           <property name="text" >
+            <string>Episode</string>
+           </property>
+          </column>
+          <column>
+           <property name="text" >
+            <string>Size</string>
+           </property>
+          </column>
+          <column>
+           <property name="text" >
+            <string>Local Link</string>
+           </property>
+          </column>
+          <item>
+           <property name="text" >
+            <string>ch</string>
+           </property>
+           <property name="text" >
+            <string>ep</string>
+           </property>
+           <property name="text" >
+            <string>size</string>
+           </property>
+           <property name="text" >
+            <string>local file</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>902</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuPodcasts" >
+    <property name="windowModified" >
+     <bool>true</bool>
+    </property>
+    <property name="tearOffEnabled" >
+     <bool>false</bool>
+    </property>
+    <property name="title" >
+     <string>Podcasts</string>
+    </property>
+    <addaction name="actionNew" />
+    <addaction name="actionUpdate" />
+    <addaction name="actionImport" />
+    <addaction name="actionExport" />
+    <addaction name="separator" />
+    <addaction name="actionQuit" />
+   </widget>
+   <widget class="QMenu" name="menuDownloads" >
+    <property name="tearOffEnabled" >
+     <bool>true</bool>
+    </property>
+    <property name="title" >
+     <string>Downloads</string>
+    </property>
+    <addaction name="actionPause" />
+    <addaction name="actionPause_All" />
+    <addaction name="actionCancel" />
+    <addaction name="actionCancel_All" />
+   </widget>
+   <addaction name="menuPodcasts" />
+   <addaction name="menuDownloads" />
+  </widget>
+  <widget class="QStatusBar" name="statusbar" />
+  <widget class="QToolBar" name="toolBar" >
+   <property name="baseSize" >
+    <size>
+     <width>100</width>
+     <height>0</height>
+    </size>
+   </property>
+   <property name="mouseTracking" >
+    <bool>true</bool>
+   </property>
+   <property name="windowTitle" >
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea" >
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak" >
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionUpdateFeeds" />
+   <addaction name="actionCancel" />
+  </widget>
+  <action name="EpisodeDubleclicked" >
+   <property name="text" >
+    <string>EpisodeDubleclicked</string>
+   </property>
+  </action>
+  <action name="EpisodeActivated" >
+   <property name="text" >
+    <string>EpisodeActivated</string>
+   </property>
+  </action>
+  <action name="ChannelActivated" >
+   <property name="text" >
+    <string>ChannelActivated</string>
+   </property>
+  </action>
+  <action name="AddChannel" >
+   <property name="text" >
+    <string>AddChannel</string>
+   </property>
+  </action>
+  <action name="actionCancel" >
+   <property name="icon" >
+    <iconset>images/cancel.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Cancel</string>
+   </property>
+  </action>
+  <action name="actionUpdateFeeds" >
+   <property name="icon" >
+    <iconset>images/reload.png</iconset>
+   </property>
+   <property name="text" >
+    <string>UpdateFeeds</string>
+   </property>
+  </action>
+  <action name="actionNew" >
+   <property name="text" >
+    <string>Add New</string>
+   </property>
+  </action>
+  <action name="actionUpdate" >
+   <property name="text" >
+    <string>Update</string>
+   </property>
+  </action>
+  <action name="actionPause" >
+   <property name="text" >
+    <string>Pause</string>
+   </property>
+  </action>
+  <action name="actionCancel_All" >
+   <property name="text" >
+    <string>Cancel All</string>
+   </property>
+  </action>
+  <action name="actionPause_All" >
+   <property name="text" >
+    <string>Pause All</string>
+   </property>
+  </action>
+  <action name="actionImport" >
+   <property name="text" >
+    <string>Import</string>
+   </property>
+  </action>
+  <action name="actionExport" >
+   <property name="text" >
+    <string>Export</string>
+   </property>
+  </action>
+  <action name="actionQuit" >
+   <property name="icon" >
+    <iconset>images/exit.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Quit</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="0" />
+ <tabstops>
+  <tabstop>QLineEdit1</tabstop>
+  <tabstop>QPushButton1</tabstop>
+  <tabstop>QTextBrowser1</tabstop>
+  <tabstop>tabWidget</tabstop>
+ </tabstops>
+ <includes>
+  <include location="local" >sdf</include>
+ </includes>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>actionCancel</sender>
+   <signal>activated()</signal>
+   <receiver>AddChannel</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionUpdateFeeds</sender>
+   <signal>activated()</signal>
+   <receiver>AddChannel</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionNew</sender>
+   <signal>activated()</signal>
+   <receiver>AddChannel</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>treeWidget_2</sender>
+   <signal>itemDoubleClicked(QTreeWidgetItem*,int)</signal>
+   <receiver>EpisodeDubleclicked</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>59</x>
+     <y>67</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <designerdata>
+  <property name="gridDeltaX" >
+   <number>10</number>
+  </property>
+  <property name="gridDeltaY" >
+   <number>10</number>
+  </property>
+  <property name="gridSnapX" >
+   <bool>true</bool>
+  </property>
+  <property name="gridSnapY" >
+   <bool>true</bool>
+  </property>
+  <property name="gridVisible" >
+   <bool>true</bool>
+  </property>
+ </designerdata>
+</ui>
