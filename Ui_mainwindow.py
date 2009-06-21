@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/homoludens/projekti/eric4/brePodder/mainwindow.ui'
+# Form implementation generated from reading ui file 'brePodder/mainwindow.ui'
 #
 # Created: Tue Jan 29 20:12:18 2008
 #      by: PyQt4 UI code generator 4.3.1
@@ -21,8 +21,6 @@ import sqlalchemy
 import sys  
 import sqlite3
 
-#session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(autoflush=True,autocommit=True))
-#session.begin()
 sys.setappdefaultencoding('utf-8')  
 class Download(object):
     def setup(self):
@@ -40,17 +38,18 @@ class Download(object):
         self.paused=False
         self.urlRedirect=None
         self.locationRedirect = None
+        self.httpRequestAborted = False
 #        self.itemsDownloading=[]
         
     def downloadFile(self, link, item):
         self.CurDir = os.getcwd()
         self.itemZaPrenos=item
-        print "Download.downloadFile"
+#        print "Download.downloadFile"
         url = QtCore.QUrl(link)
         fileInfo = QtCore.QFileInfo(url.path())
         fileName = QtCore.QString(fileInfo.fileName())
         httpIndex=ui.itemsDownloading.index(self.itemZaPrenos.text(5))
-        print httpIndex
+#        print httpIndex
         
         # Qt 4.4+ doesn't wont to show images named favicon.ico, favicon.icon is ok
         if '.ico' in fileName:
@@ -91,19 +90,22 @@ class Download(object):
             self.httpRequestAborted = False
             ui.httpGetId.append(ui.http[httpIndex].request(self.header, self.q, ui.outFile[httpIndex]))
 #            print os.getcwd()
-            print ui.outFile
+#            print ui.outFile
             return
+            
         ui.http.append(QtNetwork.QHttp())
         ui.outFile.append(QtCore.QFile(fileName))
         of=len(ui.outFile)-1
         ht=len(ui.http)-1
+        print "ht " + str(ht)
+        
+        QtCore.QObject.connect(ui.actionCancel,QtCore.SIGNAL("activated()"),self.cancelDownload)
+        QtCore.QObject.connect(ui.actionPause,QtCore.SIGNAL("activated()"),self.pauseDownload)
+        QtCore.QObject.connect(ui.actionResume ,QtCore.SIGNAL("activated()"),self.resumeDownload)
         
         QtCore.QObject.connect(ui.http[ht], QtCore.SIGNAL("dataReadProgress(int, int)"), self.updateDataReadProgress)
         QtCore.QObject.connect(ui.http[ht], QtCore.SIGNAL("requestFinished(int, bool)"), self.httpRequestFinished)
         QtCore.QObject.connect(ui.http[ht], QtCore.SIGNAL("done(bool)"), self.downloadDone)
-        QtCore.QObject.connect(ui.actionCancel,QtCore.SIGNAL("activated()"),self.cancelDownload)
-        QtCore.QObject.connect(ui.actionPause,QtCore.SIGNAL("activated()"),self.pauseDownload)
-        QtCore.QObject.connect(ui.actionResume ,QtCore.SIGNAL("activated()"),self.resumeDownload)
         QtCore.QObject.connect(ui.http[ht], QtCore.SIGNAL('responseHeaderReceived(const QHttpResponseHeader&)'), self.responseHeaderReceived)
         
         if  not ui.outFile[of].open(QtCore.QIODevice.WriteOnly):
@@ -200,6 +202,8 @@ class Download(object):
 #            ui.outFile[of] = None
     
     def updateDataReadProgress(self, bytesRead, totalBytes):
+#        print "updateDataReadProgress"
+#        print self.itemZaPrenos
         if self.httpRequestAborted:
             return
         if not self.resumed:
@@ -346,7 +350,7 @@ class Ui_MainWindow(object):
 
 
     def setupUi(self, MainWindow):
-        self.dd=[]
+#        self.dd=[]
         
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(QtCore.QSize(QtCore.QRect(0,0,604,511).size()).expandedTo(MainWindow.minimumSizeHint()))
@@ -754,20 +758,23 @@ class Ui_MainWindow(object):
 #            desc_localimg = self.getImageFromDesc(desc, e.channel)
 #            print desc_localimg
 
-            self.QTextBrowser1.setHtml("<p>"+desc+"</br>\n\r</p><p><b>FILE: </b><a href="+enc+">"+enc+"</a></p><p><b>LOCALFILE: </b><a href="+localFile+">"+localFile+"</a></p>")
+#            self.QTextBrowser1.setHtml("<p>"+desc+"</br>\n\r</p><p><b>FILE: </b><a href="+enc+">"+enc+"</a></p><p><b>LOCALFILE: </b><a href="+localFile+">"+localFile+"</a></p>")
+            self.QTextBrowser1.setHtml("Opis epizode na 760 liniji")
+
         except:
             print "EpisodeActivated exception"
     
     def DownloadActivated(self, a, i):
 #        print "DownloadActivated"
+        print a
         self.itemZaPrekid=a
         self.actionCancel.setToolTip("Remove Selected Download")
         self.actionPause.setToolTip("Pause Selected Download")
         self.actionResume.setToolTip("Resume Selected Download")
     
     def EpisodeDoubleClicked(self, a):
-#        print "EpisodeDoubleClicked"
-        a.setFont(0, self.fontBold)    #ovde cemo da probmenimo backgroundColor ali me mrzi da se sada drkam sa QBrushom
+#TODO chage backgroundColor with QBrush
+        a.setFont(0, self.fontBold)   
         e=Episode.query.filter_by(title=a.text(0).toUtf8().data()).one()
         
         p=re.compile("\W")  
@@ -793,11 +800,20 @@ class Ui_MainWindow(object):
 #        e.localfile=e.channel.title+'/'+file
         session.commit()
         self.itemsDownloading.append(e.enclosure.replace(" ", "%20"))
-        print self.itemsDownloading
-        self.dd.append(Download())
-        self.dd[len(self.http)-1].setup()
-        self.dd[len(self.http)-1].downloadFile( e.enclosure.replace(" ", "%20"), item)
         
+        self.dd.append(Download())
+        ht=len(self.dd)-1
+#        print "ht: " + str(ht) 
+        self.dd[ht].setup()
+        self.dd[ht].downloadFile( e.enclosure.replace(" ", "%20"), item)
+        
+        #da probam da ih konetktujem odavde
+        
+#        QtCore.QObject.connect(self.http[ht], QtCore.SIGNAL("dataReadProgress(int, int)"), self.dd[len(self.http)-1].updateDataReadProgress)
+#        QtCore.QObject.connect(self.http[ht], QtCore.SIGNAL("requestFinished(int, bool)"), self.dd[len(self.http)-1].httpRequestFinished)
+#        QtCore.QObject.connect(self.http[ht], QtCore.SIGNAL("done(bool)"), self.dd[len(self.http)-1].downloadDone)
+#        QtCore.QObject.connect(self.http[ht], QtCore.SIGNAL('responseHeaderReceived(const QHttpResponseHeader&)'), self.dd[len(self.http)-1].responseHeaderReceived)
+       
         os.chdir(os.path.expanduser('~')+'/.brePodder') 
 
     def AddChannel(self, newUrl = None):
