@@ -24,14 +24,15 @@ import sqlite3
 #session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(autoflush=True,autocommit=True))
 #session.begin()
 sys.setappdefaultencoding('utf-8')  
-class Download(object):
-    def setup(self):
+class Download(QtCore.QThread):
+    def __init__(self, link, item):
+        QtCore.QThread.__init__(self)
+#    def setup(self):
 #        self.http = []
 #        self.httpGetId = []
 #        ui.outFile = []
+
         self.itemZaPrenos = None
-        self.itemZaPrenosList = []
-        self.itemInList=0
         self.of=None
         self.CurDir = None
         self.CurrentChannel = None
@@ -44,23 +45,16 @@ class Download(object):
         self.urlRedirect=None
         self.locationRedirect = None
 #        self.itemsDownloading=[]
-        
-    def downloadFile(self, link, item):
-        self.CurDir = os.getcwd()
-        
-        try:
-            self.itemInList = self.itemZaPrenosList.index(item)
-#            self.itemZaPrenos = item
-        except ValueError:
-            self.itemZaPrenosList.append(item)
-            self.itemInList = self.itemZaPrenosList.index(item)
-#            self.itemZaPrenos = item
+        self.item=item
+        self.link=link
 
-        self.itemZaPrenosList(self.itemInList)
-        
+    def run(self):
+#    def downloadFile(self, link, item):
+        self.CurDir = os.getcwd()
+        self.itemZaPrenos=self.item
         print self.itemZaPrenos
 #        print "Download.downloadFile"
-        url = QtCore.QUrl(link)
+        url = QtCore.QUrl(self.link)
         fileInfo = QtCore.QFileInfo(url.path())
         fileName = QtCore.QString(fileInfo.fileName())
         httpIndex=ui.itemsDownloading.index(self.itemZaPrenos.text(5))
@@ -113,13 +107,13 @@ class Download(object):
         self.of=of
         ht=len(ui.http)-1
         
-        QtCore.QObject.connect(ui.http[ht], QtCore.SIGNAL("dataReadProgress(int, int)"), self.updateDataReadProgress)
-        QtCore.QObject.connect(ui.http[ht], QtCore.SIGNAL("requestFinished(int, bool)"), self.httpRequestFinished)
-        QtCore.QObject.connect(ui.http[ht], QtCore.SIGNAL("done(bool)"), self.downloadDone)
-        QtCore.QObject.connect(ui.actionCancel,QtCore.SIGNAL("activated()"),self.cancelDownload)
-        QtCore.QObject.connect(ui.actionPause,QtCore.SIGNAL("activated()"),self.pauseDownload)
-        QtCore.QObject.connect(ui.actionResume ,QtCore.SIGNAL("activated()"),self.resumeDownload)
-        QtCore.QObject.connect(ui.http[ht], QtCore.SIGNAL('responseHeaderReceived(const QHttpResponseHeader&)'), self.responseHeaderReceived)
+        QtCore.QObject.connect(ui.http[ht], QtCore.SIGNAL("dataReadProgress(int, int)"), self.updateDataReadProgress,QtCore.Qt.QueuedConnection)
+        QtCore.QObject.connect(ui.http[ht], QtCore.SIGNAL("requestFinished(int, bool)"), self.httpRequestFinished,QtCore.Qt.QueuedConnection)
+        QtCore.QObject.connect(ui.http[ht], QtCore.SIGNAL("done(bool)"), self.downloadDone,QtCore.Qt.QueuedConnection)
+        QtCore.QObject.connect(ui.actionCancel,QtCore.SIGNAL("activated()"),self.cancelDownload,QtCore.Qt.QueuedConnection)
+        QtCore.QObject.connect(ui.actionPause,QtCore.SIGNAL("activated()"),self.pauseDownload,QtCore.Qt.QueuedConnection)
+        QtCore.QObject.connect(ui.actionResume ,QtCore.SIGNAL("activated()"),self.resumeDownload,QtCore.Qt.QueuedConnection)
+        QtCore.QObject.connect(ui.http[ht], QtCore.SIGNAL('responseHeaderReceived(const QHttpResponseHeader&)'), self.responseHeaderReceived,QtCore.Qt.QueuedConnection)
         
         if  not ui.outFile[of].open(QtCore.QIODevice.WriteOnly):
             print "Unable to save file "+fileName
@@ -143,7 +137,7 @@ class Download(object):
         if self.bytesRead:
             self.header.setValue("Range", "bytes "+str(self.bytesRead)+"-"+str(self.totalBytes)+"/"+str(self.totalBytes))
         self.q=None
-        
+        print "Download initialized"
         self.httpRequestAborted = False
         ui.httpGetId.append(ui.http[ht].request(self.header, self.q, ui.outFile[of]))
         
@@ -193,7 +187,10 @@ class Download(object):
         
         if self.locationRedirect:
             os.chdir(self.CurDir)
-            self.downloadFile(self.locationRedirect, self.itemZaPrenos)
+#            self.downloadFile(self.locationRedirect, self.itemZaPrenos)
+            self.link = self.locationRedirect
+            self.item = self.itemZaPrenos
+            self.run()
             self.urlRedirect='M'
             self.locationRedirect=None
 #            os.chdir(os.path.expanduser('~')+'/.brePodder')
@@ -331,7 +328,10 @@ class Download(object):
 #                item=self.itemZaPrenos
                 
 #                self.http[0].abort()
-                self.downloadFile(resumeLink, self.itemZaPrenos)
+#                self.downloadFile(resumeLink, self.itemZaPrenos)
+                self.item=self.itemZaPrenos
+                self.link=resumeLink
+                self.run()
 #TODO sigrno postoji razlog da se vratim u 'home' direktorijum
 #                os.chdir(os.path.expanduser('~')+'/.brePodder')
                 self.httpRequestAborted = False
@@ -353,6 +353,7 @@ class Ui_MainWindow(object):
         self.fontBold.setBold(True)
         self.ChannelForUpdate=None
         self.TTThread=[]
+        self.DDThread=[]
         self.BufferSize = 5
 #        self.freeBytes = QtCore.QSemaphore(self.BufferSize)
 #        self.usedBytes = QtCore.QSemaphore()
@@ -740,12 +741,13 @@ class Ui_MainWindow(object):
             p = re.compile(image)
             i=image.rfind('/')
             desc = p.sub( os.getcwd()+image[i:], desc)
-            self.dd.append(Download())
-            self.dd[len(self.http)-1].setup()
+            
+#            self.dd[len(self.http)-1].setup()
             item = QtGui.QTreeWidgetItem(self.treeWidget)
             item.setText(0,channel.title)
             item.setText(5,image)
-            self.dd[len(self.http)-1].downloadFile( image.replace(" ", "%20"), item)
+            self.dd.append(Download(image.replace(" ", "%20"), item))
+            self.dd[len(self.http)-1].start()
             
         os.chdir(os.path.expanduser('~')+'/.brePodder')            
         return desc
@@ -811,9 +813,10 @@ class Ui_MainWindow(object):
         session.commit()
         self.itemsDownloading.append(e.enclosure.replace(" ", "%20"))
 #        print self.itemsDownloading
-        self.dd.append(Download())
-        self.dd[len(self.http)-1].setup()
-        self.dd[len(self.http)-1].downloadFile( e.enclosure.replace(" ", "%20"), item)
+        self.dd.append(Download(e.enclosure.replace(" ", "%20"), item))
+#        self.dd[len(self.http)-1].setup()
+        self.DDThread.append(self.dd[len(self.dd)-1])
+        self.dd[len(self.dd)-1].start()
         
         os.chdir(os.path.expanduser('~')+'/.brePodder') 
 
@@ -846,9 +849,9 @@ class Ui_MainWindow(object):
 #            item.setText(0,w.feed.title)
             item.setText(1,w.feed.image.href)
             item.setText(5,w.feed.image.href)
-            self.dd.append(Download())
-            self.dd[len(self.http)-1].setup()
-            self.dd[len(self.http)-1].downloadFile( w.feed.image.href, item)
+            self.dd.append(Download(w.feed.image.href, item))
+#            self.dd[len(self.http)-1].setup()
+            self.dd[len(self.http)-1].start()
 
             url_done = QtCore.QUrl(w.feed.image.href)
             fileInfo = QtCore.QFileInfo(url_done.path())
@@ -881,9 +884,9 @@ class Ui_MainWindow(object):
         item2.setText(0,w.feed.title)
         item2.setText(1,url)
         item2.setText(5,url)
-        self.dd.append(Download())
-        self.dd[len(self.http)-1].setup()
-        self.dd[len(self.http)-1].downloadFile( url, item2)
+        self.dd.append(Download( url, item2))
+#        self.dd[len(self.http)-1].setup()
+        self.dd[len(self.http)-1].start()
         
         if w.feed.has_key('subtitle'):
             ChannelSubtitle=w.feed.subtitle
