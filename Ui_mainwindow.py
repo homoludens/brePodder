@@ -30,6 +30,9 @@ class Download(object):
 #        self.httpGetId = []
 #        ui.outFile = []
         self.itemZaPrenos = None
+        self.itemZaPrenosList = []
+        self.itemInList=0
+        self.of=None
         self.CurDir = None
         self.CurrentChannel = None
         self.header=None
@@ -44,8 +47,19 @@ class Download(object):
         
     def downloadFile(self, link, item):
         self.CurDir = os.getcwd()
-        self.itemZaPrenos=item
-        print "Download.downloadFile"
+        
+        try:
+            self.itemInList = self.itemZaPrenosList.index(item)
+#            self.itemZaPrenos = item
+        except ValueError:
+            self.itemZaPrenosList.append(item)
+            self.itemInList = self.itemZaPrenosList.index(item)
+#            self.itemZaPrenos = item
+
+        self.itemZaPrenosList(self.itemInList)
+        
+        print self.itemZaPrenos
+#        print "Download.downloadFile"
         url = QtCore.QUrl(link)
         fileInfo = QtCore.QFileInfo(url.path())
         fileName = QtCore.QString(fileInfo.fileName())
@@ -96,6 +110,7 @@ class Download(object):
         ui.http.append(QtNetwork.QHttp())
         ui.outFile.append(QtCore.QFile(fileName))
         of=len(ui.outFile)-1
+        self.of=of
         ht=len(ui.http)-1
         
         QtCore.QObject.connect(ui.http[ht], QtCore.SIGNAL("dataReadProgress(int, int)"), self.updateDataReadProgress)
@@ -161,18 +176,19 @@ class Download(object):
  
     
     def httpRequestFinished(self, requestId, error):
-        of=len(ui.outFile)-1
+#        of=len(ui.outFile)-1
+        of = self.of
         if self.httpRequestAborted:
-            if ui.outFile[of] is not None:
+            if ui.outFile[self.of] is not None:
                 print self.CurDir
                 os.chdir(self.CurDir)
-                ui.outFile[of].close()
-                ui.outFile[of].remove()
-                ui.outFile[of] = None
+                ui.outFile[self.of].close()
+                ui.outFile[self.of].remove()
+                ui.outFile[self.of] = None
                 os.chdir(os.path.expanduser('~')+'/.brePodder') 
             return
 
-        if requestId != ui.httpGetId[of]:
+        if requestId != ui.httpGetId[self.of]:
             return
         
         if self.locationRedirect:
@@ -186,17 +202,17 @@ class Download(object):
 #            self.header.setValue("Host", self.urlRedirect.host()) 
 #            ui.httpGetId.append(self.http[ht].request(self.header, self.q, ui.outFile[of]))
         else:
-            ui.outFile[of].close()
+            ui.outFile[self.of].close()
     
         if error and not self.paused:
             os.chdir(self.CurDir)
-            ui.outFile[of].close()
-            ui.outFile[of].remove()
-            ui.outFile[of] = None
+            ui.outFile[self.of].close()
+            ui.outFile[self.of].remove()
+            ui.outFile[self.of] = None
             os.chdir(os.path.expanduser('~')+'/.brePodder')
         elif not self.paused:
 #            fileName = QtCore.QFileInfo(QtCore.QUrl(self.QLineEdit1.text()).path()).fileName()
-            print ui.outFile[of]
+            print ui.outFile[self.of]
 #            ui.outFile[of] = None
     
     def updateDataReadProgress(self, bytesRead, totalBytes):
@@ -312,14 +328,14 @@ class Download(object):
                 ChannelDir = p.sub("",self.itemZaPrenos.text(0).toAscii().data())
                 os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
                 resumeLink=self.itemZaPrenos.text(5).toAscii().data()
-                item=self.itemZaPrenos
+#                item=self.itemZaPrenos
                 
 #                self.http[0].abort()
-                self.downloadFile(resumeLink, item)
+                self.downloadFile(resumeLink, self.itemZaPrenos)
 #TODO sigrno postoji razlog da se vratim u 'home' direktorijum
 #                os.chdir(os.path.expanduser('~')+'/.brePodder')
                 self.httpRequestAborted = False
-                self.paused = False
+#                self.paused = False
         
             
 class Ui_MainWindow(object):
@@ -327,9 +343,9 @@ class Ui_MainWindow(object):
         self.http = []
         self.httpGetId = []
         self.outFile = []
-        self.itemZaPrenos = []
+#        self.itemZaPrenos = []
         self.dd=[]
-        self.itemZaPrenos = None
+#        self.itemZaPrenos = None
         self.rawstr = r"""(?:\<img.*?\c=")(.*?)(?:\")"""  #it's better with "\src" (not "\c") but that doesn't work
         self.compile_obj = re.compile(self.rawstr, re.I)
         self.fontBold = QtGui.QFont()
@@ -767,7 +783,8 @@ class Ui_MainWindow(object):
     
     def EpisodeDoubleClicked(self, a):
 #        print "EpisodeDoubleClicked"
-        a.setFont(0, self.fontBold)    #ovde cemo da probmenimo backgroundColor ali me mrzi da se sada drkam sa QBrushom
+#TODO change backgroundColor with QBrush
+        a.setFont(0, self.fontBold)    
         e=Episode.query.filter_by(title=a.text(0).toUtf8().data()).one()
         
         p=re.compile("\W")  
@@ -793,7 +810,7 @@ class Ui_MainWindow(object):
 #        e.localfile=e.channel.title+'/'+file
         session.commit()
         self.itemsDownloading.append(e.enclosure.replace(" ", "%20"))
-        print self.itemsDownloading
+#        print self.itemsDownloading
         self.dd.append(Download())
         self.dd[len(self.http)-1].setup()
         self.dd[len(self.http)-1].downloadFile( e.enclosure.replace(" ", "%20"), item)
