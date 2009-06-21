@@ -9,6 +9,7 @@ curently using:
 - python
 - qt4
 - pyqt4
+- feedparser
 - sqlite
 - sqlalchemy
 - elixir

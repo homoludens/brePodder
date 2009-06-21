@@ -59,7 +59,7 @@ class Download(object):
 #                fileDelete.remove()
             elif not self.paused:
                 print "There already exists a file called "+fileName+ " in the current directory." 
-#TODO kada fajl vec postoji ovde izbacuje gresku "IndexError: list index out of range" jer je ui.outFile prazan
+#TODO: kada fajl vec postoji ovde izbacuje gresku "IndexError: list index out of range" jer je ui.outFile prazan
                 if  not ui.outFile[httpIndex].open(QtCore.QIODevice.Append):
                     print "Unable to save file "+fileName
 #                   TODO: what does this line do?
@@ -70,7 +70,7 @@ class Download(object):
                 ui.http[httpIndex].setHost(url.host(), url.port())
             else:
                 ui.http[httpIndex].setHost(url.host(), 80)
-#TODO insert setting of username and password for podcast download. does anyone need this?
+# TODO: insert setting of username and password for podcast download. does anyone need this?
             if  not url.userName().isEmpty():
                 ui.http[httpIndex].setUser(url.userName(), url.password())
             
@@ -186,6 +186,7 @@ class Download(object):
 #            self.header.setValue("Host", self.urlRedirect.host()) 
 #            ui.httpGetId.append(self.http[ht].request(self.header, self.q, ui.outFile[of]))
         else:
+# Never, ever close a file if you plan to write to it latter... or maybe you can re-open it.
 #            ui.outFile[of].close()
             print ui.outFile[of].size()
             
@@ -237,8 +238,8 @@ class Download(object):
 
             os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
             if file[-3:]=='ico':
-                #TODO this is bad and system depended, but... 
-                #TODO Remove this 'convert' command - maybe i don't even need it
+                #TODO: this is bad and system depended, but... 
+                #TODO: Remove this 'convert' command - maybe i don't even need it
                 if os.system('convert '+file.replace(" ","\ ")+'[0] png:'+file.replace(" ","\ "))!=0:
                     os.system('cp ../images/musicstore.png '+file)
                                      
@@ -311,7 +312,7 @@ class Download(object):
                 
                 self.paused = False
                 
-#TODO sigrno postoji razlog da se vratim u 'home' direktorijum
+# TODO: sigrno postoji razlog da se vratim u 'home' direktorijum
 #                os.chdir(os.path.expanduser('~')+'/.brePodder')
 
         
@@ -748,8 +749,7 @@ class Ui_MainWindow(object):
 #            desc_localimg = self.getImageFromDesc(desc, e.channel)
 #            print desc_localimg
 
-#            self.QTextBrowser1.setHtml("<p>"+desc+"</br>\n\r</p><p><b>FILE: </b><a href="+enc+">"+enc+"</a></p><p><b>LOCALFILE: </b><a href="+localFile+">"+localFile+"</a></p>")
-            self.QTextBrowser1.setHtml("Opis epizode na 760 liniji")
+            self.QTextBrowser1.setHtml("<p>"+desc+"</br>\n\r</p><p><b>FILE: </b><a href="+enc+">"+enc+"</a></p><p><b>LOCALFILE: </b><a href="+localFile+">"+localFile+"</a></p>")
 
         except:
             print "EpisodeActivated exception"
@@ -763,7 +763,7 @@ class Ui_MainWindow(object):
         self.actionResume.setToolTip("Resume Selected Download")
     
     def EpisodeDoubleClicked(self, a):
-#TODO change backgroundColor with QBrush
+# TODO: change backgroundColor with QBrush
         a.setFont(0, self.fontBold)   
         e=Episode.query.filter_by(title=a.text(0).toUtf8().data().decode('UTF8')).one()
         p=re.compile("\W")  
@@ -968,7 +968,8 @@ class Ui_MainWindow(object):
                 b=gmtime(float(t.date))
                 epDate=strftime("%x", b)
             except:
-                epdate=gmtime()
+                b=gmtime()
+                epDate=strftime("%x", b)
                 print "date exception"
             item2.setText(2,epDate)
             if t.status=='new':
