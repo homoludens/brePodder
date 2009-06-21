@@ -44,12 +44,10 @@ class Download(object):
     def downloadFile(self, link, item):
         self.CurDir = os.getcwd()
         self.itemZaPrenos=item
-#        print "Download.downloadFile"
         url = QtCore.QUrl(link)
         fileInfo = QtCore.QFileInfo(url.path())
         fileName = QtCore.QString(fileInfo.fileName())
         httpIndex=ui.itemsDownloading.index(self.itemZaPrenos.text(5))
-#        print httpIndex
         
         # Qt 4.4+ doesn't wont to show images named favicon.ico, favicon.icon is ok
         if '.ico' in fileName:
@@ -61,6 +59,7 @@ class Download(object):
 #                fileDelete.remove()
             elif not self.paused:
                 print "There already exists a file called "+fileName+ " in the current directory." 
+#TODO kada fajl vec postoji ovde izbacuje gresku "IndexError: list index out of range" jer je ui.outFile prazan
                 if  not ui.outFile[httpIndex].open(QtCore.QIODevice.Append):
                     print "Unable to save file "+fileName
 #                   TODO: what does this line do?
@@ -71,6 +70,7 @@ class Download(object):
                 ui.http[httpIndex].setHost(url.host(), url.port())
             else:
                 ui.http[httpIndex].setHost(url.host(), 80)
+#TODO insert setting of username and password for podcast download. does anyone need this?
             if  not url.userName().isEmpty():
                 ui.http[httpIndex].setUser(url.userName(), url.password())
             
@@ -138,9 +138,6 @@ class Download(object):
 #        ui.httpGetId.append(self.http[ht].get(url.path().replace(" ", "%20"), ui.outFile[of]))
     
     def responseHeaderReceived(self, header):
-#        print "****************** Http header received"
-#        print header.toString()
-#        print header.statusCode()
         if header.statusCode() == 200:
             print 'Link OK!'
         if header.statusCode() == 206:
@@ -148,11 +145,13 @@ class Download(object):
         elif header.statusCode() in [301, 302]: # Moved permanently or temporarily
             if header.hasKey('Location'):
                 self.locationRedirect = str(header.value('Location'))
-#                print header.value('Location')
+
         
         sidkey = "set-cookie"
         if header.hasKey(sidkey):
             print header.value(sidkey)
+            
+# ko zna kakva me je muka naterala na ovo
 #            QRegExp rx("PHPSESSID=(.+);");
 #            rx.setMinimal(true);
 #            rx.setCaseSensitive(false);
@@ -166,7 +165,6 @@ class Download(object):
         of=len(ui.outFile)-1
         if self.httpRequestAborted:
             if ui.outFile[of] is not None:
-                print self.CurDir
                 os.chdir(self.CurDir)
                 ui.outFile[of].close()
                 ui.outFile[of].remove()
@@ -188,8 +186,9 @@ class Download(object):
 #            self.header.setValue("Host", self.urlRedirect.host()) 
 #            ui.httpGetId.append(self.http[ht].request(self.header, self.q, ui.outFile[of]))
         else:
-            ui.outFile[of].close()
-    
+#            ui.outFile[of].close()
+            print ui.outFile[of].size()
+            
         if error and not self.paused:
             os.chdir(self.CurDir)
             ui.outFile[of].close()
@@ -203,7 +202,6 @@ class Download(object):
     
     def updateDataReadProgress(self, bytesRead, totalBytes):
 #        print "updateDataReadProgress"
-#        print self.itemZaPrenos
         if self.httpRequestAborted:
             return
         if not self.resumed:
@@ -225,10 +223,8 @@ class Download(object):
             url =  self.itemZaPrenos.text(5).toUtf8().data()
             
             p=re.compile("\W")  
-#            ChannelDir = p.sub(" ",self.itemZaPrenos.text(0).toUtf8().data().decode())
             ChannelDir = p.sub("",self.itemZaPrenos.text(0).toUtf8().data())
 #            e.channel.title #ovde smeju da stignu samo ascii karakteri jer je to ime foldera
-#            ChannelDir =  self.itemZaPrenos.text(0).toUtf8().data()
 
             #ova linija me nesto drka kada dodajem novi kanal. trebalo bi da je proverim i vidim sta ce mi
             
@@ -239,22 +235,13 @@ class Download(object):
 #            i = url.rfind('/')
 #            fileName = url[i+1:]
 
-
             os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
             if file[-3:]=='ico':
-                # this is bad and system depended, but... 
-                print ChannelDir
-                #TODO Remove this 'convert' command
+                #TODO this is bad and system depended, but... 
+                #TODO Remove this 'convert' command - maybe i don't even need it
                 if os.system('convert '+file.replace(" ","\ ")+'[0] png:'+file.replace(" ","\ "))!=0:
                     os.system('cp ../images/musicstore.png '+file)
-                    
-#                try:
-##                    os.system('convert '+file.replace(" ","\ ")+'[0] png:'+file.replace(" ","\ "))
-#                    os.Image.open(file).save('favicon.png', 'PNG')
-#                except IOError:
-#                    print IOError
-#                    Image.open('../images/musicstore.png').save('favicon.png', 'PNG')
-                 
+                                     
             elif file[-3:]=='png' or file[-3:]=='PNG' or file[-3:]=='jpg' or file[-3:]=='JPG':
                 print 'logoBig:' +file
                 size = 128, 128
@@ -308,7 +295,7 @@ class Download(object):
 
     def resumeDownload(self):
         print "RESUMED"
-#        self.paused = False
+
         if ui.tab_2.isVisible():
             if self.itemZaPrenos == ui.itemZaPrekid:
                 self.itemZaPrenos.setText(3, "RESUMED")
@@ -317,13 +304,16 @@ class Download(object):
                 os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
                 resumeLink=self.itemZaPrenos.text(5).toAscii().data()
                 item=self.itemZaPrenos
+
+                self.httpRequestAborted = False
                 
-#                self.http[0].abort()
                 self.downloadFile(resumeLink, item)
+                
+                self.paused = False
+                
 #TODO sigrno postoji razlog da se vratim u 'home' direktorijum
 #                os.chdir(os.path.expanduser('~')+'/.brePodder')
-                self.httpRequestAborted = False
-                self.paused = False
+
         
             
 class Ui_MainWindow(object):
@@ -773,10 +763,9 @@ class Ui_MainWindow(object):
         self.actionResume.setToolTip("Resume Selected Download")
     
     def EpisodeDoubleClicked(self, a):
-#TODO chage backgroundColor with QBrush
+#TODO change backgroundColor with QBrush
         a.setFont(0, self.fontBold)   
-        e=Episode.query.filter_by(title=a.text(0).toUtf8().data()).one()
-        
+        e=Episode.query.filter_by(title=a.text(0).toUtf8().data().decode('UTF8')).one()
         p=re.compile("\W")  
         ChannelDir = p.sub("",e.channel.title)
         
@@ -794,26 +783,14 @@ class Ui_MainWindow(object):
             print TypeError
             item.setText(5,"No link")
         
-#        i = e.enclosure.rfind('/')
-#        file = e.enclosure[i+1:]
-        
-#        e.localfile=e.channel.title+'/'+file
         session.commit()
         self.itemsDownloading.append(e.enclosure.replace(" ", "%20"))
         
         self.dd.append(Download())
         ht=len(self.dd)-1
-#        print "ht: " + str(ht) 
         self.dd[ht].setup()
         self.dd[ht].downloadFile( e.enclosure.replace(" ", "%20"), item)
-        
-        #da probam da ih konetktujem odavde
-        
-#        QtCore.QObject.connect(self.http[ht], QtCore.SIGNAL("dataReadProgress(int, int)"), self.dd[len(self.http)-1].updateDataReadProgress)
-#        QtCore.QObject.connect(self.http[ht], QtCore.SIGNAL("requestFinished(int, bool)"), self.dd[len(self.http)-1].httpRequestFinished)
-#        QtCore.QObject.connect(self.http[ht], QtCore.SIGNAL("done(bool)"), self.dd[len(self.http)-1].downloadDone)
-#        QtCore.QObject.connect(self.http[ht], QtCore.SIGNAL('responseHeaderReceived(const QHttpResponseHeader&)'), self.dd[len(self.http)-1].responseHeaderReceived)
-       
+          
         os.chdir(os.path.expanduser('~')+'/.brePodder') 
 
     def AddChannel(self, newUrl = None):
