@@ -785,7 +785,6 @@ class Ui_MainWindow(object):
         
         session.commit()
         self.itemsDownloading.append(e.enclosure.replace(" ", "%20"))
-        
         self.dd.append(Download())
         ht=len(self.dd)-1
         self.dd[ht].setup()
@@ -822,9 +821,17 @@ class Ui_MainWindow(object):
 #            item.setText(0,w.feed.title)
             item.setText(1,w.feed.image.href)
             item.setText(5,w.feed.image.href)
+            
+            
+            self.itemsDownloading.append(w.feed.image.href)
             self.dd.append(Download())
-            self.dd[len(self.http)-1].setup()
-            self.dd[len(self.http)-1].downloadFile( w.feed.image.href, item)
+            ht=len(self.dd)-1
+            self.dd[ht].setup()
+            self.dd[ht].downloadFile( w.feed.image.href, item)
+            
+#            self.dd.append(Download())
+#            self.dd[len(self.http)-1].setup()
+#            self.dd[len(self.http)-1].downloadFile( w.feed.image.href, item)
 
             url_done = QtCore.QUrl(w.feed.image.href)
             fileInfo = QtCore.QFileInfo(url_done.path())
@@ -857,9 +864,17 @@ class Ui_MainWindow(object):
         item2.setText(0,w.feed.title)
         item2.setText(1,url)
         item2.setText(5,url)
+        
+        self.itemsDownloading.append(url)
         self.dd.append(Download())
-        self.dd[len(self.http)-1].setup()
-        self.dd[len(self.http)-1].downloadFile( url, item2)
+        ht=len(self.dd)-1
+        self.dd[ht].setup()
+        self.dd[ht].downloadFile( url, item2)
+        
+        
+#        self.dd.append(Download())
+#        self.dd[len(self.http)-1].setup()
+#        self.dd[len(self.http)-1].downloadFile( url, item2)
         
         if w.feed.has_key('subtitle'):
             ChannelSubtitle=w.feed.subtitle
