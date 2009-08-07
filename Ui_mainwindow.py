@@ -63,7 +63,7 @@ class Download(object):
                 if  not ui.outFile[httpIndex].open(QtCore.QIODevice.Append):
                     print "Unable to save file "+fileName
 #                   TODO: what does this line do?
-                    ui.outFile[of] = None
+#                    ui.outFile[of] = None
                     return
         
             if url.port() != -1:
@@ -162,13 +162,18 @@ class Download(object):
  
     
     def httpRequestFinished(self, requestId, error):
-        of=len(ui.outFile)-1
+        if ui.tab_2.isVisible():
+            of=ui.itemsDownloading.index(ui.itemZaPrekid.text(5))
+        else:
+            of=len(ui.outFile)-1
+            
         if self.httpRequestAborted:
             if ui.outFile[of] is not None:
                 os.chdir(self.CurDir)
                 ui.outFile[of].close()
                 ui.outFile[of].remove()
                 ui.outFile[of] = None
+                del ui.outFile[of]
                 os.chdir(os.path.expanduser('~')+'/.brePodder') 
             return
 
@@ -188,9 +193,9 @@ class Download(object):
         else:
 # Never, ever close a file if you plan to write to it latter... or maybe you can re-open it.
 #            ui.outFile[of].close()
-            print ui.outFile[of].size()
+            print ui.outFile[of]
             
-        if error and not self.paused:
+        if error and not self.paused and ui.outFile[of] is not None:
             os.chdir(self.CurDir)
             ui.outFile[of].close()
             ui.outFile[of].remove()
@@ -241,7 +246,7 @@ class Download(object):
                 #TODO: this is bad and system depended, but... 
                 #TODO: Remove this 'convert' command - maybe i don't even need it
                 if os.system('convert '+file.replace(" ","\ ")+'[0] png:'+file.replace(" ","\ "))!=0:
-                    os.system('cp ../images/musicstore.png '+file)
+                    os.system('cp ../images/musicstore.png '+file+'n')
                                      
             elif file[-3:]=='png' or file[-3:]=='PNG' or file[-3:]=='jpg' or file[-3:]=='JPG':
                 print 'logoBig:' +file
@@ -278,6 +283,7 @@ class Download(object):
                 self.httpRequestAborted = True
                 httpIndex=ui.itemsDownloading.index(ui.itemZaPrekid.text(5))
                 ui.http[httpIndex].abort()
+                del ui.http[httpIndex]
                 ui.itemsDownloading.remove(ui.itemZaPrekid.text(5))
     
     def pauseDownload(self):
@@ -339,7 +345,24 @@ class Ui_MainWindow(object):
 #        self.freeBytes.acquire()
         self.itemsDownloading=[]
 
-
+    def memory_usage(a):
+        """Memory usage of the current process in kilobytes."""
+        status = None
+        result = {'peak': 0, 'rss': 0}
+        try:
+            # This will only work on systems with a /proc file system
+            # (like Linux).
+            status = open('/proc/self/status')
+            for line in status:
+                parts = line.split()
+                key = parts[0][2:-1].lower()
+                if key in result:
+                    result[key] = int(parts[1])
+        finally:
+            if status is not None:
+                status.close()
+        return result
+        
     def setupUi(self, MainWindow):
 #        self.dd=[]
         
@@ -1106,8 +1129,8 @@ class updateChannelThread(QtCore.QThread):
         con.commit()
         cur.close()
         if self.newEpisodeExists:
-            print self.newEpisodeExists
-            print "self.newEpisodeExists"
+#            print self.newEpisodeExists
+#            print "self.newEpisodeExists"
 #            self.emit(QtCore.SIGNAL("updatesignal"))
             self.emit(QtCore.SIGNAL("updatesignal2"))
 #            self.emit(QtCore.SIGNAL("updatesignal_episodelist(PyQt_PyObject)"),self.test.title)
@@ -1120,16 +1143,19 @@ class updateChannelThread(QtCore.QThread):
     def updateChannel(self, ch = None, cursor=None):
         newEpisode={}
         cur=cursor
-        print "thread update channel"
+#        print "thread update channel"
+#        print self.CurrentChannel
         oldEpisodes=[]
         if ch == None:
             cc = cur.execute('select id,title from sql_channel where title =?', (self.CurrentChannel,))
             a = cc.fetchone()
             tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0]))
+#            print cc.title
         else:
             cc = cur.execute('select id,title,link from sql_channel where title =?', (ch.title,))
             a = cc.fetchone()
             tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
+#            print ch.title
         newEpisode['channel_id'] = a[0]    
         epcount=0
         for j in tt:
@@ -1145,11 +1171,12 @@ class updateChannelThread(QtCore.QThread):
                 aa=None
             
             if i.has_key('title') and aa==None:
-                print 'epizoda NE postoji'
+#                print 'epizoda NE postoji'
                 self.newEpisodeExists=1
                 if i.title:
 #                    newEpisode = Episode(title=i.title)
                     newEpisode['title']=i.title
+                    print newEpisode['title']
                 else:
 #                    newEpisode = Episode(title=u'No Title')
                     newEpisode['title']=u'No Title'
@@ -1207,6 +1234,7 @@ if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     MainWindow = QtGui.QMainWindow()
     ui = Ui_MainWindow()
+#    print ui.memory_usage()
     ui.setupUi(MainWindow)
     MainWindow.show()
     ui.update_channel_list()
