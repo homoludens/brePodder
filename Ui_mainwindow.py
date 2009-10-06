@@ -145,6 +145,8 @@ class Download(object):
         elif header.statusCode() in [301, 302]: # Moved permanently or temporarily
             if header.hasKey('Location'):
                 self.locationRedirect = str(header.value('Location'))
+        else:
+            print header.statusCode()
 
         
         sidkey = "set-cookie"
@@ -162,7 +164,11 @@ class Download(object):
  
     
     def httpRequestFinished(self, requestId, error):
-        if ui.tab_2.isVisible():
+        print "httpRequestFinished"
+        print requestId
+        print error
+        if ui.tab_2.isVisible() and error:
+#TODO kada se download zavrsi ovo pravi probleme, jer nista nije izabrano
             of=ui.itemsDownloading.index(ui.itemZaPrekid.text(5))
         else:
             of=len(ui.outFile)-1
@@ -176,9 +182,9 @@ class Download(object):
                 del ui.outFile[of]
                 os.chdir(os.path.expanduser('~')+'/.brePodder') 
             return
-
-        if requestId != ui.httpGetId[of]:
-            return
+#ovo mi je trebalo kako bi odredio koji fajl salje request, ali mi samo smeta i mislim da mi vise ne treba.
+#        if requestId != ui.httpGetId[of]:
+#            return
         
         if self.locationRedirect:
             os.chdir(self.CurDir)
@@ -214,17 +220,17 @@ class Download(object):
             if self.tempBytes==0:
                 self.totalBytes=totalBytes
             self.resumed=True
-            self.tempBytes=self.bytesRead
-            
+        self.tempBytes=self.bytesRead
         self.bytesRead=self.tempBytes+bytesRead
         self.itemZaPrenos.setText(3, str(self.bytesRead))
 #        self.bytesRead=self.bytesRead+bytesRead
         
     
     def downloadDone(self, done):
+        print "downloadDone"
         if self.urlRedirect:
             self.urlRedirect = None
-            return
+#            return
         if not done:
             url =  self.itemZaPrenos.text(5).toUtf8().data()
             
@@ -287,7 +293,7 @@ class Download(object):
                 ui.itemsDownloading.remove(ui.itemZaPrekid.text(5))
     
     def pauseDownload(self):
-        print "PAUSED"
+#        print "PAUSED"
         self.paused = True
         self.resumed = False
         if ui.tab_2.isVisible():
@@ -301,8 +307,7 @@ class Download(object):
                 ui.http[httpIndex].abort()
 
     def resumeDownload(self):
-        print "RESUMED"
-
+#        print "RESUMED"
         if ui.tab_2.isVisible():
             if self.itemZaPrenos == ui.itemZaPrekid:
                 self.itemZaPrenos.setText(3, "RESUMED")
@@ -317,6 +322,7 @@ class Download(object):
                 self.downloadFile(resumeLink, item)
                 
                 self.paused = False
+                self.resumed = True
                 
 # TODO: sigrno postoji razlog da se vratim u 'home' direktorijum
 #                os.chdir(os.path.expanduser('~')+'/.brePodder')
@@ -1041,9 +1047,9 @@ class Ui_MainWindow(object):
         updtChTr=updateChannelThread(ch)
         QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal"),self.update_channel_list,QtCore.Qt.QueuedConnection)
         QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal_episodelist(PyQt_PyObject)"),self.update_episode_list,QtCore.Qt.QueuedConnection)
-        
         self.ttthread=updtChTr
         updtChTr.start()
+
         
     def update_all_channels(self):
         updtChTr=[]
@@ -1176,7 +1182,7 @@ class updateChannelThread(QtCore.QThread):
                 if i.title:
 #                    newEpisode = Episode(title=i.title)
                     newEpisode['title']=i.title
-                    print newEpisode['title']
+#                    print newEpisode['title']
                 else:
 #                    newEpisode = Episode(title=u'No Title')
                     newEpisode['title']=u'No Title'
