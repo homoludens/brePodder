@@ -440,7 +440,15 @@ class Ui_MainWindow(object):
         self.QLineEdit1.setMaximumSize(QtCore.QSize(16777215,16777215))
         self.QLineEdit1.setObjectName("QLineEdit1")
         self.hboxlayout.addWidget(self.QLineEdit1)
-
+        
+        self.updateProgressBar = QtGui.QProgressBar(self.widget)
+        self.updateProgressBar.setValue(42);
+        self.updateProgressBar.setSizePolicy(sizePolicy)
+        self.updateProgressBar.setMinimumSize(QtCore.QSize(0,0))
+        self.updateProgressBar.setMaximumSize(QtCore.QSize(16777215,16777215))
+        self.updateProgressBar.hide();
+        self.hboxlayout.addWidget(self.updateProgressBar)
+        
         self.QPushButton1 = QtGui.QPushButton(self.widget)
 
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum,QtGui.QSizePolicy.Fixed)
@@ -629,6 +637,8 @@ class Ui_MainWindow(object):
         QtCore.QObject.connect(self.QPushButton1,QtCore.SIGNAL("clicked()"),self.QLineEdit1.clear)
         QtCore.QObject.connect(self.treeWidget_2,QtCore.SIGNAL("itemClicked(QTreeWidgetItem*,int)"),self.EpisodeActivated)
         QtCore.QObject.connect(self.treeWidget_2,QtCore.SIGNAL("itemDoubleClicked(QTreeWidgetItem*,int)"),self.EpisodeDoubleClicked)
+        QtCore.QObject.connect(self.treeWidget_4,QtCore.SIGNAL("itemDoubleClicked(QTreeWidgetItem*,int)"),self.LastestEpisodeDoubleClicked)
+
         QtCore.QObject.connect(self.treeWidget,QtCore.SIGNAL("itemClicked(QTreeWidgetItem*,int)"),self.DownloadActivated)
         QtCore.QObject.connect(self.trayIcon,QtCore.SIGNAL("activated(QSystemTrayIcon::ActivationReason)"),self.trayIconActivated)
         QtCore.QObject.connect(self.actionUpdateFeeds,QtCore.SIGNAL("activated()"),self.update_channel)
@@ -665,22 +675,25 @@ class Ui_MainWindow(object):
         item1.setText(0, QtGui.QApplication.translate("MainWindow", "New Item", None, QtGui.QApplication.UnicodeUTF8))
        
         self.QLineEdit1.setText(QtGui.QApplication.translate("MainWindow", "addNewChannel", None, QtGui.QApplication.UnicodeUTF8))
+        self.QLineEdit1.selectAll()
         self.QPushButton1.setText(QtGui.QApplication.translate("MainWindow", "Add", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget_2.setStatusTip(QtGui.QApplication.translate("MainWindow", "epizode", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget_2.headerItem().setText(0,QtGui.QApplication.translate("MainWindow", "episode", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget_2.headerItem().setText(1,QtGui.QApplication.translate("MainWindow", "size", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget_2.headerItem().setText(2,QtGui.QApplication.translate("MainWindow", "date", None, QtGui.QApplication.UnicodeUTF8))
+        self.treeWidget_2.header().resizeSection(0, 300)
         self.treeWidget_2.clear()
 
-        item2 = QtGui.QTreeWidgetItem(self.treeWidget_2)
-        item2.setIcon(0,QtGui.QIcon("images/build.png"))
-        item2.setText(0,QtGui.QApplication.translate("MainWindow", "naziv", None, QtGui.QApplication.UnicodeUTF8))
-        item2.setText(1,QtGui.QApplication.translate("MainWindow", "33 MB", None, QtGui.QApplication.UnicodeUTF8))
-        self.QTextBrowser1.setStatusTip(QtGui.QApplication.translate("MainWindow", "opis", None, QtGui.QApplication.UnicodeUTF8))
-        self.QTextBrowser1.setHtml(QtGui.QApplication.translate("MainWindow", "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-        "p, li { white-space: pre-wrap; }\n"
-        "</style></head><body style=\" font-family:\'Sans Serif\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
-        "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">tekst u tekst browseru</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+#        item2 = QtGui.QTreeWidgetItem(self.treeWidget_2)
+#        item2.setIcon(0,QtGui.QIcon("images/build.png"))
+#        item2.setText(0,QtGui.QApplication.translate("MainWindow", "naziv", None, QtGui.QApplication.UnicodeUTF8))
+#        item2.setText(1,QtGui.QApplication.translate("MainWindow", "33 MB", None, QtGui.QApplication.UnicodeUTF8))
+#        self.QTextBrowser1.setStatusTip(QtGui.QApplication.translate("MainWindow", "opis", None, QtGui.QApplication.UnicodeUTF8))
+#        self.QTextBrowser1.setHtml(QtGui.QApplication.translate("MainWindow", "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+#        "p, li { white-space: pre-wrap; }\n"
+#        "</style></head><body style=\" font-family:\'Sans Serif\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
+#        "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">tekst u tekst browseru</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+#       
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QtGui.QApplication.translate("MainWindow", "Channels", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget.headerItem().setText(0,QtGui.QApplication.translate("MainWindow", "Channel", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget.headerItem().setText(1,QtGui.QApplication.translate("MainWindow", "Episode", None, QtGui.QApplication.UnicodeUTF8))
@@ -688,15 +701,17 @@ class Ui_MainWindow(object):
         self.treeWidget.headerItem().setText(3,QtGui.QApplication.translate("MainWindow", "%", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget.headerItem().setText(4,QtGui.QApplication.translate("MainWindow", "Speed", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget.headerItem().setText(5,QtGui.QApplication.translate("MainWindow", "Link", None, QtGui.QApplication.UnicodeUTF8))
+        self.treeWidget.header().resizeSection(0, 200)
+        self.treeWidget.header().resizeSection(1, 200)
         self.treeWidget.clear()
 
-        item3 = QtGui.QTreeWidgetItem(self.treeWidget)
-        item3.setText(0,QtGui.QApplication.translate("MainWindow", "dl-ch", None, QtGui.QApplication.UnicodeUTF8))
-        item3.setText(1,QtGui.QApplication.translate("MainWindow", "dl-ep", None, QtGui.QApplication.UnicodeUTF8))
-        item3.setText(2,QtGui.QApplication.translate("MainWindow", "dl-size", None, QtGui.QApplication.UnicodeUTF8))
-        item3.setText(3,QtGui.QApplication.translate("MainWindow", "dl-proc", None, QtGui.QApplication.UnicodeUTF8))
-        item3.setText(4,QtGui.QApplication.translate("MainWindow", "dl-speed", None, QtGui.QApplication.UnicodeUTF8))
-        item3.setText(5,QtGui.QApplication.translate("MainWindow", "dl-link", None, QtGui.QApplication.UnicodeUTF8))
+#        item3 = QtGui.QTreeWidgetItem(self.treeWidget)
+#        item3.setText(0,QtGui.QApplication.translate("MainWindow", "dl-ch", None, QtGui.QApplication.UnicodeUTF8))
+#        item3.setText(1,QtGui.QApplication.translate("MainWindow", "dl-ep", None, QtGui.QApplication.UnicodeUTF8))
+#        item3.setText(2,QtGui.QApplication.translate("MainWindow", "dl-size", None, QtGui.QApplication.UnicodeUTF8))
+#        item3.setText(3,QtGui.QApplication.translate("MainWindow", "dl-proc", None, QtGui.QApplication.UnicodeUTF8))
+#        item3.setText(4,QtGui.QApplication.translate("MainWindow", "dl-speed", None, QtGui.QApplication.UnicodeUTF8))
+#        item3.setText(5,QtGui.QApplication.translate("MainWindow", "dl-link", None, QtGui.QApplication.UnicodeUTF8))
         
         
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QtGui.QApplication.translate("MainWindow", "Downloads", None, QtGui.QApplication.UnicodeUTF8))
@@ -711,6 +726,8 @@ class Ui_MainWindow(object):
         self.treeWidget_4.headerItem().setText(1,QtGui.QApplication.translate("MainWindow", "Episode", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget_4.headerItem().setText(2,QtGui.QApplication.translate("MainWindow", "Size", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget_4.headerItem().setText(3,QtGui.QApplication.translate("MainWindow", "Local Link", None, QtGui.QApplication.UnicodeUTF8))
+        self.treeWidget_4.header().resizeSection(0, 200)
+        self.treeWidget_4.header().resizeSection(1, 200)
         self.treeWidget_4.clear()
 
         item6 = QtGui.QTreeWidgetItem(self.treeWidget_4)
@@ -991,8 +1008,13 @@ class Ui_MainWindow(object):
             item.setText(0,e.channel.title)
             item.setText(1,e.title)
             item.setText(2,str(e.size/1024/1024)+' MB')
-            item.setText(3,str(e.localfile))
-            
+            item.setText(3,os.path.expanduser('~')+'/.brePodder/'+str(e.localfile))
+    
+    def LastestEpisodeDoubleClicked(self, a):
+        print  a.text(3).toUtf8().data().decode('UTF8')
+        os.system("mplayer "+a.text(3).toUtf8().data().decode('UTF8'))
+        
+        
     def update_episode_list(self,channel_Title):
 #        cc = Channel.query.filter_by(title=channel_Title.toUtf8().data()).one()
         cc = Channel.query.filter_by(title=channel_Title).one()
@@ -1044,13 +1066,23 @@ class Ui_MainWindow(object):
  
 # dodati bold za channel koji ima novu epizodu. mislim da je to najefikasnije preko novog polja u bazi. 
 
-
+    def updateProgressBarFromThread(self):
+#        print "MARKO"
+#        print ui.updateProgressBar.value()
+        ui.updateProgressBar.setValue(ui.updateProgressBar.value()+1)
+#        ui.updateProgressBar.setText(ui.updateProgressBar.value()+1)
+#        self.listWidget.setStatusTip(QtCore.QString(str(ui.updateProgressBar.value()+1)))
 
     
     def update_channel(self):
+        self.QLineEdit1.hide()
+        self.QPushButton1.hide()
+        self.updateProgressBar.setRange(0,0)
+        self.updateProgressBar.show()
+        
         ch=Channel.query.filter_by(title=self.CurrentChannel).one()
         self.ChannelForUpdate=ch
-        updtChTr=updateChannelThread(ch)
+        updtChTr=updateChannelThread(ch,0)
         QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal"),self.update_channel_list,QtCore.Qt.QueuedConnection)
         QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal_episodelist(PyQt_PyObject)"),self.update_episode_list,QtCore.Qt.QueuedConnection)
         self.ttthread=updtChTr
@@ -1058,8 +1090,17 @@ class Ui_MainWindow(object):
 
         
     def update_all_channels(self):
+        self.QLineEdit1.hide()
+        self.QPushButton1.hide()
+        
+        self.updateProgressBar.show()
+        
         updtChTr=[]
         ch=Channel.query.all()
+        self.numberOfChannels = ch.__len__()-1
+        self.updateProgressBar.setRange(0,self.numberOfChannels+1)
+        self.updateProgressBar.setValue(0)
+        self.updateProgressBar.setFormat(QtCore.QString("%v" + " of " + "%m"))
         j=0
         for i in ch:
 #            updtChTr=updateChannelThread(i)
@@ -1067,17 +1108,18 @@ class Ui_MainWindow(object):
 #            self.TTThread.append(updtChTr)
 #            updtChTr.start()
             
-            updtChTr.append(updateChannelThread(i))
+            updtChTr.append(updateChannelThread(i,j))
 #            QtCore.QObject.connect(updtChTr[j],QtCore.SIGNAL("updatesignal2"),self.update_channel_list,QtCore.Qt.BlockingQueuedConnection)
             self.TTThread.append(updtChTr[j])
+            QtCore.QObject.connect(updtChTr[j],QtCore.SIGNAL("updateProgressSignal"),self.updateProgressBarFromThread,QtCore.Qt.BlockingQueuedConnection)
             updtChTr[j].start()
             j=j+1
+            
 #        self.update_channel_list()
 #        print 'update Channel List'
-        QtCore.QObject.connect(updtChTr[j-1],QtCore.SIGNAL("updatesignal2"),self.update_channel_list,QtCore.Qt.QueuedConnection)
-
-        
-    
+#        QtCore.QObject.moveToThread(updtChTr[j-1])
+#        QtCore.QObject.connect(updtChTr[j],QtCore.SIGNAL("updatesignal2"),self.update_channel_list,QtCore.Qt.QueuedConnection)
+  
     def dialog_add(self):
         filename = QtGui.QFileDialog.getOpenFileName(MainWindow, 'Open file','/home')
 #        file=open(filename)
@@ -1088,7 +1130,6 @@ class Ui_MainWindow(object):
     
     
     def app_quit(self):
-#        print 'app_quit'
         app.exit()
     
     def export_opml(self):
@@ -1122,21 +1163,21 @@ class Ui_MainWindow(object):
         
 
 class updateChannelThread(QtCore.QThread):
-    def __init__(self,test):
+    def __init__(self,test, updateProgress = 0):
         QtCore.QThread.__init__(self)
 #        self.test = ui.ChannelForUpdate
         self.test = test
-        self.newEpisodeExists=0
+        self.updateProgress = updateProgress
+        self.newEpisodeExists = 0
 #        ui.freeBytes.acquire()
-
-#        print test
-        
+       
     def run(self):
         ui.Mutex.lock()
         con = sqlite3.connect("/home/homoludens/.brePodder/podcasts.sqlite")
         con.isolation_level = None
         cur = con.cursor()
         self.updateChannel(self.test,cur)
+#        print self.test.title
         
         con.commit()
         cur.close()
@@ -1147,6 +1188,14 @@ class updateChannelThread(QtCore.QThread):
             self.emit(QtCore.SIGNAL("updatesignal2"))
 #            self.emit(QtCore.SIGNAL("updatesignal_episodelist(PyQt_PyObject)"),self.test.title)
         ui.Mutex.unlock()
+        self.emit(QtCore.SIGNAL("updateProgressSignal"))
+ 
+        if self.updateProgress == ui.numberOfChannels-1:
+            ui.updateProgressBar.hide()
+            ui.QLineEdit1.show()
+            ui.QPushButton1.show()
+            ui.update_channel_list()
+
 #        self.emit(QtCore.SIGNAL("updatesignal2"))
 #        ui.usedBytes.acquire()
 #        ui.freeBytes.release()
@@ -1155,19 +1204,15 @@ class updateChannelThread(QtCore.QThread):
     def updateChannel(self, ch = None, cursor=None):
         newEpisode={}
         cur=cursor
-#        print "thread update channel"
-#        print self.CurrentChannel
         oldEpisodes=[]
         if ch == None:
             cc = cur.execute('select id,title from sql_channel where title =?', (self.CurrentChannel,))
             a = cc.fetchone()
             tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0]))
-#            print cc.title
         else:
             cc = cur.execute('select id,title,link from sql_channel where title =?', (ch.title,))
             a = cc.fetchone()
             tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
-#            print ch.title
         newEpisode['channel_id'] = a[0]    
         epcount=0
         for j in tt:
@@ -1235,6 +1280,7 @@ class updateChannelThread(QtCore.QThread):
 #        session.close()
 #        ui.update_channel_list()
 #        ui.update_episode_list(cc.title)
+
 
     
 if __name__ == "__main__":
