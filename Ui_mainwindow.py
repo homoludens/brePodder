@@ -537,6 +537,30 @@ class Ui_MainWindow(object):
 #        self.gridlayout.addWidget(self.tabWidget,0,0,1,1)
 #        MainWindow.setCentralWidget(self.centralwidget)
 
+#Tab with newest episodes
+        self.tab_4 = QtGui.QWidget()
+        self.tab_4.setObjectName("tab_4")
+        
+        
+        self.treeWidget_5 = QtGui.QTreeWidget(self.tab_4)
+        self.treeWidget_5.setWindowModality(QtCore.Qt.NonModal)
+        self.treeWidget_5.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.treeWidget_5.setItemsExpandable(False)
+        self.treeWidget_5.setSortingEnabled(True)
+        self.treeWidget_5.setAnimated(True)
+        self.treeWidget_5.setObjectName("treeWidget_4")
+        
+        
+        
+        
+        self.gridlayout4 = QtGui.QGridLayout(self.tab_4)
+        self.gridlayout4.setObjectName("gridlayout4")
+        self.gridlayout4.addWidget(self.treeWidget_5,0,0,1,1)
+        self.tabWidget.addTab(self.tab_4,"")
+        self.gridlayout.addWidget(self.tabWidget,0,0,1,1)
+        MainWindow.setCentralWidget(self.centralwidget)
+
+
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0,0,604,28))
         self.menubar.setObjectName("menubar")
@@ -729,6 +753,14 @@ class Ui_MainWindow(object):
         self.treeWidget_4.header().resizeSection(0, 200)
         self.treeWidget_4.header().resizeSection(1, 200)
         self.treeWidget_4.clear()
+        
+        self.treeWidget_5.headerItem().setText(0,QtGui.QApplication.translate("MainWindow", "Channel", None, QtGui.QApplication.UnicodeUTF8))
+        self.treeWidget_5.headerItem().setText(1,QtGui.QApplication.translate("MainWindow", "Episode", None, QtGui.QApplication.UnicodeUTF8))
+        self.treeWidget_5.headerItem().setText(2,QtGui.QApplication.translate("MainWindow", "Size", None, QtGui.QApplication.UnicodeUTF8))
+        self.treeWidget_5.headerItem().setText(3,QtGui.QApplication.translate("MainWindow", "Date", None, QtGui.QApplication.UnicodeUTF8))
+        self.treeWidget_5.header().resizeSection(0, 200)
+        self.treeWidget_5.header().resizeSection(1, 200)
+        self.treeWidget_5.clear()
 
         item6 = QtGui.QTreeWidgetItem(self.treeWidget_4)
         item6.setText(0,QtGui.QApplication.translate("MainWindow", "ch", None, QtGui.QApplication.UnicodeUTF8))
@@ -737,7 +769,7 @@ class Ui_MainWindow(object):
         item6.setText(3,QtGui.QApplication.translate("MainWindow", "local file", None, QtGui.QApplication.UnicodeUTF8))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), QtGui.QApplication.translate("MainWindow", "Lastest downlods", None, QtGui.QApplication.UnicodeUTF8))
         
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), QtGui.QApplication.translate("MainWindow", "Lastest Downloads", None, QtGui.QApplication.UnicodeUTF8))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), QtGui.QApplication.translate("MainWindow", "Newest Episodes", None, QtGui.QApplication.UnicodeUTF8))
         
         self.menuPodcasts.setTitle(QtGui.QApplication.translate("MainWindow", "Podcasts", None, QtGui.QApplication.UnicodeUTF8))
         self.toolBar.setWindowTitle(QtGui.QApplication.translate("MainWindow", "toolBar", None, QtGui.QApplication.UnicodeUTF8))
@@ -1009,6 +1041,23 @@ class Ui_MainWindow(object):
             item.setText(1,e.title)
             item.setText(2,str(e.size/1024/1024)+' MB')
             item.setText(3,os.path.expanduser('~')+'/.brePodder/'+str(e.localfile))
+            
+#newest episodes
+    def update_newest_episodes_list(self):
+        episodes=Episode.query().order_by(Episode.date.desc()).limit(40).all()
+        self.treeWidget_5.clear()
+        for e in episodes:
+            item = QtGui.QTreeWidgetItem(self.treeWidget_5)
+            item.setText(0,e.channel.title)
+            item.setText(1,e.title)
+            item.setText(2,str(e.size/1024/1024)+' MB')
+            try:
+                b=gmtime(float(e.date))
+                epDate=strftime("%x", b)
+            except:
+                b=gmtime()
+                epDate=strftime("%x", b)
+            item.setText(3,epDate)
     
     def LastestEpisodeDoubleClicked(self, a):
         print  a.text(3).toUtf8().data().decode('UTF8')
@@ -1079,7 +1128,7 @@ class Ui_MainWindow(object):
         self.QPushButton1.hide()
         self.updateProgressBar.setRange(0,0)
         self.updateProgressBar.show()
-        
+        self.numberOfChannels = 1
         ch=Channel.query.filter_by(title=self.CurrentChannel).one()
         self.ChannelForUpdate=ch
         updtChTr=updateChannelThread(ch,0)
@@ -1194,7 +1243,7 @@ class updateChannelThread(QtCore.QThread):
             ui.updateProgressBar.hide()
             ui.QLineEdit1.show()
             ui.QPushButton1.show()
-            ui.update_channel_list()
+#            ui.update_channel_list()
 
 #        self.emit(QtCore.SIGNAL("updatesignal2"))
 #        ui.usedBytes.acquire()
@@ -1297,4 +1346,5 @@ if __name__ == "__main__":
     MainWindow.show()
     ui.update_channel_list()
     ui.update_lastest_episodes_list()
+    ui.update_newest_episodes_list()
     sys.exit(app.exec_())
