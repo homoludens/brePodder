@@ -219,8 +219,13 @@ class Download(object):
         if not self.resumed:
             if self.tempBytes==0:
                 self.totalBytes=totalBytes
-            self.resumed=True
-        self.tempBytes=self.bytesRead
+#            self.resumed=True
+#            self.tempBytes=self.bytesRead
+            
+        if self.resumed:
+            self.resumed=False
+            self.tempBytes=self.bytesRead
+            
         self.bytesRead=self.tempBytes+bytesRead
         self.itemZaPrenos.setText(3, str(self.bytesRead))
 #        self.bytesRead=self.bytesRead+bytesRead
@@ -318,11 +323,12 @@ class Download(object):
                 item=self.itemZaPrenos
 
                 self.httpRequestAborted = False
+                self.resumed = True
                 
                 self.downloadFile(resumeLink, item)
                 
                 self.paused = False
-                self.resumed = True
+
                 
 # TODO: sigrno postoji razlog da se vratim u 'home' direktorijum
 #                os.chdir(os.path.expanduser('~')+'/.brePodder')
