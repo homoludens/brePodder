@@ -1198,14 +1198,16 @@ class Ui_MainWindow(object):
             
     def activeMenuChannels(self, pos):
         self.actionCancel.setText(QtGui.QApplication.translate("MainWindow", "Delete feed", None, QtGui.QApplication.UnicodeUTF8))
-        globalPos = self.listWidget.mapToGlobal(pos);
+        globalPos = self.listWidget.mapToGlobal(pos)
+        globalPos.setY(globalPos.y() + 25)
         t=self.listWidget.indexAt(pos)
         self.menuChannels.popup(globalPos)
         
+        
     def activeMenuDownloads(self, pos):
         self.actionCancel.setText(QtGui.QApplication.translate("MainWindow", "Cancel downlaod", None, QtGui.QApplication.UnicodeUTF8))
-        globalPos = self.treeWidget.mapToGlobal(pos);
-#        print pos.x(),  pos.y()
+        globalPos = self.treeWidget.mapToGlobal(pos)
+        globalPos.setY(globalPos.y() + 25)
         t=self.treeWidget.indexAt(pos)
         self.menuDownloads.popup(globalPos)
 
