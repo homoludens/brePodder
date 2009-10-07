@@ -227,7 +227,7 @@ class Download(object):
             self.tempBytes=self.bytesRead
             
         self.bytesRead=self.tempBytes+bytesRead
-        self.itemZaPrenos.setText(3, str(self.bytesRead))
+        self.itemZaPrenos.setText(3, str(self.bytesRead/1048576)+" MB")
 #        self.bytesRead=self.bytesRead+bytesRead
         
     
@@ -808,7 +808,7 @@ class Ui_MainWindow(object):
         item = QtGui.QTreeWidgetItem(self.treeWidget)
         item.setText(0,e.channel.title)
         item.setText(1,e.title)
-        item.setText(2,str(e.size))
+        item.setText(2,str(e.size/1048576)+" MB")
         item.setText(3,'0')
         item.setText(4,'0')
 
