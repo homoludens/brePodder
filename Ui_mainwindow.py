@@ -24,9 +24,6 @@ import sqlite3
 sys.setappdefaultencoding('utf-8')  
 class Download(object):
     def setup(self):
-#        self.http = []
-#        self.httpGetId = []
-#        ui.outFile = []
         self.itemZaPrenos = None
         self.CurDir = None
         self.CurrentChannel = None
@@ -39,8 +36,7 @@ class Download(object):
         self.urlRedirect=None
         self.locationRedirect = None
         self.httpRequestAborted = False
-#        self.itemsDownloading=[]
-        
+       
     def downloadFile(self, link, item):
         self.CurDir = os.getcwd()
         self.itemZaPrenos=item
@@ -89,8 +85,6 @@ class Download(object):
             self.q=None
             self.httpRequestAborted = False
             ui.httpGetId.append(ui.http[httpIndex].request(self.header, self.q, ui.outFile[httpIndex]))
-#            print os.getcwd()
-#            print ui.outFile
             return
             
         ui.http.append(QtNetwork.QHttp())
@@ -133,9 +127,6 @@ class Download(object):
         
         self.httpRequestAborted = False
         ui.httpGetId.append(ui.http[ht].request(self.header, self.q, ui.outFile[of]))
-        
-#        self.httpRequestAborted = False
-#        ui.httpGetId.append(self.http[ht].get(url.path().replace(" ", "%20"), ui.outFile[of]))
     
     def responseHeaderReceived(self, header):
         if header.statusCode() == 200:
@@ -153,16 +144,6 @@ class Download(object):
         if header.hasKey(sidkey):
             print header.value(sidkey)
             
-# ko zna kakva me je muka naterala na ovo
-#            QRegExp rx("PHPSESSID=(.+);");
-#            rx.setMinimal(true);
-#            rx.setCaseSensitive(false);
-#            if (rx.search(resp.value(sidkey)) >= 0)
-#                cookie = "PHPSESSID=" + rx.cap(1);
-#                cout << "found cookie:" << cookie << "\n";
-
- 
-    
     def httpRequestFinished(self, requestId, error):
         print "httpRequestFinished"
         print requestId
@@ -219,8 +200,6 @@ class Download(object):
         if not self.resumed:
             if self.tempBytes==0:
                 self.totalBytes=totalBytes
-#            self.resumed=True
-#            self.tempBytes=self.bytesRead
             
         if self.resumed:
             self.resumed=False
@@ -228,7 +207,6 @@ class Download(object):
             
         self.bytesRead=self.tempBytes+bytesRead
         self.itemZaPrenos.setText(3, str(self.bytesRead/1048576)+" MB")
-#        self.bytesRead=self.bytesRead+bytesRead
         
     
     def downloadDone(self, done):
@@ -276,9 +254,6 @@ class Download(object):
                     e.status=u'downloaded'
                 except:
                     print 'InvalidRequestError'
-                    print file
-#                i = e.enclosure.rfind('/')
-#                file = e.enclosure[i+1:]
                 session.commit()
             os.chdir(os.path.expanduser('~')+'/.brePodder')
             self.itemZaPrenos.setText(3, "DONE")
@@ -298,21 +273,18 @@ class Download(object):
                 ui.itemsDownloading.remove(ui.itemZaPrekid.text(5))
     
     def pauseDownload(self):
-#        print "PAUSED"
         self.paused = True
         self.resumed = False
         if ui.tab_2.isVisible():
             if self.itemZaPrenos == ui.itemZaPrekid:
                 self.itemZaPrenos.setText(3, "PAUSED")
                 fileLink = ui.itemZaPrekid.text(5)
-#                ui.outFile[0].close()
 #TODO: do i need next line?
                 self.httpRequestAborted = False
                 httpIndex=ui.itemsDownloading.index(ui.itemZaPrekid.text(5))
                 ui.http[httpIndex].abort()
 
     def resumeDownload(self):
-#        print "RESUMED"
         if ui.tab_2.isVisible():
             if self.itemZaPrenos == ui.itemZaPrekid:
                 self.itemZaPrenos.setText(3, "RESUMED")
@@ -329,12 +301,6 @@ class Download(object):
                 
                 self.paused = False
 
-                
-# TODO: sigrno postoji razlog da se vratim u 'home' direktorijum
-#                os.chdir(os.path.expanduser('~')+'/.brePodder')
-
-        
-            
 class Ui_MainWindow(object):
     def __init__(self, parent=None):
         self.http = []
@@ -375,11 +341,9 @@ class Ui_MainWindow(object):
                 status.close()
         return result
         
-    def setupUi(self, MainWindow):
-#        self.dd=[]
-        
+    def setupUi(self, MainWindow):      
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(QtCore.QSize(QtCore.QRect(0,0,604,511).size()).expandedTo(MainWindow.minimumSizeHint()))
+        MainWindow.resize(QtCore.QSize(QtCore.QRect(0,0,600,400).size()).expandedTo(MainWindow.minimumSizeHint()))
         MainWindow.setWindowIcon(QtGui.QIcon("images/musicstore.png"))
 
         self.centralwidget = QtGui.QWidget(MainWindow)
@@ -419,10 +383,8 @@ class Ui_MainWindow(object):
         self.listWidget.setSizeIncrement(QtCore.QSize(0,0))
         self.listWidget.setBaseSize(QtCore.QSize(0,0))
         self.listWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-#        self.listWidget.setFrameShadow(QtGui.QFrame.Raised)
         self.listWidget.setObjectName("listWidget")
         self.listWidget.setAlternatingRowColors(True)
-#        self.listWidget.setMouseTracking(True)
         self.vboxlayout.addWidget(self.listWidget)
         
 
@@ -461,8 +423,6 @@ class Ui_MainWindow(object):
         self.QPushButton1.setObjectName("QPushButton1")
         self.hboxlayout.addWidget(self.QPushButton1)
 
-#        spacerItem = QtGui.QSpacerItem(10,20,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Minimum)
-#        self.hboxlayout.addItem(spacerItem)
         self.vboxlayout.addLayout(self.hboxlayout)
 
         self.splitter = QtGui.QSplitter(self.splitter_2)
@@ -478,11 +438,11 @@ class Ui_MainWindow(object):
 
         self.treeWidget_2 = QtGui.QTreeWidget(self.splitter)
         self.treeWidget_2.setItemsExpandable(False)
-#        self.treeWidget_2.setSortingEnabled(True)
         self.treeWidget_2.setAnimated(True)
         self.treeWidget_2.setAlternatingRowColors(True)
         self.treeWidget_2.setObjectName("treeWidget_2")
-
+        
+#TODO: make settings fot choosing WebKit insted of QTextBrowser
 #        self.QTextBrowser1 = QtWebKit.QWebView(self.splitter) #Qt4.4
         self.QTextBrowser1 = QtGui.QTextBrowser(self.splitter) # Qt4.3
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding,QtGui.QSizePolicy.Expanding)
@@ -493,7 +453,6 @@ class Ui_MainWindow(object):
         self.QTextBrowser1.setMinimumSize(QtCore.QSize(0,0))
         self.QTextBrowser1.setSizeIncrement(QtCore.QSize(4,0))
         self.QTextBrowser1.setBaseSize(QtCore.QSize(400,0))
-#        self.QTextBrowser1.setOpenExternalLinks(True)
         self.QTextBrowser1.setObjectName("QTextBrowser1")
         self.gridlayout1.addWidget(self.splitter_2,0,0,1,1)
         self.tabWidget.addTab(self.tab,"")
@@ -531,16 +490,9 @@ class Ui_MainWindow(object):
         self.gridlayout.addWidget(self.tabWidget,0,0,1,1)
         MainWindow.setCentralWidget(self.centralwidget)
 
-#        self.gridlayout3 = QtGui.QGridLayout(self.tab_3)
-#        self.gridlayout3.setObjectName("gridlayout3")
-#        self.tabWidget.addTab(self.tab_3,"")
-#        self.gridlayout.addWidget(self.tabWidget,0,0,1,1)
-#        MainWindow.setCentralWidget(self.centralwidget)
-
-#Tab with newest episodes
+        #Tab with newest episodes
         self.tab_4 = QtGui.QWidget()
-        self.tab_4.setObjectName("tab_4")
-        
+        self.tab_4.setObjectName("tab_4")    
         
         self.treeWidget_5 = QtGui.QTreeWidget(self.tab_4)
         self.treeWidget_5.setWindowModality(QtCore.Qt.NonModal)
@@ -550,16 +502,12 @@ class Ui_MainWindow(object):
         self.treeWidget_5.setAnimated(True)
         self.treeWidget_5.setObjectName("treeWidget_4")
         
-        
-        
-        
         self.gridlayout4 = QtGui.QGridLayout(self.tab_4)
         self.gridlayout4.setObjectName("gridlayout4")
         self.gridlayout4.addWidget(self.treeWidget_5,0,0,1,1)
         self.tabWidget.addTab(self.tab_4,"")
         self.gridlayout.addWidget(self.tabWidget,0,0,1,1)
         MainWindow.setCentralWidget(self.centralwidget)
-
 
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0,0,604,28))
@@ -601,9 +549,6 @@ class Ui_MainWindow(object):
         self.menuPodcasts.addSeparator()
         self.menuPodcasts.addAction(self.actionQuit)
         
-        
-        
-        
         MainWindow.setMenuBar(self.menubar)
 
         self.statusbar = QtGui.QStatusBar(MainWindow)
@@ -615,7 +560,6 @@ class Ui_MainWindow(object):
         self.toolBar.setMouseTracking(True)
         self.toolBar.setObjectName("toolBar")
         MainWindow.addToolBar(QtCore.Qt.TopToolBarArea,self.toolBar)
-
 
         self.menubar.addAction(self.menuPodcasts.menuAction())
         
@@ -656,10 +600,11 @@ class Ui_MainWindow(object):
         
         self.retranslateUi(MainWindow)
         self.tabWidget.setCurrentIndex(0)
-        QtCore.QObject.connect(self.listWidget,QtCore.SIGNAL("itemPressed(QTreeWidgetItem*,int)"),self.ChannelActivated)
+        QtCore.QObject.connect(self.listWidget,QtCore.SIGNAL("itemSelectionChanged()"),self.channel_activated)
+        
         QtCore.QObject.connect(self.QPushButton1,QtCore.SIGNAL("clicked()"),self.AddChannel)
         QtCore.QObject.connect(self.QPushButton1,QtCore.SIGNAL("clicked()"),self.QLineEdit1.clear)
-        QtCore.QObject.connect(self.treeWidget_2,QtCore.SIGNAL("itemClicked(QTreeWidgetItem*,int)"),self.EpisodeActivated)
+        QtCore.QObject.connect(self.treeWidget_2,QtCore.SIGNAL("itemSelectionChanged()"),self.episode_activated)
         QtCore.QObject.connect(self.treeWidget_2,QtCore.SIGNAL("itemDoubleClicked(QTreeWidgetItem*,int)"),self.EpisodeDoubleClicked)
         QtCore.QObject.connect(self.treeWidget_4,QtCore.SIGNAL("itemDoubleClicked(QTreeWidgetItem*,int)"),self.LastestEpisodeDoubleClicked)
 
@@ -675,7 +620,6 @@ class Ui_MainWindow(object):
 
 #        QtCore.QObject.connect(self.actionImport,QtCore.SIGNAL("activated()"),self.update_channel_list)
 
-        
         QtCore.QObject.connect(self.listWidget,QtCore.SIGNAL("customContextMenuRequested (QPoint)"),self.activeMenuChannels)
         QtCore.QObject.connect(self.treeWidget,QtCore.SIGNAL("customContextMenuRequested (QPoint)"),self.activeMenuDownloads)
         
@@ -684,7 +628,6 @@ class Ui_MainWindow(object):
         MainWindow.setTabOrder(self.QLineEdit1,self.QPushButton1)
         MainWindow.setTabOrder(self.QPushButton1,self.QTextBrowser1)
         MainWindow.setTabOrder(self.QTextBrowser1,self.tabWidget)
-        
         
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "brePodder", None, QtGui.QApplication.UnicodeUTF8))
@@ -767,7 +710,7 @@ class Ui_MainWindow(object):
         item6.setText(1,QtGui.QApplication.translate("MainWindow", "ep", None, QtGui.QApplication.UnicodeUTF8))
         item6.setText(2,QtGui.QApplication.translate("MainWindow", "size", None, QtGui.QApplication.UnicodeUTF8))
         item6.setText(3,QtGui.QApplication.translate("MainWindow", "local file", None, QtGui.QApplication.UnicodeUTF8))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), QtGui.QApplication.translate("MainWindow", "Lastest downlods", None, QtGui.QApplication.UnicodeUTF8))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), QtGui.QApplication.translate("MainWindow", "Lastest downloads", None, QtGui.QApplication.UnicodeUTF8))
         
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), QtGui.QApplication.translate("MainWindow", "Newest Episodes", None, QtGui.QApplication.UnicodeUTF8))
         
@@ -813,41 +756,40 @@ class Ui_MainWindow(object):
         os.chdir(os.path.expanduser('~')+'/.brePodder')            
         return desc
         
-    def EpisodeActivated(self, a, i):
-#        print "EpisodeActivated"
-        try:
-            e=Episode.query.filter_by(title=a.text(0).toUtf8().data().decode()).one()
-            if e.enclosure:
-                enc=e.enclosure
-            else:
-                enc='None'
-            if e.description:
-                desc=e.description
-            else:
-                desc='None'
-            if e.localfile:
-                localFile=e.localfile
-            else:
-                localFile='None'
-# TODO: download images from episode description so i can show them in QTextBrowser
-#            desc_localimg = self.getImageFromDesc(desc, e.channel)
-#            print desc_localimg
+    def episode_activated(self):
+        if self.treeWidget_2.selectedItems():
+            selection = self.treeWidget_2.selectedItems()[0]
+            try:
+                e=Episode.query.filter_by(title=selection.text(0).toUtf8().data().decode()).one()
+                if e.enclosure:
+                    enc=e.enclosure
+                else:
+                    enc='None'
+                if e.description:
+                    desc=e.description
+                else:
+                    desc='None'
+                if e.localfile:
+                    localFile=e.localfile
+                else:
+                    localFile='None'
+    # TODO: download images from episode description so i can show them in QTextBrowser
+    #            desc_localimg = self.getImageFromDesc(desc, e.channel)
+    #            print desc_localimg
 
-            self.QTextBrowser1.setHtml("<p>"+desc+"</br>\n\r</p><p><b>FILE: </b><a href="+enc+">"+enc+"</a></p><p><b>LOCALFILE: </b><a href="+localFile+">"+localFile+"</a></p>")
+                self.QTextBrowser1.setHtml("<p>"+desc+"</br>\n\r</p><p><b>FILE: </b><a href="+enc+">"+enc+"</a></p><p><b>LOCALFILE: </b><a href="+localFile+">"+localFile+"</a></p>")
 
-        except:
-            print "EpisodeActivated exception"
+            except:
+                print "EpisodeActivated exception"
     
     def DownloadActivated(self, a, i):
-#        print "DownloadActivated"
-        print a
         self.itemZaPrekid=a
         self.actionCancel.setToolTip("Remove Selected Download")
         self.actionPause.setToolTip("Pause Selected Download")
         self.actionResume.setToolTip("Resume Selected Download")
     
     def EpisodeDoubleClicked(self, a):
-# TODO: change backgroundColor with QBrush
+# TODO: change backgroundColor or something else with QBrush
         a.setFont(0, self.fontBold)   
         e=Episode.query.filter_by(title=a.text(0).toUtf8().data().decode('UTF8')).one()
         p=re.compile("\W")  
@@ -1006,28 +948,24 @@ class Ui_MainWindow(object):
         os.chdir(os.path.expanduser('~')+'/.brePodder') 
         
 
-    def ChannelActivated(self, a, i):
-#        print "ChannelActivated"
-        self.update_episode_list(a.text(i).toUtf8().data().decode('UTF8'))
-#        self.update_episode_list(a.text(i))
-#        self.update_episode_list(a.text(i).toUtf8().data().decode())
-#        self.CurrentChannel=a.text(0).toUtf8().data().decode()
-        self.CurrentChannel=a.text(0).toUtf8().data().decode('UTF8')
+    def channel_activated(self):
+        selection = self.listWidget.selectedItems()
+        self.update_episode_list(selection[0].text(0).toUtf8().data().decode('UTF8'))
+        self.CurrentChannel=selection[0].text(0).toUtf8().data().decode('UTF8')
         self.actionCancel.setToolTip("Delete Selected Channel")
         self.actionUpdateFeeds.setToolTip("Update Selected Channel")
+        
     
     def delete_channel(self):
         if self.tab.isVisible():
-#            print "delete_channel"
             c=self.CurrentChannel
             ch=Channel.query.filter_by(title=self.CurrentChannel).one()
-#            print ch
             j=0
             for i in ch.episode:
                 ch.episode[j].delete()
                 j=j+1
             ch.delete()
-            #ovde treba da se rekurzivno obrise i direktorijum
+#TODO: ovde treba da se rekurzivno obrise i direktorijum
             session.commit()
             self.update_channel_list()
 
@@ -1049,6 +987,7 @@ class Ui_MainWindow(object):
         for e in episodes:
             item = QtGui.QTreeWidgetItem(self.treeWidget_5)
             item.setText(0,e.channel.title)
+            item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+e.channel.logo)))
             item.setText(1,e.title)
             item.setText(2,str(e.size/1024/1024)+' MB')
             try:
@@ -1116,12 +1055,10 @@ class Ui_MainWindow(object):
 # dodati bold za channel koji ima novu epizodu. mislim da je to najefikasnije preko novog polja u bazi. 
 
     def updateProgressBarFromThread(self):
-#        print "MARKO"
-#        print ui.updateProgressBar.value()
         ui.updateProgressBar.setValue(ui.updateProgressBar.value()+1)
-#        ui.updateProgressBar.setText(ui.updateProgressBar.value()+1)
-#        self.listWidget.setStatusTip(QtCore.QString(str(ui.updateProgressBar.value()+1)))
-
+        if ui.updateProgressBar.value() == ui.numberOfChannels-1:
+            self.update_done()
+            
     
     def update_channel(self):
         self.QLineEdit1.hide()
@@ -1151,24 +1088,19 @@ class Ui_MainWindow(object):
         self.updateProgressBar.setValue(0)
         self.updateProgressBar.setFormat(QtCore.QString("%v" + " of " + "%m"))
         j=0
-        for i in ch:
-#            updtChTr=updateChannelThread(i)
-#            QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal2"),self.update_channel_list,QtCore.Qt.QueuedConnection)
-#            self.TTThread.append(updtChTr)
-#            updtChTr.start()
-            
+        for i in ch:            
             updtChTr.append(updateChannelThread(i,j))
-#            QtCore.QObject.connect(updtChTr[j],QtCore.SIGNAL("updatesignal2"),self.update_channel_list,QtCore.Qt.BlockingQueuedConnection)
             self.TTThread.append(updtChTr[j])
             QtCore.QObject.connect(updtChTr[j],QtCore.SIGNAL("updateProgressSignal"),self.updateProgressBarFromThread,QtCore.Qt.BlockingQueuedConnection)
             updtChTr[j].start()
             j=j+1
+
+    def update_done(self):
+            self.updateProgressBar.hide()
+            self.QLineEdit1.show()
+            self.QPushButton1.show()
+            self.update_channel_list()
             
-#        self.update_channel_list()
-#        print 'update Channel List'
-#        QtCore.QObject.moveToThread(updtChTr[j-1])
-#        QtCore.QObject.connect(updtChTr[j],QtCore.SIGNAL("updatesignal2"),self.update_channel_list,QtCore.Qt.QueuedConnection)
-  
     def dialog_add(self):
         filename = QtGui.QFileDialog.getOpenFileName(MainWindow, 'Open file','/home')
 #        file=open(filename)
@@ -1224,30 +1156,23 @@ class updateChannelThread(QtCore.QThread):
        
     def run(self):
         ui.Mutex.lock()
-        con = sqlite3.connect("/home/homoludens/.brePodder/podcasts.sqlite")
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
         con.isolation_level = None
         cur = con.cursor()
         self.updateChannel(self.test,cur)
-#        print self.test.title
-        
+       
         con.commit()
         cur.close()
         if self.newEpisodeExists:
-#            print self.newEpisodeExists
-#            print "self.newEpisodeExists"
-#            self.emit(QtCore.SIGNAL("updatesignal"))
             self.emit(QtCore.SIGNAL("updatesignal2"))
-#            self.emit(QtCore.SIGNAL("updatesignal_episodelist(PyQt_PyObject)"),self.test.title)
         ui.Mutex.unlock()
         self.emit(QtCore.SIGNAL("updateProgressSignal"))
  
-        if self.updateProgress == ui.numberOfChannels-1:
-            ui.updateProgressBar.hide()
-            ui.QLineEdit1.show()
-            ui.QPushButton1.show()
+#        if self.updateProgress == ui.numberOfChannels-1:
+#            ui.updateProgressBar.hide()
+#            ui.QLineEdit1.show()
+#            ui.QPushButton1.show()
 #            ui.update_channel_list()
-
-#        self.emit(QtCore.SIGNAL("updatesignal2"))
 #        ui.usedBytes.acquire()
 #        ui.freeBytes.release()
     
@@ -1275,18 +1200,14 @@ class updateChannelThread(QtCore.QThread):
             try:
                 aa=oldEpisodes.index(i.title)
             except ValueError:
-#                print "not in index"
                 aa=None
             
             if i.has_key('title') and aa==None:
 #                print 'epizoda NE postoji'
                 self.newEpisodeExists=1
                 if i.title:
-#                    newEpisode = Episode(title=i.title)
                     newEpisode['title']=i.title
-#                    print newEpisode['title']
                 else:
-#                    newEpisode = Episode(title=u'No Title')
                     newEpisode['title']=u'No Title'
                 if i.has_key('enclosures'):
                     newEpisode['enclosure'] = i.enclosures[0].href
@@ -1304,40 +1225,27 @@ class updateChannelThread(QtCore.QThread):
                 else:
                     newEpisode['description'] = u'No description'
                 if i.has_key('updated'):
-#                    print i.updated_parsed
-#                    epDate=strftime("%x", i.updated_parsed)
                     if i.updated_parsed:
                         epDate=mktime(i.updated_parsed)
                     else:
                         epDate=mktime(gmtime())
                     newEpisode['date'] = epDate
-#                    newEpisode.date = "12345"
                 else:
                     epDate=mktime(gmtime())
                 nEpisode=(newEpisode['title'], newEpisode['enclosure'], newEpisode['size'], newEpisode['date'], newEpisode['description'], newEpisode['status'], newEpisode['channel_id'])
                 cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', nEpisode)
-                
-                #                cc.episode.append(newEpisode)
             elif not i.has_key('title'):
                 print "NEMA NASLOVA EPIZODE"
-                
             else:
                 if j[2]!=u"old":
                     cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(j[0],) )
-#                   tt[aa].status=u"old"
-#                print 'epizoda posoji'
-#                newEpisode = Episode(title='pajseri nisu stavili naziv epizode')
-#        session.commit()
-#        session.close()
-#        ui.update_channel_list()
-#        ui.update_episode_list(cc.title)
-
 
     
 if __name__ == "__main__":
     import sys
     os.chdir(os.path.expanduser('~'))
-#    os.makedirs('.brePodder')
+    if not os.path.isdir('.brePodder'):
+        os.makedirs('.brePodder')
     os.chdir('.brePodder')
 #    os.makedirs('images')
     app = QtGui.QApplication(sys.argv)
