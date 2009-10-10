@@ -18,10 +18,41 @@ import re
 from time import gmtime, strftime, mktime, sleep
 from elixir import *
 import sqlalchemy
-import sys  
+import sys
 import sqlite3
+from Ui_add_folder import *
 
 sys.setappdefaultencoding('utf-8')  
+# constants
+
+draggable = QtCore.Qt.ItemIsDragEnabled
+droppable = QtCore.Qt.ItemIsDropEnabled
+editable  = QtCore.Qt.ItemIsEditable
+enabled   = QtCore.Qt.ItemIsEnabled
+selectable = QtCore.Qt.ItemIsSelectable 
+noflags = QtCore.Qt.NoItemFlags
+
+class treeViewWidget(QtGui.QTreeWidget):
+    def __init__(self, parent=None):
+      super(treeViewWidget, self).__init__(parent)
+      self.setAcceptDrops(True)
+      self.setDragEnabled(True)
+      self.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
+      self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
+
+    def dropEvent(self, event):
+        if self.itemAt(event.pos()).flags() & droppable:
+            print 'drop'
+        else:
+            print 'not folder'
+
+#      print dir(event)
+      
+#      event.setDropAction(QtCore.Qt.MoveAction)
+#      event.accept() 
+
+
+
 class Download(object):
     def setup(self):
         self.itemZaPrenos = None
@@ -372,7 +403,7 @@ class Ui_MainWindow(object):
         self.vboxlayout.setSpacing(-1)
         self.vboxlayout.setObjectName("vboxlayout")
 
-        self.listWidget = QtGui.QTreeWidget(self.widget)
+        self.listWidget = treeViewWidget(self.widget)
         
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred,QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -385,6 +416,18 @@ class Ui_MainWindow(object):
         self.listWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.listWidget.setObjectName("listWidget")
         self.listWidget.setAlternatingRowColors(True)
+        self.listWidget.setLineWidth(5)
+        self.listWidget.setMidLineWidth(8)
+        self.listWidget.setDragEnabled(True)
+        self.listWidget.setDragDropOverwriteMode(True)
+        self.listWidget.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
+        self.listWidget.setAlternatingRowColors(True)
+        self.listWidget.setIconSize(QtCore.QSize(18,-1))
+        self.listWidget.setIndentation(23)
+        self.listWidget.setRootIsDecorated(True)
+        self.listWidget.setUniformRowHeights(True)
+        self.listWidget.setSortingEnabled(True)
+        self.listWidget.setAnimated(True)
         self.vboxlayout.addWidget(self.listWidget)
         
 
@@ -567,6 +610,9 @@ class Ui_MainWindow(object):
         self.actionUpdateFeeds.setIcon(QtGui.QIcon("images/reload.png"))
         self.actionUpdateFeeds.setObjectName("actionUpdateFeeds")
         
+        self.actionNewFolder = QtGui.QAction(MainWindow)
+        self.actionNewFolder.setIcon(QtGui.QIcon("images/reload.png"))
+        self.actionNewFolder.setObjectName("actionNewFolder")
         
         self.actionCancel = QtGui.QAction(MainWindow)
         self.actionCancel.setIcon(QtGui.QIcon("images/cancel.png"))
@@ -587,9 +633,11 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.actionResume)
         
         self.menuChannels.addAction(self.actionUpdateFeeds)
-        self.menuChannels.addAction(self.actionCancel)
+        self.menuChannels.addAction(self.actionNewFolder)
         self.menuChannels.addAction(self.actionImport)
         self.menuChannels.addAction(self.actionExport)
+        self.menuPodcasts.addSeparator()
+        self.menuChannels.addAction(self.actionCancel)
         
         self.menuDownloads.addAction(self.actionUpdateFeeds)
         self.menuDownloads.addAction(self.actionCancel)
@@ -611,6 +659,7 @@ class Ui_MainWindow(object):
         QtCore.QObject.connect(self.treeWidget,QtCore.SIGNAL("itemClicked(QTreeWidgetItem*,int)"),self.DownloadActivated)
         QtCore.QObject.connect(self.trayIcon,QtCore.SIGNAL("activated(QSystemTrayIcon::ActivationReason)"),self.trayIconActivated)
         QtCore.QObject.connect(self.actionUpdateFeeds,QtCore.SIGNAL("activated()"),self.update_channel)
+        QtCore.QObject.connect(self.actionNewFolder,QtCore.SIGNAL("activated()"),self.create_new_foder)
         QtCore.QObject.connect(self.actionQuit,QtCore.SIGNAL("activated()"),self.app_quit)
         QtCore.QObject.connect(self.actionCancel,QtCore.SIGNAL("activated()"),self.delete_channel)
         QtCore.QObject.connect(self.actionUpdateAllChannels,QtCore.SIGNAL("activated()"),self.update_all_channels)
@@ -722,8 +771,9 @@ class Ui_MainWindow(object):
         self.actionNew.setText(QtGui.QApplication.translate("MainWindow", "Add New", None, QtGui.QApplication.UnicodeUTF8))
         self.actionUpdateAllChannels.setText(QtGui.QApplication.translate("MainWindow", "Update All", None, QtGui.QApplication.UnicodeUTF8))
         self.actionQuit.setText(QtGui.QApplication.translate("MainWindow", "Quit", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionUpdateFeeds.setText(QtGui.QApplication.translate("MainWindow", "Fetch feed", None, QtGui.QApplication.UnicodeUTF8))
-    
+        self.actionUpdateFeeds.setText(QtGui.QApplication.translate("MainWindow", "Fetch Feed", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionNewFolder.setText(QtGui.QApplication.translate("MainWindow", "New Folder", None, QtGui.QApplication.UnicodeUTF8))
+
     
     def trayIconActivated(self, reason):
         if reason==3  or reason ==2:
@@ -950,10 +1000,11 @@ class Ui_MainWindow(object):
 
     def channel_activated(self):
         selection = self.listWidget.selectedItems()
-        self.update_episode_list(selection[0].text(0).toUtf8().data().decode('UTF8'))
-        self.CurrentChannel=selection[0].text(0).toUtf8().data().decode('UTF8')
-        self.actionCancel.setToolTip("Delete Selected Channel")
-        self.actionUpdateFeeds.setToolTip("Update Selected Channel")
+        if selection:
+            self.update_episode_list(selection[0].text(0).toUtf8().data().decode('UTF8'))
+            self.CurrentChannel=selection[0].text(0).toUtf8().data().decode('UTF8')
+            self.actionCancel.setToolTip("Delete Selected Channel")
+            self.actionUpdateFeeds.setToolTip("Update Selected Channel")
         
     
     def delete_channel(self):
@@ -1037,21 +1088,22 @@ class Ui_MainWindow(object):
          
     def update_channel_list(self):
         channels = Channel.query.all()
+        folders = Taxonomy.query.all()
         self.listWidget.clear()
+        for title in folders:
+            itemF = QtGui.QTreeWidgetItem(self.listWidget)
+            itemF.setText(0, title.title)
+            itemF.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/images/directory.png')))
+            itemF.setFlags(enabled|droppable)
+            
         for title in channels:
             item = QtGui.QTreeWidgetItem(self.listWidget)
             if title.episode[-1].status == u'new':
                 item.setFont(0, self.fontBold)
             item.setText(0, title.title)
-#        print self.freeBytes.available()
-#        self.freeBytes.release()
-#        print self.freeBytes.available()
-#            item.setIcon(0, QtGui.QIcon(os.path.expanduser('~')+'/.brePodder/'+title.logo))
             item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+title.logo)))
-
-#            print os.path.expanduser('~')+'/.brePodder/'+title.logo
             item.setToolTip(0,"<p><img src="+"'"+title.logobig+"'"+"></p><p style='font-size:20pt'><b>"+title.title+"</b></p><a href="+title.link+">"+title.link+"</a>")
- 
+            item.setFlags(enabled|draggable|selectable)
 # dodati bold za channel koji ima novu epizodu. mislim da je to najefikasnije preko novog polja u bazi. 
 
     def updateProgressBarFromThread(self):
@@ -1059,7 +1111,21 @@ class Ui_MainWindow(object):
         if ui.updateProgressBar.value() == ui.numberOfChannels-1:
             self.update_done()
             
-    
+    def create_new_foder(self):
+        text, ok = QtGui.QInputDialog.getText(MainWindow, 'Input Dialog', 'Enter name for new folder:')
+        
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con.isolation_level = None
+        cur = con.cursor()
+
+        if ok:
+            con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+            con.isolation_level = None
+            cur2 = con.cursor()
+            cur2.execute('insert into sql_taxonomy(title) values (?)', (text.toUtf8().data(),))
+            
+
+        
     def update_channel(self):
         self.QLineEdit1.hide()
         self.QPushButton1.hide()
@@ -1071,8 +1137,10 @@ class Ui_MainWindow(object):
         updtChTr=updateChannelThread(ch,0)
         QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal"),self.update_channel_list,QtCore.Qt.QueuedConnection)
         QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal_episodelist(PyQt_PyObject)"),self.update_episode_list,QtCore.Qt.QueuedConnection)
+        QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updateDoneSignal"),self.update_done, QtCore.Qt.BlockingQueuedConnection)
         self.ttthread=updtChTr
         updtChTr.start()
+        
 
         
     def update_all_channels(self):
@@ -1167,7 +1235,11 @@ class updateChannelThread(QtCore.QThread):
             self.emit(QtCore.SIGNAL("updatesignal2"))
         ui.Mutex.unlock()
         self.emit(QtCore.SIGNAL("updateProgressSignal"))
- 
+        
+        
+        if self.updateProgress == 0:
+            self.emit(QtCore.SIGNAL("updateDoneSignal"))
+
 #        if self.updateProgress == ui.numberOfChannels-1:
 #            ui.updateProgressBar.hide()
 #            ui.QLineEdit1.show()
@@ -1257,4 +1329,5 @@ if __name__ == "__main__":
     ui.update_channel_list()
     ui.update_lastest_episodes_list()
     ui.update_newest_episodes_list()
+#    print ui.memory_usage()
     sys.exit(app.exec_())

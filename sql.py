@@ -5,7 +5,7 @@ sys.setappdefaultencoding('utf-8')
 
 metadata.bind = "sqlite:////home/homoludens/.brePodder/podcasts.sqlite"
 metadata.bind.echo = False
-#options_defaults['autosetup'] = True
+options_defaults['autosetup'] = True
 
 class Channel(Entity):
     title = Field(Unicode(30))
@@ -15,6 +15,7 @@ class Channel(Entity):
     logo = Field(Unicode(256))
     logobig = Field(Unicode(256))
     episode = OneToMany('Episode')    # <-- add this line
+    folder = ManyToOne('Taxonomy') 
     
     def __repr__(self):
         return ' "%s" (%s) ' % (self.title,self.link)
@@ -31,7 +32,10 @@ class Episode(Entity):
     status=Field(Unicode(16)) #status epizode: new, downloaded, deleted, old
     channel = ManyToOne('Channel', ondelete="cascade")         # <-- and this one
     
-    
+class Taxonomy(Entity):
+    title = Field(Unicode(60))
+    folder = OneToMany('Channel')
+
 setup_all(True)
 
 
