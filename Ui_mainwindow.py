@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'brePodder/mainwindow.ui'
-#
-# Created: Tue Jan 29 20:12:18 2008
-#      by: PyQt4 UI code generator 4.3.1
-#
-
 from PyQt4 import QtCore, QtGui,  QtNetwork,  QtTest,  QtWebKit
 import feedparser
 from sql import *
@@ -67,6 +61,8 @@ class Download(object):
         self.urlRedirect=None
         self.locationRedirect = None
         self.httpRequestAborted = False
+        self.faviconFound=False
+#        self.p=re.compile("\W") 
        
     def downloadFile(self, link, item):
         self.CurDir = os.getcwd()
@@ -77,8 +73,8 @@ class Download(object):
         httpIndex=ui.itemsDownloading.index(self.itemZaPrenos.text(5))
         
         # Qt 4.4+ doesn't wont to show images named favicon.ico, favicon.icon is ok
-        if '.ico' in fileName:
-            fileName = fileName.replace('.ico','.icon')
+#        if '.ico' in fileName:
+#            fileName = fileName.replace('.ico','.icon')
             
         if QtCore.QFile.exists(fileName):
             if self.locationRedirect:
@@ -122,7 +118,7 @@ class Download(object):
         ui.outFile.append(QtCore.QFile(fileName))
         of=len(ui.outFile)-1
         ht=len(ui.http)-1
-        print "ht " + str(ht)
+#        print "ht " + str(ht)
         
         QtCore.QObject.connect(ui.actionCancel,QtCore.SIGNAL("activated()"),self.cancelDownload)
         QtCore.QObject.connect(ui.actionPause,QtCore.SIGNAL("activated()"),self.pauseDownload)
@@ -160,25 +156,23 @@ class Download(object):
         ui.httpGetId.append(ui.http[ht].request(self.header, self.q, ui.outFile[of]))
     
     def responseHeaderReceived(self, header):
-        if header.statusCode() == 200:
-            print 'Link OK!'
-        if header.statusCode() == 206:
-            print 'Link Resuming!'
-        elif header.statusCode() in [301, 302]: # Moved permanently or temporarily
+#        if header.statusCode() == 200:
+#            print 'Link OK!'
+#        if header.statusCode() == 206:
+#            print 'Link Resuming!'
+        if header.statusCode() in [301, 302]: # Moved permanently or temporarily
             if header.hasKey('Location'):
                 self.locationRedirect = str(header.value('Location'))
         else:
-            print header.statusCode()
-
-        
+            print header.statusCode()       
         sidkey = "set-cookie"
         if header.hasKey(sidkey):
             print header.value(sidkey)
             
     def httpRequestFinished(self, requestId, error):
-        print "httpRequestFinished"
-        print requestId
-        print error
+#        print "httpRequestFinished"
+#        print requestId
+#        print error
         if ui.tab_2.isVisible() and error:
 #TODO kada se download zavrsi ovo pravi probleme, jer nista nije izabrano
             of=ui.itemsDownloading.index(ui.itemZaPrekid.text(5))
@@ -208,10 +202,10 @@ class Download(object):
 #            self.header=QtNetwork.QHttpRequestHeader(self.get, self.urlRedirect.path().replace(" ", "%20"))
 #            self.header.setValue("Host", self.urlRedirect.host()) 
 #            ui.httpGetId.append(self.http[ht].request(self.header, self.q, ui.outFile[of]))
-        else:
+#        else:
 # Never, ever close a file if you plan to write to it latter... or maybe you can re-open it.
 #            ui.outFile[of].close()
-            print ui.outFile[of]
+#            print ui.outFile[of]
             
         if error and not self.paused and ui.outFile[of] is not None:
             os.chdir(self.CurDir)
@@ -219,9 +213,9 @@ class Download(object):
             ui.outFile[of].remove()
             ui.outFile[of] = None
             os.chdir(os.path.expanduser('~')+'/.brePodder')
-        elif not self.paused:
+#        elif not self.paused:
 #            fileName = QtCore.QFileInfo(QtCore.QUrl(self.QLineEdit1.text()).path()).fileName()
-            print ui.outFile[of]
+#            print ui.outFile[of]
 #            ui.outFile[of] = None
     
     def updateDataReadProgress(self, bytesRead, totalBytes):
@@ -236,9 +230,8 @@ class Download(object):
             self.resumed=False
             self.tempBytes=self.bytesRead
             
-        self.bytesRead=self.tempBytes+bytesRead
-        self.itemZaPrenos.setText(3, str(self.bytesRead/1048576)+" MB")
-        
+        self.bytesRead=self.tempBytes+bytesRead     
+        self.itemZaPrenos.setText(3,ui.getReadableSize(self.bytesRead)) 
     
     def downloadDone(self, done):
         print "downloadDone"
@@ -248,8 +241,8 @@ class Download(object):
         if not done:
             url =  self.itemZaPrenos.text(5).toUtf8().data()
             
-            p=re.compile("\W")  
-            ChannelDir = p.sub("",self.itemZaPrenos.text(0).toUtf8().data())
+#            p=re.compile("\W")  
+            ChannelDir = ui.p.sub("",self.itemZaPrenos.text(0).toUtf8().data())
 #            e.channel.title #ovde smeju da stignu samo ascii karakteri jer je to ime foldera
 
             #ova linija me nesto drka kada dodajem novi kanal. trebalo bi da je proverim i vidim sta ce mi
@@ -262,13 +255,17 @@ class Download(object):
 #            fileName = url[i+1:]
 
             os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
-            if file[-3:]=='ico':
+            if file[-3:]=='ico' and self.faviconFound:
+                self.faviconFound = False
                 #TODO: this is bad and system depended, but... 
                 #TODO: Remove this 'convert' command - maybe i don't even need it
-                if os.system('convert '+file.replace(" ","\ ")+'[0] png:'+file.replace(" ","\ "))!=0:
-                    os.system('cp ../images/musicstore.png '+file+'n')
-                                     
-            elif file[-3:]=='png' or file[-3:]=='PNG' or file[-3:]=='jpg' or file[-3:]=='JPG':
+#                if os.system('convert '+file.replace(" ","\ ")+'[0] png:'+file.replace(" ","\ "))!=0:
+#                    print "convert fail"
+#                    os.system('cp ../images/musicstore.png '+file)
+#                    os.system('cp ../images/musicstore.png '+file+'n')
+            elif self.faviconFound:
+                print "favicon: "+file
+            elif (file[-3:]=='png' or file[-3:]=='PNG' or file[-3:]=='jpg' or file[-3:]=='JPG'):
                 print 'logoBig:' +file
                 size = 128, 128
                 try:
@@ -277,7 +274,7 @@ class Download(object):
                     im.save('128'+file)
                 except IOError:
                     print IOError
-                    Image.open('../images/musicstore.png').save(file, 'PNG')
+#                    Image.open('../images/musicstore.png').save(file, 'PNG')
             else:
                 try:
                     e=Episode.query.filter_by(enclosure=self.itemZaPrenos.text(5).toUtf8().data().decode('UTF8')).one()
@@ -287,7 +284,7 @@ class Download(object):
                     print 'InvalidRequestError'
                 session.commit()
             os.chdir(os.path.expanduser('~')+'/.brePodder')
-            self.itemZaPrenos.setText(3, "DONE")
+#            self.itemZaPrenos.setText(3, "DONE")
             ui.update_lastest_episodes_list()
         else:
             print "Download Error!"
@@ -319,8 +316,8 @@ class Download(object):
         if ui.tab_2.isVisible():
             if self.itemZaPrenos == ui.itemZaPrekid:
                 self.itemZaPrenos.setText(3, "RESUMED")
-                p=re.compile("\W")  
-                ChannelDir = p.sub("",self.itemZaPrenos.text(0).toAscii().data())
+#                p=re.compile("\W")  
+                ChannelDir = ui.p.sub("",self.itemZaPrenos.text(0).toAscii().data())
                 os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
                 resumeLink=self.itemZaPrenos.text(5).toAscii().data()
                 item=self.itemZaPrenos
@@ -353,6 +350,7 @@ class Ui_MainWindow(object):
         self.Mutex = QtCore.QMutex()
 #        self.freeBytes.acquire()
         self.itemsDownloading=[]
+        self.p=re.compile("\W")
 
     def memory_usage(a):
         """Memory usage of the current process in kilobytes."""
@@ -786,8 +784,8 @@ class Ui_MainWindow(object):
 # TODO: download images from episode description so i can show them in QTextBrowser
 # this is beta... :)
     def getImageFromDesc(self, desc,  channel):
-        p=re.compile("\W")  
-        ChannelDir = p.sub("",channel.title)
+#        p=re.compile("\W")  
+        ChannelDir = self.p.sub("",channel.title)
         os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
         
         match_obj = self.compile_obj.findall(desc)
@@ -842,14 +840,14 @@ class Ui_MainWindow(object):
 # TODO: change backgroundColor or something else with QBrush
         a.setFont(0, self.fontBold)   
         e=Episode.query.filter_by(title=a.text(0).toUtf8().data().decode('UTF8')).one()
-        p=re.compile("\W")  
-        ChannelDir = p.sub("",e.channel.title)
+#        p=re.compile("\W")  
+        ChannelDir = self.p.sub("",e.channel.title)
         
         os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
         item = QtGui.QTreeWidgetItem(self.treeWidget)
         item.setText(0,e.channel.title)
         item.setText(1,e.title)
-        item.setText(2,str(e.size/1048576)+" MB")
+        item.setText(2,self.getReadableSize(e.size))
         item.setText(3,'0')
         item.setText(4,'0')
 
@@ -882,8 +880,8 @@ class Ui_MainWindow(object):
         else:
             ChannelTitle=feedLink
             
-        p=re.compile("\W")  
-        ChannelDir = p.sub("",ChannelTitle)
+#        p=re.compile("\W")  
+        ChannelDir = self.p.sub("",ChannelTitle)
         os.makedirs(ChannelDir)
         os.chdir(ChannelDir)
 #        os.makedirs(ChannelTitle.decode())
@@ -934,8 +932,8 @@ class Ui_MainWindow(object):
 #        ifavicon=url.rfind('/')
 #        favicon=url[ifavicon+1:]
         logo_file=ChannelDir +'/'+favicon
-        if '.ico' in logo_file :
-            logo_file = logo_file.replace('.ico','.icon')
+#        if '.ico' in logo_file :
+#            logo_file = logo_file.replace('.ico','.icon')
         item2 = QtGui.QTreeWidgetItem(self.treeWidget)
         item2.setText(0,w.feed.title)
         item2.setText(1,url)
@@ -945,6 +943,7 @@ class Ui_MainWindow(object):
         self.dd.append(Download())
         ht=len(self.dd)-1
         self.dd[ht].setup()
+        self.dd[ht].faviconFound=True
         self.dd[ht].downloadFile( url, item2)
         
         
@@ -1016,7 +1015,12 @@ class Ui_MainWindow(object):
                 ch.episode[j].delete()
                 j=j+1
             ch.delete()
-#TODO: ovde treba da se rekurzivno obrise i direktorijum
+
+#            p=re.compile("\W")  
+            os.chdir(os.path.expanduser('~')+'/.brePodder/')
+            ChannelDir = os.path.expanduser('~')+'/.brePodder/'+self.p.sub("",ch.title)
+            import shutil
+            shutil.rmtree(ChannelDir)
             session.commit()
             self.update_channel_list()
 
@@ -1028,7 +1032,7 @@ class Ui_MainWindow(object):
             item = QtGui.QTreeWidgetItem(self.treeWidget_4)
             item.setText(0,e.channel.title)
             item.setText(1,e.title)
-            item.setText(2,str(e.size/1024/1024)+' MB')
+            item.setText(2,self.getReadableSize(e.size))
             item.setText(3,os.path.expanduser('~')+'/.brePodder/'+str(e.localfile))
             
 #newest episodes
@@ -1040,7 +1044,10 @@ class Ui_MainWindow(object):
             item.setText(0,e.channel.title)
             item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+e.channel.logo)))
             item.setText(1,e.title)
-            item.setText(2,str(e.size/1024/1024)+' MB')
+            if e.size:
+                item.setText(2,self.getReadableSize(e.size))
+            else:
+                item.setText(2,'???')
             try:
                 b=gmtime(float(e.date))
                 epDate=strftime("%x", b)
@@ -1050,10 +1057,21 @@ class Ui_MainWindow(object):
             item.setText(3,epDate)
     
     def LastestEpisodeDoubleClicked(self, a):
-        print  a.text(3).toUtf8().data().decode('UTF8')
+#        print  a.text(3).toUtf8().data().decode('UTF8')
         os.system("mplayer "+a.text(3).toUtf8().data().decode('UTF8'))
         
-        
+    def getReadableSize(self,  size):
+        if size:
+            if (size) > 1024*1024:
+                sizeReadable = str(size/1024/1024)+' MB'
+            elif (size) > 1024:
+                sizeReadable = str(size/1024)+' kB'
+            else:   
+                sizeReadable = str(size)+' B'
+        else:
+            sizeReadable = 'None'
+        return sizeReadable
+    
     def update_episode_list(self,channel_Title):
 #        cc = Channel.query.filter_by(title=channel_Title.toUtf8().data()).one()
         cc = Channel.query.filter_by(title=channel_Title).one()
@@ -1067,14 +1085,7 @@ class Ui_MainWindow(object):
             else:
                 item2.setIcon(0,QtGui.QIcon("images/mp3.png"))
             item2.setText(0,t.title)
-            
-            if t.size:
-                if (t.size) > 1024*1024:
-                    item2.setText(1,str(t.size/1024/1024)+' MB')
-                else:   
-                    item2.setText(1,str(t.size)+' B')
-            else:
-                item2.setText(1, 'None')
+            item2.setText(1,self.getReadableSize(t.size))
             try:
                 b=gmtime(float(t.date))
                 epDate=strftime("%x", b)
@@ -1102,7 +1113,7 @@ class Ui_MainWindow(object):
                 item.setFont(0, self.fontBold)
             item.setText(0, title.title)
             item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+title.logo)))
-            item.setToolTip(0,"<p><img src="+"'"+title.logobig+"'"+"></p><p style='font-size:20pt'><b>"+title.title+"</b></p><a href="+title.link+">"+title.link+"</a>")
+#            item.setToolTip(0,"<p><img src="+"'"+title.logobig+"'"+"></p><p style='font-size:20pt'><b>"+title.title+"</b></p><a href="+title.link+">"+title.link+"</a>")
             item.setFlags(enabled|draggable|selectable)
 # dodati bold za channel koji ima novu epizodu. mislim da je to najefikasnije preko novog polja u bazi. 
 

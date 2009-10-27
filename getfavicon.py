@@ -22,10 +22,9 @@ def getIcoUrl(url):
 		ICONREGEX = "<link rel=\"shortcut\ icon\" (?:.*?)href=(?:['|\"])(.[^'|\"|\s]{0,})(?:['|\"])(?:.*)/>"
 		results = re.search(ICONREGEX, data, re.I)
 	if results != None:
-		print 'ima rezultata'
 		# Found the requested URL of the favourite icon
 		icourl = results.groups()[0]
-		# the base url is already known to be valid, so we
+        # the base url is already known to be valid, so we
 		# don't need to check that the join works.
 		# If the icon's url is invalid, we'll let
 		# loadResizeImage handle the inability to retrieve it
