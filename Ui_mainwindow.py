@@ -882,7 +882,10 @@ class Ui_MainWindow(object):
             
 #        p=re.compile("\W")  
         ChannelDir = self.p.sub("",ChannelTitle)
-        os.makedirs(ChannelDir)
+        try:
+            os.mkdir(ChannelDir)
+        except:
+            print "directory exists"
         os.chdir(ChannelDir)
 #        os.makedirs(ChannelTitle.decode())
 #        os.chdir(ChannelTitle)
