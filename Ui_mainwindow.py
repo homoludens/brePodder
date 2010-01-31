@@ -1237,9 +1237,14 @@ class Ui_MainWindow(object):
         app.exit()
     
     def export_opml(self):
-        ch=Channel.query.all()
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con.isolation_level = None
+        cur = con.cursor()       
+        cur.execute('select * from sql_channel')
+        channels = cur.fetchall()
+        
         o=opml.Exporter('brePodder.opml')
-        o.write(ch)
+        o.write(channels)
         
     def import_opml(self):
 #        ch=Channel.query.all()

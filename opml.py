@@ -39,9 +39,9 @@ class Exporter(object):
         document for the supplied channel.
         """
         outline = doc.createElement( 'outline')
-        outline.setAttribute( 'title', channel.title)
-        outline.setAttribute( 'text', channel.description)
-        outline.setAttribute( 'xmlUrl', channel.link)
+        outline.setAttribute( 'title', channel[1])
+        outline.setAttribute( 'text', channel[4])
+        outline.setAttribute( 'xmlUrl', channel[2])
         outline.setAttribute( 'type', self.FEED_TYPE)
         return outline
 
@@ -58,7 +58,7 @@ class Exporter(object):
         
         opml = doc.createElement( 'opml')
         opml.setAttribute( 'version', '1.1')
-        doc.appendChild( opml)
+        doc.appendChild(opml)
 
         head = doc.createElement( 'head')
         head.appendChild( self.create_node( doc, 'title', 'brePodder subscriptions'))
