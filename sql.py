@@ -5,7 +5,9 @@ sys.setappdefaultencoding('utf-8')
 
 metadata.bind = "sqlite:////home/homoludens/.brePodder/podcasts.sqlite"
 metadata.bind.echo = False
-options_defaults['autosetup'] = True
+#options_defaults['autosetup'] = True
+
+setup_all()
 
 class Channel(Entity):
     title = Field(Unicode(30))
@@ -35,6 +37,8 @@ class Episode(Entity):
 class Taxonomy(Entity):
     title = Field(Unicode(60))
     folder = OneToMany('Channel')
+
+setup_all()
 
 setup_all(True)
 

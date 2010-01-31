@@ -1,20 +1,24 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore, QtGui,  QtNetwork,  QtTest,  QtWebKit
-import feedparser
-from sql import *
+from PyQt4 import QtCore, QtGui
+#,  QtNetwork,  QtTest,  QtWebKit
+#import feedparser
 import os
-from getfavicon import getIcoUrl
+#from getfavicon import getIcoUrl
 #from Download import *
-import Image
-import opml
+#import Image
+#import opml
 import re
 from time import gmtime, strftime, mktime, sleep
 from elixir import *
 import sqlalchemy
 import sys
 import sqlite3
-from Ui_add_folder import *
+from sql import *
+#from Ui_add_folder import *
+
+setup_all()
 
 sys.setappdefaultencoding('utf-8')  
 # constants
@@ -35,15 +39,39 @@ class treeViewWidget(QtGui.QTreeWidget):
       self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
 
     def dropEvent(self, event):
-        if self.itemAt(event.pos()).flags() & droppable:
-            print 'drop'
+        if self.itemAt(event.pos()).flags() & droppable:         
+#            what = self.selectedItems()[0].text(0)
+#            where = self.itemAt(event.pos()).text(0)
+#            ch=Channel.query.filter_by(title=self.selectedItems()[0].text(0)).one()
+#            tx=Taxonomy.query.filter_by(title=self.itemAt(event.pos()).text(0)).one()           
+            con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+            con.isolation_level = None
+            cur = con.cursor()
+            cur.execute('select id from sql_channel where title = ?', [self.selectedItems()[0].text(0).toUtf8().data(),]) 
+            ch_id = cur.fetchone()[0]
+            cur.execute('select id from sql_taxonomy where title = ?', (self.itemAt(event.pos()).text(0).toUtf8().data(),))
+            tx_id = cur.fetchone()[0]   
+            cur.execute('update sql_channel set folder_id = :tx_id  where id = :ch_id', {"tx_id": tx_id, "ch_id": ch_id})
+            con.commit()
+            cur.close()
+            ui.update_channel_list()
         else:
             print 'not folder'
 
 #      print dir(event)
-      
 #      event.setDropAction(QtCore.Qt.MoveAction)
 #      event.accept() 
+
+    def dropMimeData(self, parent, row, data, action):
+        if action == QtCore.Qt.MoveAction:
+            return self.moveSelection(parent, row)
+        return False
+
+    def dragEnterEvent(self, event):
+            event.accept()
+            print 'drag'
+
+
 
 
 
@@ -62,7 +90,7 @@ class Download(object):
         self.locationRedirect = None
         self.httpRequestAborted = False
         self.faviconFound=False
-#        self.p=re.compile("\W") 
+        self.i = 0
        
     def downloadFile(self, link, item):
         self.CurDir = os.getcwd()
@@ -118,7 +146,6 @@ class Download(object):
         ui.outFile.append(QtCore.QFile(fileName))
         of=len(ui.outFile)-1
         ht=len(ui.http)-1
-#        print "ht " + str(ht)
         
         QtCore.QObject.connect(ui.actionCancel,QtCore.SIGNAL("activated()"),self.cancelDownload)
         QtCore.QObject.connect(ui.actionPause,QtCore.SIGNAL("activated()"),self.pauseDownload)
@@ -156,23 +183,18 @@ class Download(object):
         ui.httpGetId.append(ui.http[ht].request(self.header, self.q, ui.outFile[of]))
     
     def responseHeaderReceived(self, header):
-#        if header.statusCode() == 200:
-#            print 'Link OK!'
-#        if header.statusCode() == 206:
-#            print 'Link Resuming!'
         if header.statusCode() in [301, 302]: # Moved permanently or temporarily
             if header.hasKey('Location'):
                 self.locationRedirect = str(header.value('Location'))
-        else:
+        elif header.statusCode() not in [200, 206]:
             print header.statusCode()       
         sidkey = "set-cookie"
         if header.hasKey(sidkey):
             print header.value(sidkey)
             
     def httpRequestFinished(self, requestId, error):
-#        print "httpRequestFinished"
-#        print requestId
-#        print error
+        self.i=self.i+1
+        print self.i
         if ui.tab_2.isVisible() and error:
 #TODO kada se download zavrsi ovo pravi probleme, jer nista nije izabrano
             of=ui.itemsDownloading.index(ui.itemZaPrekid.text(5))
@@ -202,9 +224,12 @@ class Download(object):
 #            self.header=QtNetwork.QHttpRequestHeader(self.get, self.urlRedirect.path().replace(" ", "%20"))
 #            self.header.setValue("Host", self.urlRedirect.host()) 
 #            ui.httpGetId.append(self.http[ht].request(self.header, self.q, ui.outFile[of]))
-#        else:
+        elif self.i==2:
 # Never, ever close a file if you plan to write to it latter... or maybe you can re-open it.
-#            ui.outFile[of].close()
+            ui.outFile[of].close()
+            print "ui.outFile"
+            print ui.outFile
+            print of
 #            print ui.outFile[of]
             
         if error and not self.paused and ui.outFile[of] is not None:
@@ -219,7 +244,6 @@ class Download(object):
 #            ui.outFile[of] = None
     
     def updateDataReadProgress(self, bytesRead, totalBytes):
-#        print "updateDataReadProgress"
         if self.httpRequestAborted:
             return
         if not self.resumed:
@@ -233,27 +257,18 @@ class Download(object):
         self.bytesRead=self.tempBytes+bytesRead     
         self.itemZaPrenos.setText(3,ui.getReadableSize(self.bytesRead)) 
     
-    def downloadDone(self, done):
-        print "downloadDone"
+    def downloadDone(self, error):
+#        print "downloadDone"
         if self.urlRedirect:
             self.urlRedirect = None
 #            return
-        if not done:
+        if not error:
             url =  self.itemZaPrenos.text(5).toUtf8().data()
-            
-#            p=re.compile("\W")  
             ChannelDir = ui.p.sub("",self.itemZaPrenos.text(0).toUtf8().data())
-#            e.channel.title #ovde smeju da stignu samo ascii karakteri jer je to ime foldera
-
             #ova linija me nesto drka kada dodajem novi kanal. trebalo bi da je proverim i vidim sta ce mi
-            
             url_done = QtCore.QUrl(url)
             fileInfo = QtCore.QFileInfo(url_done.path())
             file = QtCore.QString(fileInfo.fileName()).toUtf8().data()
-            
-#            i = url.rfind('/')
-#            fileName = url[i+1:]
-
             os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
             if file[-3:]=='ico' and self.faviconFound:
                 self.faviconFound = False
@@ -266,7 +281,7 @@ class Download(object):
             elif self.faviconFound:
                 print "favicon: "+file
             elif (file[-3:]=='png' or file[-3:]=='PNG' or file[-3:]=='jpg' or file[-3:]=='JPG'):
-                print 'logoBig:' +file
+#                print 'logoBig:' +file
                 size = 128, 128
                 try:
                     im = Image.open(file)
@@ -277,7 +292,7 @@ class Download(object):
 #                    Image.open('../images/musicstore.png').save(file, 'PNG')
             else:
                 try:
-                    e=Episode.query.filter_by(enclosure=self.itemZaPrenos.text(5).toUtf8().data().decode('UTF8')).one()
+                    c
                     e.localfile=ChannelDir.decode('utf8')+'/'+ file.decode('utf8')
                     e.status=u'downloaded'
                 except:
@@ -1029,8 +1044,8 @@ class Ui_MainWindow(object):
 
 #last 20 downloadowed episodes
     def update_lastest_episodes_list(self):
-        episodes=Episode.query().filter_by(status=u'downloaded').limit(20).all()
-        self.treeWidget_4.clear()
+        episodes=Episode.query.filter_by(status=u'downloaded').order_by(Episode.id.desc()).limit(50).all()
+	self.treeWidget_4.clear()
         for e in episodes:
             item = QtGui.QTreeWidgetItem(self.treeWidget_4)
             item.setText(0,e.channel.title)
@@ -1040,7 +1055,7 @@ class Ui_MainWindow(object):
             
 #newest episodes
     def update_newest_episodes_list(self):
-        episodes=Episode.query().order_by(Episode.date.desc()).limit(40).all()
+        episodes=Episode.query.order_by(Episode.date.desc()).limit(40).all()
         self.treeWidget_5.clear()
         for e in episodes:
             item = QtGui.QTreeWidgetItem(self.treeWidget_5)
@@ -1078,7 +1093,8 @@ class Ui_MainWindow(object):
     def update_episode_list(self,channel_Title):
 #        cc = Channel.query.filter_by(title=channel_Title.toUtf8().data()).one()
         cc = Channel.query.filter_by(title=channel_Title).one()
-        self.QTextBrowser1.setHtml("<p><img src="+"'"+cc.logobig+"'"+"><br>\n\n</p><p>"+cc.description+"</p><p><b>Homepage: </b><a href="+cc.homepage+">"+cc.homepage+"</a><p>")
+#        self.QTextBrowser1.setHtml("<p><img src="+"'"+cc.logobig+"'"+"><br>\n\n</p><p>"+cc.description+"</p><p><b>Homepage: </b><a href="+cc.homepage+">"+cc.homepage+"</a><p>")
+        self.QTextBrowser1.setHtml("<p>"+cc.description+"</p><p><b>Homepage: </b><a href="+cc.homepage+">"+cc.homepage+"</a></p>")
         tt = Episode.query.filter(Episode.channel.has(title=channel_Title)).order_by(Episode.date.desc()).all() 
         self.treeWidget_2.clear()
         for t in tt:
@@ -1101,24 +1117,49 @@ class Ui_MainWindow(object):
                 item2.setFont(0, self.fontBold)
          
     def update_channel_list(self):
-        channels = Channel.query.all()
-        folders = Taxonomy.query.all()
+        
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con.isolation_level = None
+        cur = con.cursor()
+        
+        cur.execute('select * from sql_channel where folder_id IS NULL')
+        channels = cur.fetchall()
+        
+        cur.execute('select * from sql_taxonomy')
+        folders = cur.fetchall()
+        
+#        channels = Channel.query.all()
+#        folders = Taxonomy.query.all()
+        
         self.listWidget.clear()
-        for title in folders:
+        
+        for folder in folders:
             itemF = QtGui.QTreeWidgetItem(self.listWidget)
-            itemF.setText(0, title.title)
+            itemF.setText(0, folder[1])
             itemF.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/images/directory.png')))
-            itemF.setFlags(enabled|droppable)
+            itemF.setFlags(enabled|droppable)      
+#            childChannels = Channel.query.filter_by(folder_id=folder.id).all()
+            cur.execute('select * from sql_channel where folder_id = ?',(folder[0],))
+            childChannels = cur.fetchall()
             
-        for title in channels:
+            
+            for childChannel in childChannels:
+                itemChildChannel = QtGui.QTreeWidgetItem(itemF)
+                itemChildChannel.setText(0, childChannel[1])
+                itemChildChannel.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+childChannel[5])))
+                itemF.addChild(itemChildChannel)
+            
+        for channel in channels:
             item = QtGui.QTreeWidgetItem(self.listWidget)
-            if title.episode[-1].status == u'new':
-                item.setFont(0, self.fontBold)
-            item.setText(0, title.title)
-            item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+title.logo)))
-#            item.setToolTip(0,"<p><img src="+"'"+title.logobig+"'"+"></p><p style='font-size:20pt'><b>"+title.title+"</b></p><a href="+title.link+">"+title.link+"</a>")
+#            if channel.episode[-1].status == u'new':
+#                item.setFont(0, self.fontBold)
+            item.setText(0, channel[1])
+            item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+channel[5])))
+#            item.setToolTip(0,"<p><img src="+"'"+channel.logobig+"'"+"></p><p style='font-size:20pt'><b>"+channel.title+"</b></p><a href="+channel.link+">"+channel.link+"</a>")
             item.setFlags(enabled|draggable|selectable)
 # dodati bold za channel koji ima novu epizodu. mislim da je to najefikasnije preko novog polja u bazi. 
+
+        cur.close()
 
     def updateProgressBarFromThread(self):
         ui.updateProgressBar.setValue(ui.updateProgressBar.value()+1)
