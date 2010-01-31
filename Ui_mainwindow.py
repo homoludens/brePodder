@@ -18,7 +18,7 @@ import sqlite3
 from sql import *
 #from Ui_add_folder import *
 
-setup_all()
+#setup_all()
 
 sys.setappdefaultencoding('utf-8')  
 # constants
@@ -70,10 +70,6 @@ class treeViewWidget(QtGui.QTreeWidget):
     def dragEnterEvent(self, event):
             event.accept()
             print 'drag'
-
-
-
-
 
 class Download(object):
     def setup(self):
@@ -1047,30 +1043,44 @@ class Ui_MainWindow(object):
 
 #last 20 downloadowed episodes
     def update_lastest_episodes_list(self):
-        episodes=Episode.query.filter_by(status=u'downloaded').order_by(Episode.id.desc()).limit(50).all()
-	self.treeWidget_4.clear()
+
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con.isolation_level = None
+        cur = con.cursor()
+        cur.execute('SELECT * FROM sql_episode WHERE status="downloaded" ORDER BY date DESC LIMIT 50')
+        episodes = cur.fetchall()
+
+        self.treeWidget_4.clear()
+
+        #episodes=Episode.query.filter_by(status=u'downloaded').order_by(Episode.id.desc()).limit(50).all()
         for e in episodes:
             item = QtGui.QTreeWidgetItem(self.treeWidget_4)
-            item.setText(0,e.channel.title)
-            item.setText(1,e.title)
-            item.setText(2,self.getReadableSize(e.size))
-            item.setText(3,os.path.expanduser('~')+'/.brePodder/'+str(e.localfile))
+            item.setText(0,str(e[8]))
+            item.setText(1,e[1])
+            item.setText(2,self.getReadableSize(e[4]))
+            item.setText(3,os.path.expanduser('~')+'/.brePodder/'+str(e[3]))
             
 #newest episodes
     def update_newest_episodes_list(self):
-        episodes=Episode.query.order_by(Episode.date.desc()).limit(40).all()
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con.isolation_level = None
+        cur = con.cursor()
+        cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id ORDER BY date DESC LIMIT 50')
+        episodes = cur.fetchall()
+        
+#        episodes=Episode.query.order_by(Episode.date.desc()).limit(40).all()
         self.treeWidget_5.clear()
         for e in episodes:
             item = QtGui.QTreeWidgetItem(self.treeWidget_5)
-            item.setText(0,e.channel.title)
-            item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+e.channel.logo)))
-            item.setText(1,e.title)
-            if e.size:
-                item.setText(2,self.getReadableSize(e.size))
+            item.setText(0,str(e[10]))
+            item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+e[14])))
+            item.setText(1,e[1])
+            if e[4]:
+                item.setText(2,self.getReadableSize(e[4]))
             else:
                 item.setText(2,'???')
             try:
-                b=gmtime(float(e.date))
+                b=gmtime(float(e[5]))
                 epDate=strftime("%x", b)
             except:
                 b=gmtime()
@@ -1276,8 +1286,6 @@ class Ui_MainWindow(object):
         globalPos.setY(globalPos.y() + 25)
         t=self.treeWidget.indexAt(pos)
         self.menuDownloads.popup(globalPos)
-
-        
 
 class updateChannelThread(QtCore.QThread):
     def __init__(self,test, updateProgress = 0):
