@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore, QtGui
-#,  QtNetwork,  QtTest,  QtWebKit
+#, QtNetwork,  QtTest,  QtWebKit
 #import feedparser
 import os
 #from getfavicon import getIcoUrl
@@ -16,7 +16,7 @@ import sqlalchemy
 import sys
 import sqlite3
 from sql import *
-#from Ui_add_folder import *
+from Ui_add_folder import *
 
 setup_all()
 
@@ -130,7 +130,7 @@ class Download(object):
                 realUrl=url.path()+'?'+url.encodedQuery()
             else:
                 realUrl=url.path()
-                
+            from PyQt4 import QtNetwork
             self.get=QtCore.QString().append('GET')
             self.header=QtNetwork.QHttpRequestHeader(self.get, realUrl.replace(" ", "%20"))
             self.header.setValue("Host", url.host())
@@ -284,6 +284,7 @@ class Download(object):
 #                print 'logoBig:' +file
                 size = 128, 128
                 try:
+                    import Image
                     im = Image.open(file)
                     im.thumbnail(size, Image.ANTIALIAS) #ovo ne daje bas dobar kvalitet
                     im.save('128'+file)
@@ -882,6 +883,7 @@ class Ui_MainWindow(object):
         os.chdir(os.path.expanduser('~')+'/.brePodder') 
 
     def AddChannel(self, newUrl = None):
+        import feedparser
         if newUrl == None:
             feedLink = self.QLineEdit1.text().toUtf8().data()
         else:
@@ -936,6 +938,7 @@ class Ui_MainWindow(object):
             logo_fileBig = ChannelDir+"/128"+fileName.toUtf8().data()
         else: logo_fileBig=u"images/musicstore2.png"
 #  download favicon
+        from getfavicon import getIcoUrl
         favicon_url=getIcoUrl("http://"+QtCore.QUrl(w.feed.link).host().toUtf8().data())
         if favicon_url:
             url = favicon_url
@@ -1237,6 +1240,7 @@ class Ui_MainWindow(object):
         app.exit()
     
     def export_opml(self):
+        import opml
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
         con.isolation_level = None
         cur = con.cursor()       
@@ -1247,6 +1251,7 @@ class Ui_MainWindow(object):
         o.write(channels)
         
     def import_opml(self):
+        import opml
 #        ch=Channel.query.all()
         filename = QtGui.QFileDialog.getOpenFileName(MainWindow, 'Open file','/home')
 #        i=opml.Importer('brePodderImport.opml')
@@ -1310,6 +1315,7 @@ class updateChannelThread(QtCore.QThread):
     
 
     def updateChannel(self, ch = None, cursor=None):
+        import feedparser
         newEpisode={}
         cur=cursor
         oldEpisodes=[]
