@@ -11,12 +11,12 @@ import os
 #import opml
 import re
 from time import gmtime, strftime, mktime, sleep
-from elixir import *
-import sqlalchemy
+#from elixir import *
+#import sqlalchemy
 import sys
 import sqlite3
 from sql import *
-from Ui_add_folder import *
+#from Ui_add_folder import *
 
 setup_all()
 
@@ -1181,7 +1181,8 @@ class Ui_MainWindow(object):
             con.isolation_level = None
             cur2 = con.cursor()
             cur2.execute('insert into sql_taxonomy(title) values (?)', (text.toUtf8().data(),))
-            
+       
+        ui.update_channel_list()
 
         
     def update_channel(self):
