@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtCore, QtGui, QtNetwork
 #, QtNetwork,  QtTest,  QtWebKit
 #import feedparser
 import os
@@ -126,7 +126,7 @@ class Download(object):
                 realUrl=url.path()+'?'+url.encodedQuery()
             else:
                 realUrl=url.path()
-            from PyQt4 import QtNetwork
+   #         from PyQt4 import QtNetwork
             self.get=QtCore.QString().append('GET')
             self.header=QtNetwork.QHttpRequestHeader(self.get, realUrl.replace(" ", "%20"))
             self.header.setValue("Host", url.host())
@@ -289,7 +289,7 @@ class Download(object):
 #                    Image.open('../images/musicstore.png').save(file, 'PNG')
             else:
                 try:
-                    c
+                    e = Episode.query.filter_by(title=self.itemZaPrenos.text(1).toUtf8().data().decode('UTF8')).one()
                     e.localfile=ChannelDir.decode('utf8')+'/'+ file.decode('utf8')
                     e.status=u'downloaded'
                 except:
@@ -498,6 +498,8 @@ class Ui_MainWindow(object):
 #TODO: make settings fot choosing WebKit insted of QTextBrowser
 #        self.QTextBrowser1 = QtWebKit.QWebView(self.splitter) #Qt4.4
         self.QTextBrowser1 = QtGui.QTextBrowser(self.splitter) # Qt4.3
+        self.QTextBrowser1.setOpenExternalLinks(1)
+        self.QTextBrowser1.setOpenLinks(1)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding,QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
