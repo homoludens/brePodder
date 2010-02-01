@@ -6,7 +6,7 @@ from PyQt4 import QtCore, QtGui, QtNetwork
 #import feedparser
 import os
 #from getfavicon import getIcoUrl
-#from Download import *
+###from Download import *
 #import Image
 #import opml
 import re
