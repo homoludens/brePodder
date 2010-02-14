@@ -280,10 +280,12 @@ class Download(object):
 #                print 'logoBig:' +file
                 size = 128, 128
                 try:
-                    import Image
-                    im = Image.open(file)
-                    im.thumbnail(size, Image.ANTIALIAS) #ovo ne daje bas dobar kvalitet
-                    im.save('128'+file)
+                    #TODO: convert image to 128x182
+                    print "convert image to 128x182"
+#                    import Image
+#                    im = Image.open(file)
+#                    im.thumbnail(size, Image.ANTIALIAS) #ovo ne daje bas dobar kvalitet
+#                    im.save('128'+file)
                 except IOError:
                     print IOError
 #                    Image.open('../images/musicstore.png').save(file, 'PNG')
@@ -1038,6 +1040,7 @@ class Ui_MainWindow(object):
 #            p=re.compile("\W")  
             os.chdir(os.path.expanduser('~')+'/.brePodder/')
             ChannelDir = os.path.expanduser('~')+'/.brePodder/'+self.p.sub("",ch.title)
+            
             import shutil
             shutil.rmtree(ChannelDir)
             session.commit()
@@ -1233,12 +1236,25 @@ class Ui_MainWindow(object):
             QtCore.QObject.connect(updtChTr[j],QtCore.SIGNAL("updateProgressSignal"),self.updateProgressBarFromThread,QtCore.Qt.BlockingQueuedConnection)
             updtChTr[j].start()
             j=j+1
+    
+    def sendMessage(self, message):
+        try:
+            import pynotify
+            if pynotify.init("brePodder"):
+                n = pynotify.Notification("brePodder", message)
+#                n = pynotify.Notification("Title", "message", "icon-name")
+                n.show()
+            else:
+                print "there was a problem initializing the pynotify module"
+        except:
+            print "you don't seem to have pynotify installed"        
 
     def update_done(self):
             self.updateProgressBar.hide()
             self.QLineEdit1.show()
             self.QPushButton1.show()
             self.update_channel_list()
+            self.sendMessage("Updating Done")
             
     def dialog_add(self):
         filename = QtGui.QFileDialog.getOpenFileName(MainWindow, 'Open file','/home')
