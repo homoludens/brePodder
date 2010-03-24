@@ -1,13 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore, QtGui, QtNetwork
+from PyQt4 import QtCore, QtGui, QtNetwork, QtWebKit
 #, QtNetwork,  QtTest,  QtWebKit
 #import feedparser
 import os
 #from getfavicon import getIcoUrl
 #from Download import *
-#import Image
+import Image
 #import opml
 import re
 from time import gmtime, strftime, mktime, sleep
@@ -498,10 +498,10 @@ class Ui_MainWindow(object):
         self.treeWidget_2.setObjectName("treeWidget_2")
         
 #TODO: make settings fot choosing WebKit insted of QTextBrowser
-#        self.QTextBrowser1 = QtWebKit.QWebView(self.splitter) #Qt4.4
-        self.QTextBrowser1 = QtGui.QTextBrowser(self.splitter) # Qt4.3
-        self.QTextBrowser1.setOpenExternalLinks(1)
-        self.QTextBrowser1.setOpenLinks(1)
+        self.QTextBrowser1 = QtWebKit.QWebView(self.splitter) #Qt4.4
+#        self.QTextBrowser1 = QtGui.QTextBrowser(self.splitter) # Qt4.3
+#        self.QTextBrowser1.setOpenExternalLinks(1)
+#        self.QTextBrowser1.setOpenLinks(1)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding,QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -719,11 +719,11 @@ class Ui_MainWindow(object):
 #        item2.setText(0,QtGui.QApplication.translate("MainWindow", "naziv", None, QtGui.QApplication.UnicodeUTF8))
 #        item2.setText(1,QtGui.QApplication.translate("MainWindow", "33 MB", None, QtGui.QApplication.UnicodeUTF8))
 #        self.QTextBrowser1.setStatusTip(QtGui.QApplication.translate("MainWindow", "opis", None, QtGui.QApplication.UnicodeUTF8))
-#        self.QTextBrowser1.setHtml(QtGui.QApplication.translate("MainWindow", "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-#        "p, li { white-space: pre-wrap; }\n"
-#        "</style></head><body style=\" font-family:\'Sans Serif\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
-#        "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">tekst u tekst browseru</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-#       
+        self.QTextBrowser1.setHtml(QtGui.QApplication.translate("MainWindow", "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+        "p, li { white-space: pre-wrap; }\n"
+        "</style></head><body style=\" font-family:\'Sans Serif\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
+        "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">tekst u tekst browseru</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+       
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QtGui.QApplication.translate("MainWindow", "Channels", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget.headerItem().setText(0,QtGui.QApplication.translate("MainWindow", "Channel", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget.headerItem().setText(1,QtGui.QApplication.translate("MainWindow", "Episode", None, QtGui.QApplication.UnicodeUTF8))
@@ -841,7 +841,9 @@ class Ui_MainWindow(object):
     #            desc_localimg = self.getImageFromDesc(desc, e.channel)
     #            print desc_localimg
 
-                self.QTextBrowser1.setHtml("<p>"+desc+"</br>\n\r</p><p><b>FILE: </b><a href="+enc+">"+enc+"</a></p><p><b>LOCALFILE: </b><a href="+localFile+">"+localFile+"</a></p>")
+                self.QTextBrowser1.setHtml("<p>"+desc+"</br>\n\r</p><p><b>FILE: </b><a href="+enc+">"+enc+"</a></p>\
+                                            <p><b>LOCALFILE: </b><a href="+localFile+">"+localFile+"</a></p>\
+                                            <p>PLAY:<audio  controls='controls' src='"+enc+"'>"+enc+"</audio>")
 
             except:
                 print "EpisodeActivated exception"
@@ -911,31 +913,33 @@ class Ui_MainWindow(object):
         item.setText(0,ChannelTitle)
 # download Channel logo
         if w.feed.has_key('image'):
+            if w.feed.image.href != None:
 #            item = QtGui.QTreeWidgetItem(self.treeWidget)
 #            item.setText(0,w.feed.title)
-            item.setText(1,w.feed.image.href)
-            item.setText(5,w.feed.image.href)
+                item.setText(1,w.feed.image.href)
+                item.setText(5,w.feed.image.href)
             
             
-            self.itemsDownloading.append(w.feed.image.href)
-            self.dd.append(Download())
-            ht=len(self.dd)-1
-            self.dd[ht].setup()
-            self.dd[ht].downloadFile( w.feed.image.href, item)
-            
-#            self.dd.append(Download())
-#            self.dd[len(self.http)-1].setup()
-#            self.dd[len(self.http)-1].downloadFile( w.feed.image.href, item)
+                self.itemsDownloading.append(w.feed.image.href)
+                self.dd.append(Download())
+                ht=len(self.dd)-1
+                self.dd[ht].setup()
+                self.dd[ht].downloadFile( w.feed.image.href, item)
+                
+    #            self.dd.append(Download())
+    #            self.dd[len(self.http)-1].setup()
+    #            self.dd[len(self.http)-1].downloadFile( w.feed.image.href, item)
 
-            url_done = QtCore.QUrl(w.feed.image.href)
-            fileInfo = QtCore.QFileInfo(url_done.path())
-            fileName = QtCore.QString(fileInfo.fileName())
-            
-#            i = w.feed.image.href.rfind('/')
-#            logo_fileBig = ChannelTitle+"/"+w.feed.image.href[i+1:]
+                url_done = QtCore.QUrl(w.feed.image.href)
+                fileInfo = QtCore.QFileInfo(url_done.path())
+                fileName = QtCore.QString(fileInfo.fileName())
+                
+    #            i = w.feed.image.href.rfind('/')
+    #            logo_fileBig = ChannelTitle+"/"+w.feed.image.href[i+1:]
 
-# should we put original or 128px version of logo
-            logo_fileBig = ChannelDir+"/128"+fileName.toUtf8().data()
+    # should we put original or 128px version of logo
+                logo_fileBig = ChannelDir+"/128"+fileName.toUtf8().data()
+            else: logo_fileBig=u"images/musicstore2.png"
         else: logo_fileBig=u"images/musicstore2.png"
 #  download favicon
         from getfavicon import getIcoUrl
