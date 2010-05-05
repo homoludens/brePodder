@@ -843,7 +843,7 @@ class Ui_MainWindow(object):
 
                 self.QTextBrowser1.setHtml("<p>"+desc+"</br>\n\r</p><p><b>FILE: </b><a href="+enc+">"+enc+"</a></p>\
                                             <p><b>LOCALFILE: </b><a href="+localFile+">"+localFile+"</a></p>\
-                                            <p>PLAY:<audio  controls='controls' src='"+enc+"'>"+enc+"</audio>")
+                                            <p>PLAY:<audio_off  controls='controls' src='"+enc+"'/></p>")
 
             except:
                 print "EpisodeActivated exception"
