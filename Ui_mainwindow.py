@@ -1133,8 +1133,7 @@ class Ui_MainWindow(object):
                 sizeReadable = str(size)+' B'
         else:
             sizeReadable = 'None'
-#        return sizeReadable
-        return str(size)
+        return sizeReadable
     
     def update_episode_list(self,channel_Title):
 #        cc = Channel.query.filter_by(title=channel_Title.toUtf8().data()).one()
