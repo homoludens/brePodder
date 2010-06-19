@@ -231,7 +231,7 @@ class Download(object):
 #            ui.outFile[of].close()
             print "ui.outFile"
             print ui.outFile
-            ui.outFile[self.downloadId][1].close()
+#            ui.outFile[self.downloadId][1].close()
 
             
         if error and not self.paused and ui.outFile[self.downloadId] is not None:
@@ -265,6 +265,7 @@ class Download(object):
             self.urlRedirect = None
 #            return
         if not error:
+            ui.outFile[self.downloadId][1].close()
             url =  self.itemZaPrenos.text(5).toUtf8().data()
             ChannelDir = ui.p.sub("",self.itemZaPrenos.text(0).toUtf8().data())
             #ova linija me nesto drka kada dodajem novi kanal. trebalo bi da je proverim i vidim sta ce mi
