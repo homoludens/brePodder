@@ -222,7 +222,7 @@ class Download(object):
 #            ui.httpGetId.append(self.http[ht].request(self.header, self.q, ui.outFile[of]))
         elif self.i==2:
 # Never, ever close a file if you plan to write to it latter... or maybe you can re-open it.
-            ui.outFile[of].close()
+#            ui.outFile[of].close()
             print "ui.outFile"
             print ui.outFile
             print of
@@ -282,13 +282,13 @@ class Download(object):
                 try:
                     #TODO: convert image to 128x182
                     print "convert image to 128x182"
-#                    import Image
-#                    im = Image.open(file)
-#                    im.thumbnail(size, Image.ANTIALIAS) #ovo ne daje bas dobar kvalitet
-#                    im.save('128'+file)
+                    import Image
+                    im = Image.open(file)
+                    im.thumbnail(size, Image.ANTIALIAS) #ovo ne daje bas dobar kvalitet
+                    im.save('128'+file)
                 except IOError:
                     print IOError
-#                    Image.open('../images/musicstore.png').save(file, 'PNG')
+                    Image.open('../images/musicstore.png').save(file, 'PNG')
             else:
                 try:
                     e = Episode.query.filter_by(title=self.itemZaPrenos.text(1).toUtf8().data().decode('UTF8')).one()
@@ -498,8 +498,8 @@ class Ui_MainWindow(object):
         self.treeWidget_2.setObjectName("treeWidget_2")
         
 #TODO: make settings fot choosing WebKit insted of QTextBrowser
-        self.QTextBrowser1 = QtWebKit.QWebView(self.splitter) #Qt4.4
-#        self.QTextBrowser1 = QtGui.QTextBrowser(self.splitter) # Qt4.3
+#        self.QTextBrowser1 = QtWebKit.QWebView(self.splitter) #Qt4.4
+        self.QTextBrowser1 = QtGui.QTextBrowser(self.splitter) # Qt4.3
 #        self.QTextBrowser1.setOpenExternalLinks(1)
 #        self.QTextBrowser1.setOpenLinks(1)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding,QtGui.QSizePolicy.Expanding)
@@ -938,7 +938,7 @@ class Ui_MainWindow(object):
     #            logo_fileBig = ChannelTitle+"/"+w.feed.image.href[i+1:]
 
     # should we put original or 128px version of logo
-                logo_fileBig = ChannelDir+"/128"+fileName.toUtf8().data()
+                logo_fileBig = ChannelDir+"/"+fileName.toUtf8().data()
             else: logo_fileBig=u"images/musicstore2.png"
         else: logo_fileBig=u"images/musicstore2.png"
 #  download favicon
@@ -1212,6 +1212,7 @@ class Ui_MainWindow(object):
         self.numberOfChannels = 1
         ch=Channel.query.filter_by(title=self.CurrentChannel).one()
         self.ChannelForUpdate=ch
+        print ch.title
         updtChTr=updateChannelThread(ch,0)
         QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal"),self.update_channel_list,QtCore.Qt.QueuedConnection)
         QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal_episodelist(PyQt_PyObject)"),self.update_episode_list,QtCore.Qt.QueuedConnection)
@@ -1269,9 +1270,6 @@ class Ui_MainWindow(object):
         print filename
     
     
-    def app_quit(self):
-        app.exit()
-    
     def export_opml(self):
         import opml
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
@@ -1308,6 +1306,10 @@ class Ui_MainWindow(object):
         globalPos.setY(globalPos.y() + 25)
         t=self.treeWidget.indexAt(pos)
         self.menuDownloads.popup(globalPos)
+        
+    def app_quit(self):
+        app.exit()
+    
 
 class updateChannelThread(QtCore.QThread):
     def __init__(self,test, updateProgress = 0):
@@ -1359,6 +1361,7 @@ class updateChannelThread(QtCore.QThread):
             a = cc.fetchone()
             tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
         newEpisode['channel_id'] = a[0]    
+        print a[1]
         epcount=0
         for j in tt:
             oldEpisodes.append(j[1])
@@ -1398,9 +1401,9 @@ class updateChannelThread(QtCore.QThread):
                         epDate=mktime(i.updated_parsed)
                     else:
                         epDate=mktime(gmtime())
-                    newEpisode['date'] = epDate
                 else:
                     epDate=mktime(gmtime())
+                newEpisode['date'] = epDate
                 nEpisode=(newEpisode['title'], newEpisode['enclosure'], newEpisode['size'], newEpisode['date'], newEpisode['description'], newEpisode['status'], newEpisode['channel_id'])
                 cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', nEpisode)
             elif not i.has_key('title'):
