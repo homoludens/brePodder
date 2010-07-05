@@ -37,6 +37,7 @@ class treeViewWidget(QtGui.QTreeWidget):
       self.setDragEnabled(True)
       self.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
       self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
+      self.sortByColumn(0, 0)
 
     def dropEvent(self, event):
         if self.itemAt(event.pos()).flags() & droppable:         
@@ -71,7 +72,7 @@ class treeViewWidget(QtGui.QTreeWidget):
             event.accept()
             print 'drag'
 
-class Download(object):
+class Download(QtCore.QObject):
     def setup(self):
         self.itemZaPrenos = None
         self.CurDir = None
@@ -266,6 +267,7 @@ class Download(object):
 #            return
         if not error:
             ui.outFile[self.downloadId][1].close()
+            self.itemZaPrenos.setText(3,"DONE")
             url =  self.itemZaPrenos.text(5).toUtf8().data()
             ChannelDir = ui.p.sub("",self.itemZaPrenos.text(0).toUtf8().data())
             #ova linija me nesto drka kada dodajem novi kanal. trebalo bi da je proverim i vidim sta ce mi
@@ -350,7 +352,7 @@ class Download(object):
                 
                 self.paused = False
 
-class Ui_MainWindow(object):
+class BrePodder(object):
     def __init__(self, parent=None):
         self.http = []
         self.httpGetId = []
@@ -1013,6 +1015,7 @@ class Ui_MainWindow(object):
 
         if w.feed.has_key('links'): 
             ChannelHomepage = w.feed.links[0].href
+#            ChannelHomepage = w.feed.links[1].href
         else:
             ChannelHomepage='http://google.com'
 
@@ -1137,9 +1140,16 @@ class Ui_MainWindow(object):
     
     def update_episode_list(self,channel_Title):
 #        cc = Channel.query.filter_by(title=channel_Title.toUtf8().data()).one()
-        cc = Channel.query.filter_by(title=channel_Title).one()
+#        cc = Channel.query.filter_by(title=channel_Title).one()
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con.isolation_level = None
+        cur = con.cursor()       
+        cur.execute('select * from sql_channel where title = ?',(channel_Title,))
+        cc = cur.fetchone()
 #        self.QTextBrowser1.setHtml("<p><img src="+"'"+cc.logobig+"'"+"><br>\n\n</p><p>"+cc.description+"</p><p><b>Homepage: </b><a href="+cc.homepage+">"+cc.homepage+"</a><p>")
-        self.QTextBrowser1.setHtml("<p>"+cc.description+"</p><p><b>Homepage: </b><a href="+cc.homepage+">"+cc.homepage+"</a></p>")
+#        self.QTextBrowser1.setHtml("<p>"+cc.description+"</p><p><b>Homepage: </b><a href="+cc.homepage+">"+cc.homepage+"</a></p>")
+        self.QTextBrowser1.setHtml("<p>"+cc[4]+"</p><p><b>Homepage: </b><a href="+cc[3]+">"+cc[3]+"</a></p>")
+
         tt = Episode.query.filter(Episode.channel.has(title=channel_Title)).order_by(Episode.date.desc()).all() 
         self.treeWidget_2.clear()
         for t in tt:
@@ -1233,9 +1243,19 @@ class Ui_MainWindow(object):
         self.updateProgressBar.setRange(0,0)
         self.updateProgressBar.show()
         self.numberOfChannels = 1
-        ch=Channel.query.filter_by(title=self.CurrentChannel).one()
+
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con.isolation_level = None
+        cur = con.cursor()       
+        cur.execute('select * from sql_channel where title = ?',(self.CurrentChannel,))
+        ch = cur.fetchone()
+
+            
+
+#        ch=Channel.query.filter_by(title=self.CurrentChannel).one()
+        
         self.ChannelForUpdate=ch
-        print ch.title
+#        print ch.title
         updtChTr=updateChannelThread(ch,0)
         QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal"),self.update_channel_list,QtCore.Qt.QueuedConnection)
         QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal_episodelist(PyQt_PyObject)"),self.update_episode_list,QtCore.Qt.QueuedConnection)
@@ -1252,13 +1272,21 @@ class Ui_MainWindow(object):
         self.updateProgressBar.show()
         
         updtChTr=[]
-        ch=Channel.query.all()
-        self.numberOfChannels = ch.__len__()-1
+#        allChannels=Channel.query.all()
+        
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con.isolation_level = None
+        cur = con.cursor()       
+        cur.execute('select * from sql_channel')
+        allChannels = cur.fetchall()
+
+
+        self.numberOfChannels = allChannels.__len__()-1
         self.updateProgressBar.setRange(0,self.numberOfChannels+1)
         self.updateProgressBar.setValue(0)
         self.updateProgressBar.setFormat(QtCore.QString("%v" + " of " + "%m"))
         j=0
-        for i in ch:            
+        for i in allChannels:       
             updtChTr.append(updateChannelThread(i,j))
             self.TTThread.append(updtChTr[j])
             QtCore.QObject.connect(updtChTr[j],QtCore.SIGNAL("updateProgressSignal"),self.updateProgressBarFromThread,QtCore.Qt.BlockingQueuedConnection)
@@ -1335,10 +1363,10 @@ class Ui_MainWindow(object):
     
 
 class updateChannelThread(QtCore.QThread):
-    def __init__(self,test, updateProgress = 0):
+    def __init__(self,channel, updateProgress = 0):
         QtCore.QThread.__init__(self)
 #        self.test = ui.ChannelForUpdate
-        self.test = test
+        self.channel = channel
         self.updateProgress = updateProgress
         self.newEpisodeExists = 0
 #        ui.freeBytes.acquire()
@@ -1348,7 +1376,7 @@ class updateChannelThread(QtCore.QThread):
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
         con.isolation_level = None
         cur = con.cursor()
-        self.updateChannel(self.test,cur)
+        self.updateChannel(self.channel,cur)
        
         con.commit()
         cur.close()
@@ -1380,11 +1408,11 @@ class updateChannelThread(QtCore.QThread):
             a = cc.fetchone()
             tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0]))
         else:
-            cc = cur.execute('select id,title,link from sql_channel where title =?', (ch.title,))
+            cc = cur.execute('select id,title,link from sql_channel where title =?', (ch[1],))
             a = cc.fetchone()
             tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
         newEpisode['channel_id'] = a[0]    
-        print a[1]
+#        print a[1]
         epcount=0
         for j in tt:
             oldEpisodes.append(j[1])
@@ -1445,7 +1473,7 @@ if __name__ == "__main__":
 #    os.makedirs('images')
     app = QtGui.QApplication(sys.argv)
     MainWindow = QtGui.QMainWindow()
-    ui = Ui_MainWindow()
+    ui = BrePodder()
 #    print ui.memory_usage()
     ui.setupUi(MainWindow)
     MainWindow.show()
