@@ -550,7 +550,7 @@ class BrePodder(object):
                 downloadId = 0
 #            print "downloadId: " + str(downloadId)
             self.downloadList.append((downloadId, Download()))
-            self.downloadList[downloadId][1].setup()
+            self.downloadList[downloadId][1].setup(self)
             
             item = QtGui.QTreeWidgetItem(self.treeWidget)
             item.setText(0,channel.title)
@@ -676,7 +676,7 @@ class BrePodder(object):
 #                print "downloadId: " + str(downloadId)
                 self.itemsDownloading.append((downloadId, w.feed.image.href))
                 self.downloadList.append((downloadId, Download()))
-                self.downloadList[downloadId][1].setup()
+                self.downloadList[downloadId][1].setup(self)
                 self.downloadList[downloadId][1].downloadFile(w.feed.image.href, item, downloadId)
 
 
@@ -720,7 +720,7 @@ class BrePodder(object):
             downloadId = 0
         self.itemsDownloading.append((downloadId, url))
         self.downloadList.append((downloadId, Download()))
-        self.downloadList[downloadId][1].setup()
+        self.downloadList[downloadId][1].setup(self)
         self.downloadList[downloadId][1].faviconFound=True
         self.downloadList[downloadId][1].downloadFile(url, item2, downloadId)
         
