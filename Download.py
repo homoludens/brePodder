@@ -236,23 +236,12 @@ class Download(QtCore.QObject):
 #                    Image.open('../images/musicstore.png').save(file, 'PNG')
             else:
                 try:
-                    #DONE: SQL
-                    e = self.ui.db.getEpisodeByTitle(self.itemZaPrenos.text(1).toUtf8().data().decode('UTF8'))
-#                    print e
-#                    episode = list(e)
-#                    e = Episode.query.filter_by(title=self.itemZaPrenos.text(1).toUtf8().data().decode('UTF8')).one()
-                    #link
-#                    episode[3] = ChannelDir.decode('utf8')+'/'+ file.decode('utf8')
-                    #status
-#                    ep = ( localfile, status, episode_id )
-                    ep = (ChannelDir.decode('utf8')+'/'+ file.decode('utf8'),  u'downloaded',  e[0])
+                    episode = self.ui.db.getEpisodeByTitle(self.itemZaPrenos.text(1).toUtf8().data().decode('UTF8'))
+                    ep = (ChannelDir.decode('utf8')+'/'+ file.decode('utf8'),  u'downloaded',  episode[0])
                     self.ui.db.updateEpisode(ep)
                 except:
                     print 'InvalidRequestError'
-                #DONE SQL
-#                session.commit()
             os.chdir(os.path.expanduser('~')+'/.brePodder')
-#            self.itemZaPrenos.setText(3, "DONE")
             self.ui.update_lastest_episodes_list()
         else:
             print "Download Error!"
