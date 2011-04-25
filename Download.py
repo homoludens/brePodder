@@ -236,11 +236,13 @@ class Download(QtCore.QObject):
 #                    Image.open('../images/musicstore.png').save(file, 'PNG')
             else:
                 try:
+                    #TODO: SQL
                     e = Episode.query.filter_by(title=self.itemZaPrenos.text(1).toUtf8().data().decode('UTF8')).one()
                     e.localfile=ChannelDir.decode('utf8')+'/'+ file.decode('utf8')
                     e.status=u'downloaded'
                 except:
                     print 'InvalidRequestError'
+                #TODO: SQL
                 session.commit()
             os.chdir(os.path.expanduser('~')+'/.brePodder')
 #            self.itemZaPrenos.setText(3, "DONE")
@@ -266,7 +268,7 @@ class Download(QtCore.QObject):
             if self.itemZaPrenos == self.ui.itemZaPrekid:
                 self.itemZaPrenos.setText(3, "PAUSED")
                 fileLink = self.ui.itemZaPrekid.text(5)
-#TODO: do i need next line?
+                #TODO: do i need next line?
                 self.httpRequestAborted = False
 #                httpIndex=self.ui.itemsDownloading.index(self.ui.itemZaPrekid.text(5))
                 self.ui.http[self.downloadId][1].abort()
