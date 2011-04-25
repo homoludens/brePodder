@@ -12,13 +12,15 @@ class updateChannelThread(QtCore.QThread):
     def run(self):
 #        ui.Mutex.lock()
         self.ui.Sem.acquire(1)
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        con.isolation_level = None
-        cur = con.cursor()
-        self.updateChannel(self.channel,cur)
+        
+#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+#        con.isolation_level = None
+#        cur = con.cursor()
+        
+        self.updateChannel(self.channel)
        
-        con.commit()
-        cur.close()
+#        con.commit()
+#        cur.close()
         
         if self.newEpisodeExists:
             self.emit(QtCore.SIGNAL("updatesignal2"))
@@ -33,15 +35,18 @@ class updateChannelThread(QtCore.QThread):
 
     def updateChannel(self, ch = None, cursor=None):
         newEpisode={}
-        cur=cursor
+#        cur=cursor
         oldEpisodes=[]
+#        print "updateChannel: "
+#        print ch[1]
         if ch == None:
-            self.db.getCurrentChannel(self.CurrentChannel)
+#            print self.ui.CurrentChannel
+            a,  tt = self.ui.db.getCurrentChannel(self.ui.CurrentChannel[1])
 #            cc = cur.execute('select id,title from sql_channel where title =?', (self.CurrentChannel,))
 #            a = cc.fetchone()
 #            tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0]))
         else:
-            self.db.getChannel(ch[1])
+            a,  tt = self.ui.db.getCurrentChannel(ch[1])
 #            cc = cur.execute('select id,title,link from sql_channel where title =?', (ch[1],))
 #            a = cc.fetchone()
 #            tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
@@ -90,17 +95,22 @@ class updateChannelThread(QtCore.QThread):
                     epDate=mktime(gmtime())
                 newEpisode['date'] = epDate
                 nEpisode=(newEpisode['title'], newEpisode['enclosure'], newEpisode['size'], newEpisode['date'], newEpisode['description'], newEpisode['status'], newEpisode['channel_id'])
-                cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', nEpisode)
+                self.ui.db.insertEpisode(nEpisode)
+#                cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', nEpisode)
+                
             elif not i.has_key('title'):
                 print "NEMA NASLOVA EPIZODE"
             else:
                 if j[2]!=u"old":
-                    cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(j[0],) )
+                    self.ui.db.updateEpisodeStatus(j[0])
+#                    cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(j[0],) )
 
 
 class BrePodder(MainUi):
-    def __init__(self):
-        self.db = DBOperation()
+#    def __init__(self):
+#        self.db = DBOperation()
+#        self.Sem = QtCore.QSemaphore(5)
+
         
     def memory_usage(a):
         """Memory usage of the current process in kilobytes."""
@@ -366,7 +376,7 @@ class BrePodder(MainUi):
         selection = self.listWidget.selectedItems()
         if selection:
             self.update_episode_list(selection[0].text(0).toUtf8().data().decode('UTF8'))
-            self.CurrentChannel=selection[0].text(0).toUtf8().data().decode('UTF8')
+            self.CurrentChannel = selection[0].text(0).toUtf8().data().decode('UTF8')
             self.actionCancel.setToolTip("Delete Selected Channel")
             self.actionUpdateFeeds.setToolTip("Update Selected Channel")
         
@@ -455,11 +465,15 @@ class BrePodder(MainUi):
     def update_episode_list(self,channel_Title):
 #        cc = Channel.query.filter_by(title=channel_Title.toUtf8().data()).one()
 #        cc = Channel.query.filter_by(title=channel_Title).one()
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        con.isolation_level = None
-        cur = con.cursor()       
-        cur.execute('select * from sql_channel where title = ?',(channel_Title,))
-        cc = cur.fetchone()
+        
+#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = True)
+#        con.isolation_level = None
+#        cur = con.cursor()       
+#        cur.execute('select * from sql_channel where title = ?',(channel_Title,))
+#        cc = cur.fetchone()
+
+        cc = self.db.getChannelByTitle(channel_Title)
+        print cc
 #        self.QTextBrowser1.setHtml("<p><img src="+"'"+cc.logobig+"'"+"><br>\n\n</p><p>"+cc.description+"</p><p><b>Homepage: </b><a href="+cc.homepage+">"+cc.homepage+"</a><p>")
 #        self.QTextBrowser1.setHtml("<p>"+cc.description+"</p><p><b>Homepage: </b><a href="+cc.homepage+">"+cc.homepage+"</a></p>")
         self.QTextBrowser1.setHtml("<p>"+cc[4]+"</p><p><b>Homepage: </b><a href="+cc[3]+">"+cc[3]+"</a></p>")
@@ -482,8 +496,8 @@ class BrePodder(MainUi):
                 epDate=strftime("%x", b)
                 print "date exception"
             item2.setText(2,epDate)
-            if t.status=='new':
-                item2.setFont(0, self.fontBold)
+#            if t.status=='new':
+#                item2.setFont(0, self.fontBold)
          
     def update_channel_list(self):
         
@@ -499,7 +513,7 @@ class BrePodder(MainUi):
         
 #        channels = Channel.query.all()
 #        folders = Taxonomy.query.all()
-        channels =  self.db.getAllChannels()
+        channels =  self.db.getAllChannelsWOFolder()
         folders = self.db.getAllFolders()
 
         
@@ -560,13 +574,17 @@ class BrePodder(MainUi):
         self.updateProgressBar.show()
         self.numberOfChannels = 1
 
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        con.isolation_level = None
-        cur = con.cursor()       
-        cur.execute('select * from sql_channel where title = ?',(self.CurrentChannel,))
-        ch = cur.fetchone()
+#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+#        con.isolation_level = None
+#        cur = con.cursor()       
+#        cur.execute('select * from sql_channel where title = ?',(self.CurrentChannel,))
+#        ch = cur.fetchone()
         
 #        ch=Channel.query.filter_by(title=self.CurrentChannel).one()
+        
+        ch = self.db.getChannelByTitle(self.CurrentChannel)
+#        print "updateChannelThread"
+#        print ch 
         
         self.ChannelForUpdate=ch
 #        print ch.title
@@ -589,12 +607,14 @@ class BrePodder(MainUi):
         updtChTr=[]
 #        allChannels=Channel.query.all()
         
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        con.isolation_level = None
-        cur = con.cursor()       
-        cur.execute('select * from sql_channel')
-        allChannels = cur.fetchall()
-
+#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+#        con.isolation_level = None
+#        cur = con.cursor()       
+#        cur.execute('select * from sql_channel')
+#        allChannels = cur.fetchall()
+        
+        allChannels = self.db.getAllChannels()
+        
 
         self.numberOfChannels = allChannels.__len__()-1
         self.updateProgressBar.setRange(0,self.numberOfChannels+1)

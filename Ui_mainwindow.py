@@ -89,14 +89,15 @@ class MainUi(object):
         self.fontBold.setBold(True)
         self.ChannelForUpdate=None
         self.TTThread=[]
-        self.BufferSize = 5
-#        self.freeBytes = QtCore.QSemaphore(self.BufferSize)
-#        self.usedBytes = QtCore.QSemaphore()
-        self.Mutex = QtCore.QMutex()
-        self.Sem = QtCore.QSemaphore(5)
+#        self.BufferSize = 5
+#        self.Mutex = QtCore.QMutex()
+        
 #        self.freeBytes.acquire()
         self.itemsDownloading=[]
         self.p=re.compile("\W")
+        
+        self.db = DBOperation()
+        self.Sem = QtCore.QSemaphore(1)
         
     def setupUi(self, MainWindow):      
         MainWindow.setObjectName("MainWindow")

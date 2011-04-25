@@ -15,9 +15,15 @@ setup_all()
 class DBOperation():
     def __init__(self):
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite",  check_same_thread = False)
-        con.isolation_level = None
+        con.isolation_level = "IMMEDIATE"
         self.cur = con.cursor()
-    
+
+    def updateEpisodeStatus(self, episodeId):
+        self.cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(episodeId,) )
+
+    def insertEpisode(self, episode):              
+        self.cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', episode)
+
     def close(self):
         self.cur.close()
     
@@ -25,8 +31,40 @@ class DBOperation():
         self.cur.execute('select * from sql_channel where folder_id = ?',(folder,))
         childChannels = self.cur.fetchall()
         return childChannels
-    
+
+
+    def getChannelByTitle(self,  channel):
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = True)
+        con.isolation_level = "IMMEDIATE"
+        cur = con.cursor()       
+        cur.execute('select * from sql_channel where title = ?',(channel,))
+        cc = cur.fetchone()
+        cur.close()
+        
+        return cc
+
+#    def GETCHANNEL(self,  channel):
+#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = True)
+#        con.isolation_level = "IMMEDIATE"
+#        cur = con.cursor()       
+#        cur.execute('select * from sql_channel where title = ?',(channel,))
+#        cc = cur.fetchone()
+#        cur.close()
+#        
+#        return cc
+        
+#    def getChannel(self,  channel):   
+#        self.cur.execute('select * from sql_channel where title = ?',(channel, ))
+#        ch = self.cur.fetchone()
+#        return ch
+        
     def getAllChannels(self):
+        self.cur.execute('select * from sql_channel')
+        channels = self.cur.fetchall()
+        
+        return channels
+    
+    def getAllChannelsWOFolder(self):
         self.cur.execute('select * from sql_channel where folder_id IS NULL')
         channels = self.cur.fetchall()
         
@@ -39,16 +77,20 @@ class DBOperation():
         return folders
         
     def getCurrentChannel(self, ch):
-        cc = self.cur.execute('select id,title from sql_channel where title =?', (ch[1],))
-        a = cc.fetchone()
-        tt = self.cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0]))
+#        cc = self.cur.execute('select id,title,link from sql_channel where title =?', (ch,))
+#        a = cc.fetchone()
+        a = self.getChannelByTitle(ch)
+        tt_1 = self.cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0], ))
+        tt = tt_1.fetchall()
+#        print 'tt'
+#        print tt
         return a, tt
         
-    def getChannel(self, ch):    
-        cc = self.cur.execute('select id,title,link from sql_channel where title =?', (ch[1],))
-        a = cc.fetchone()
-        tt = self.cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
-        return a, tt
+#    def getChannel(self, ch):    
+#        cc = self.cur.execute('select id,title,link from sql_channel where title =?', (ch,))
+#        a = cc.fetchone()
+#        tt = self.cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
+#        return a, tt
         
     def insertEpisode(self, ep):       
         self.cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', ep)
