@@ -22,7 +22,7 @@ if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     MainWindow = QtGui.QMainWindow()
     ui = BrePodder()
-    baza = BaseOperation()
+#    baza = DBOperation()
 #    print ui.memory_usage()
     ui.setupUi(MainWindow)
     MainWindow.show()

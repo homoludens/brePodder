@@ -12,11 +12,31 @@ metadata.bind.echo = False
 
 setup_all()
 
-class BaseOperation():
+class DBOperation():
     def __init__(self):
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite",  check_same_thread = False)
         con.isolation_level = None
         self.cur = con.cursor()
+    
+    def close(self):
+        self.cur.close()
+    
+    def getFolderChannels(self,  folder):
+        self.cur.execute('select * from sql_channel where folder_id = ?',(folder,))
+        childChannels = self.cur.fetchall()
+        return childChannels
+    
+    def getAllChannels(self):
+        self.cur.execute('select * from sql_channel where folder_id IS NULL')
+        channels = self.cur.fetchall()
+        
+        return channels
+    
+    def getAllFolders(self):
+        self.cur.execute('select * from sql_taxonomy')
+        folders = self.cur.fetchall()
+        
+        return folders
         
     def getCurrentChannel(self, ch):
         cc = self.cur.execute('select id,title from sql_channel where title =?', (ch[1],))

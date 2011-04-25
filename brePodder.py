@@ -1,4 +1,5 @@
 from Download import *
+from sql import DBOperation
 
 class updateChannelThread(QtCore.QThread):
     def __init__(self,channel, ui,  updateProgress = 0):
@@ -35,13 +36,15 @@ class updateChannelThread(QtCore.QThread):
         cur=cursor
         oldEpisodes=[]
         if ch == None:
-            cc = cur.execute('select id,title from sql_channel where title =?', (self.CurrentChannel,))
-            a = cc.fetchone()
-            tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0]))
+            self.db.getCurrentChannel(self.CurrentChannel)
+#            cc = cur.execute('select id,title from sql_channel where title =?', (self.CurrentChannel,))
+#            a = cc.fetchone()
+#            tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0]))
         else:
-            cc = cur.execute('select id,title,link from sql_channel where title =?', (ch[1],))
-            a = cc.fetchone()
-            tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
+            self.db.getChannel(ch[1])
+#            cc = cur.execute('select id,title,link from sql_channel where title =?', (ch[1],))
+#            a = cc.fetchone()
+#            tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
         newEpisode['channel_id'] = a[0]    
 #        print a[1]
         epcount=0
@@ -96,6 +99,8 @@ class updateChannelThread(QtCore.QThread):
 
 
 class BrePodder(MainUi):
+    def __init__(self):
+        self.db = DBOperation()
         
     def memory_usage(a):
         """Memory usage of the current process in kilobytes."""
@@ -482,18 +487,21 @@ class BrePodder(MainUi):
          
     def update_channel_list(self):
         
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        con.isolation_level = None
-        cur = con.cursor()
+#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+#        con.isolation_level = None
+#        cur = con.cursor()
         
-        cur.execute('select * from sql_channel where folder_id IS NULL')
-        channels = cur.fetchall()
-        
-        cur.execute('select * from sql_taxonomy')
-        folders = cur.fetchall()
+#        cur.execute('select * from sql_channel where folder_id IS NULL')
+#        channels = cur.fetchall()
+#        
+#        cur.execute('select * from sql_taxonomy')
+#        folders = cur.fetchall()
         
 #        channels = Channel.query.all()
 #        folders = Taxonomy.query.all()
+        channels =  self.db.getAllChannels()
+        folders = self.db.getAllFolders()
+
         
         self.listWidget.clear()
         
@@ -502,10 +510,9 @@ class BrePodder(MainUi):
             itemF.setText(0, folder[1])
             itemF.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/images/directory.png')))
             itemF.setFlags(enabled|droppable)      
-#            childChannels = Channel.query.filter_by(folder_id=folder.id).all()
-            cur.execute('select * from sql_channel where folder_id = ?',(folder[0],))
-            childChannels = cur.fetchall()
-            
+#            cur.execute('select * from sql_channel where folder_id = ?',(folder[0],))
+#            childChannels = cur.fetchall()
+            childChannels = self.db.getFolderChannels(folder[0])
             
             for childChannel in childChannels:
                 itemChildChannel = QtGui.QTreeWidgetItem(itemF)
@@ -523,7 +530,7 @@ class BrePodder(MainUi):
             item.setFlags(enabled|draggable|selectable)
 # dodati bold za channel koji ima novu epizodu. mislim da je to najefikasnije preko novog polja u bazi. 
 
-        cur.close()
+#        self.cur.close()
 
     def updateProgressBarFromThread(self):
         self.updateProgressBar.setValue(self.updateProgressBar.value()+1)
@@ -558,9 +565,7 @@ class BrePodder(MainUi):
         cur = con.cursor()       
         cur.execute('select * from sql_channel where title = ?',(self.CurrentChannel,))
         ch = cur.fetchone()
-
-            
-
+        
 #        ch=Channel.query.filter_by(title=self.CurrentChannel).one()
         
         self.ChannelForUpdate=ch
