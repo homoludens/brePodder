@@ -528,7 +528,7 @@ class MainUi(object):
     
     def export_opml(self):
         import opml
-        TODO: SQL
+        #TODO: SQL
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()       

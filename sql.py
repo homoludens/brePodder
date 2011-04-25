@@ -19,7 +19,11 @@ class DBOperation():
         self.cur = con.cursor()
 
     def updateEpisodeStatus(self, episodeId):
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+        con.isolation_level = "IMMEDIATE"
+        cur = con.cursor()       
         self.cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(episodeId,) )
+        cur.close()
 
     def insertEpisode(self, episode):              
         self.cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', episode)
@@ -42,6 +46,16 @@ class DBOperation():
         cur.close()
         
         return cc
+        
+    def getEpisodeByTitle(self,  episodeTitle):
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+        con.isolation_level = "IMMEDIATE"
+        cur = con.cursor()       
+        cur.execute('select * from sql_episode where title = ?',(episodeTitle,))
+        episode = cur.fetchone()
+        cur.close()
+        
+        return episode
 
 #    def GETCHANNEL(self,  channel):
 #        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = True)
@@ -115,10 +129,20 @@ class DBOperation():
         return episodes
 
     def insertEpisode(self, ep):       
-        self.cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', ep)
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+        con.isolation_level = None
+        cur = con.cursor()
+        cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', ep)
+        cur.close()
 
-    def updateEpisode(self,  epiusodeId):
-        self.cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(epId,) )
+    def updateEpisode(self,  episode):
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+        con.isolation_level = None
+        cur = con.cursor()
+        cur.execute('update sql_episode set localfile = ?, status = ?  where id = ?', episode)
+        cur.close()
+#        self.cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(epId,) )
+
         
     def deleteAllEpisodes(self,  channelTitle):
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)

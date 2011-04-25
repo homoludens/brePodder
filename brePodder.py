@@ -495,7 +495,6 @@ class BrePodder(MainUi):
     def update_channel_list(self):
         channels =  self.db.getAllChannelsWOFolder()
         folders = self.db.getAllFolders()
-
         
         self.listWidget.clear()
         
