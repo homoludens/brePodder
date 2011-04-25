@@ -91,7 +91,18 @@ class DBOperation():
 #        a = cc.fetchone()
 #        tt = self.cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
 #        return a, tt
-        
+    def getLatestDownloads(self):
+        self.cur.execute('SELECT * FROM sql_episode WHERE status="downloaded" ORDER BY date DESC LIMIT 50')
+        episodes = self.cur.fetchall()
+
+        return episodes
+
+
+    def getLatestEpisodes(self):
+        self.cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id ORDER BY date DESC LIMIT 50')
+        episodes = self.cur.fetchall()
+        return episodes
+
     def insertEpisode(self, ep):       
         self.cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', ep)
 

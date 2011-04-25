@@ -385,6 +385,8 @@ class BrePodder(MainUi):
     def delete_channel(self):
         if self.tab.isVisible():
             c=self.CurrentChannel
+            
+            # TODO: SQL
             ch=Channel.query.filter_by(title=self.CurrentChannel).one()
             j=0
             for i in ch.episode:
@@ -404,12 +406,13 @@ class BrePodder(MainUi):
 #last 20 downloadowed episodes
     def update_lastest_episodes_list(self):
 
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        con.isolation_level = None
-        cur = con.cursor()
-        cur.execute('SELECT * FROM sql_episode WHERE status="downloaded" ORDER BY date DESC LIMIT 50')
-        episodes = cur.fetchall()
+#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+#        con.isolation_level = None
+#        cur = con.cursor()
+#        cur.execute('SELECT * FROM sql_episode WHERE status="downloaded" ORDER BY date DESC LIMIT 50')
+#        episodes = cur.fetchall()
 
+        episodes = self.db.getLatestDownloads()
         self.treeWidget_4.clear()
 
         #episodes=Episode.query.filter_by(status=u'downloaded').order_by(Episode.id.desc()).limit(50).all()
@@ -422,13 +425,15 @@ class BrePodder(MainUi):
             
 #newest episodes
     def update_newest_episodes_list(self):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        con.isolation_level = None
-        cur = con.cursor()
-        cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id ORDER BY date DESC LIMIT 50')
-        episodes = cur.fetchall()
+#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+#        con.isolation_level = None
+#        cur = con.cursor()
+#        cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id ORDER BY date DESC LIMIT 50')
+#        episodes = cur.fetchall()
         
 #        episodes=Episode.query.order_by(Episode.date.desc()).limit(40).all()
+
+        episodes = self.db.getLatestEpisodes()
         self.treeWidget_5.clear()
         for e in episodes:
             item = QtGui.QTreeWidgetItem(self.treeWidget_5)
