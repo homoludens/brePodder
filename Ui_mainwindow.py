@@ -528,24 +528,16 @@ class MainUi(object):
     
     def export_opml(self):
         import opml
-        #TODO: SQL--
-#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-#        con.isolation_level = None
-#        cur = con.cursor()       
-#        cur.execute('select * from sql_channel')
-#        channels = cur.fetchall()
         channels = self.db.getAllChannels()
         o=opml.Exporter('brePodder.opml')
         o.write(channels)
         
     def import_opml(self):
         import opml
-#        ch=Channel.query.all()
         filename = QtGui.QFileDialog.getOpenFileName(MainWindow, 'Open file','/home')
 #        i=opml.Importer('brePodderImport.opml')
         i=opml.Importer(filename.toAscii().data())
         i.get_model()
-#        print "Import Done"
         for ch in i.items:
             self.AddChannel(ch['url'])
             
