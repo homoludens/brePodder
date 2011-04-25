@@ -34,7 +34,7 @@ class DBOperation():
 
 
     def getChannelByTitle(self,  channel):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = True)
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = "IMMEDIATE"
         cur = con.cursor()       
         cur.execute('select * from sql_channel where title = ?',(channel,))
