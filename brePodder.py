@@ -493,19 +493,6 @@ class BrePodder(MainUi):
 #                item2.setFont(0, self.fontBold)
          
     def update_channel_list(self):
-        
-#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-#        con.isolation_level = None
-#        cur = con.cursor()
-        
-#        cur.execute('select * from sql_channel where folder_id IS NULL')
-#        channels = cur.fetchall()
-#        
-#        cur.execute('select * from sql_taxonomy')
-#        folders = cur.fetchall()
-        
-#        channels = Channel.query.all()
-#        folders = Taxonomy.query.all()
         channels =  self.db.getAllChannelsWOFolder()
         folders = self.db.getAllFolders()
 
