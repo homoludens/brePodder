@@ -126,7 +126,6 @@ class BrePodder(MainUi):
 # TODO: download images from episode description so i can show them in QTextBrowser
 # this is beta... :)
     def getImageFromDesc(self, desc,  channel):
-        #TODO: SQL
         ChannelDir = self.p.sub("",channel.title)
         os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
         
@@ -158,18 +157,20 @@ class BrePodder(MainUi):
         if self.treeWidget_2.selectedItems():
             selection = self.treeWidget_2.selectedItems()[0]
             try:
-                #TODO: SQL
-                e=Episode.query.filter_by(title=selection.text(0).toUtf8().data().decode()).one()
-                if e.enclosure:
-                    enc=e.enclosure
+                e = self.db.getEpisodeByTitle(selection.text(0).toUtf8().data().decode())
+                if e[2]: 
+                    #enclosure
+                    enc=e[2]
                 else:
                     enc='None'
-                if e.description:
-                    desc=e.description
+                if e[6]:
+                    #description
+                    desc=e[6]
                 else:
                     desc='None'
-                if e.localfile:
-                    localFile=e.localfile
+                if e[3]:
+#                    localfile
+                    localFile=e[3]
                 else:
                     localFile='None'
     # TODO: download images from episode description so i can show them in QTextBrowser
