@@ -44,7 +44,7 @@ class updateChannelThread(QtCore.QThread):
 #            tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0]))
         else:
 #            a,  tt = self.ui.db.getCurrentChannel(ch[1])
-            #TODO: SQL!!!
+            #TODO: SQL--
             cc = cur.execute('select id,title,link from sql_channel where title =?', (ch[1],))
             a = cc.fetchone()
             tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
@@ -193,7 +193,7 @@ class BrePodder(MainUi):
     def EpisodeDoubleClicked(self, a):
 # TODO: change backgroundColor or something else with QBrush
         a.setFont(0, self.fontBold) 
-        #TODO: SQL  
+        #TODO: SQL++
         e=Episode.query.filter_by(title=a.text(0).toUtf8().data().decode('UTF8')).one()
 #        p=re.compile("\W")  
         ChannelDir = self.p.sub("",e.channel.title)
@@ -446,7 +446,10 @@ class BrePodder(MainUi):
     def getReadableSize(self,  size):
         if size:
             if (size) > 1024*1024:
-                sizeReadable = str(size/1024/1024)+' MB'
+                try:
+                    sizeReadable = str(size/1024/1024)+' MB'
+                except:
+                    sizeReadable = size
             elif (size) > 1024:
                 sizeReadable = str(size/1024)+' kB'
             else:   

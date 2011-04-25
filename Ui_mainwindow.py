@@ -528,13 +528,13 @@ class MainUi(object):
     
     def export_opml(self):
         import opml
-        #TODO: SQL
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        con.isolation_level = None
-        cur = con.cursor()       
-        cur.execute('select * from sql_channel')
-        channels = cur.fetchall()
-        
+        #TODO: SQL--
+#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+#        con.isolation_level = None
+#        cur = con.cursor()       
+#        cur.execute('select * from sql_channel')
+#        channels = cur.fetchall()
+        channels = self.db.getAllChannels()
         o=opml.Exporter('brePodder.opml')
         o.write(channels)
         

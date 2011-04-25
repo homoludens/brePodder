@@ -72,7 +72,7 @@ class Exporter(object):
 
         try:
             fp = open( self.filename, 'w')
-            fp.write( doc.toxml( encoding = 'utf-8'))
+            fp.write( doc.toprettyxml( encoding = 'utf-8'))
             fp.close()
         except:
             log( 'Could not open file for writing: %s', self.filename, sender = self)
