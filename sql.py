@@ -86,17 +86,28 @@ class DBOperation():
 #        print tt
         return a, tt
         
+        
+    def insertFolder(self,  FolderName):
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+        con.isolation_level = None
+        cur = con.cursor()
+        cur.execute('insert into sql_taxonomy(title) values (?)', (FolderName,))
+        cur.close()
+#        self.cur.execute('insert into sql_taxonomy(title) values (?)', (FolderName,))
+#        self.cur.close()
+        
 #    def getChannel(self, ch):    
 #        cc = self.cur.execute('select id,title,link from sql_channel where title =?', (ch,))
 #        a = cc.fetchone()
 #        tt = self.cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
 #        return a, tt
+
+
     def getLatestDownloads(self):
         self.cur.execute('SELECT * FROM sql_episode WHERE status="downloaded" ORDER BY date DESC LIMIT 50')
         episodes = self.cur.fetchall()
 
         return episodes
-
 
     def getLatestEpisodes(self):
         self.cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id ORDER BY date DESC LIMIT 50')
@@ -106,9 +117,25 @@ class DBOperation():
     def insertEpisode(self, ep):       
         self.cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', ep)
 
-    def updateEpisode(self,  epId):
+    def updateEpisode(self,  epiusodeId):
         self.cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(epId,) )
+        
+    def deleteAllEpisodes(self,  channelTitle):
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+        con.isolation_level = None
+        cur = con.cursor()
+        channel_id = self.getChannelByTitle(channelTitle)
+        cur.execute('delete from  sql_episode where channel_id = ?',(channel_id[0],) )
+        cur.close()
 
+    def deleteChannel(self,  channelTitle):
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+        con.isolation_level = None
+        cur = con.cursor()
+        channel_id = self.getChannelByTitle(channelTitle)
+        cur.execute('delete from  sql_channel where id = ?',(channel_id[0],) )
+        cur.close()
+        
 class Channel(Entity):
     title = Field(Unicode(30))
     link = Field(Unicode(256))

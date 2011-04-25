@@ -47,6 +47,7 @@ class updateChannelThread(QtCore.QThread):
 #            tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0]))
         else:
 #            a,  tt = self.ui.db.getCurrentChannel(ch[1])
+            #TODO: SQL
             cc = cur.execute('select id,title,link from sql_channel where title =?', (ch[1],))
             a = cc.fetchone()
             tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
@@ -384,23 +385,25 @@ class BrePodder(MainUi):
     
     def delete_channel(self):
         if self.tab.isVisible():
-            c=self.CurrentChannel
+            self.db.deleteAllEpisodes(self.CurrentChannel)
+            self.db.deleteChannel(self.CurrentChannel)
+            
             
             # TODO: SQL
-            ch=Channel.query.filter_by(title=self.CurrentChannel).one()
-            j=0
-            for i in ch.episode:
-                ch.episode[j].delete()
-                j=j+1
-            ch.delete()
+#            c = self.CurrentChannel
+#            ch = Channel.query.filter_by(title=self.CurrentChannel).one()
+#            j=0
+#            for i in ch.episode:
+#                ch.episode[j].delete()
+#                j=j+1
+#            ch.delete()
 
-#            p=re.compile("\W")  
             os.chdir(os.path.expanduser('~')+'/.brePodder/')
-            ChannelDir = os.path.expanduser('~')+'/.brePodder/'+self.p.sub("",ch.title)
+            ChannelDir = os.path.expanduser('~')+'/.brePodder/'+self.p.sub("", self.CurrentChannel)
             
             import shutil
             shutil.rmtree(ChannelDir)
-            session.commit()
+#            session.commit()
             self.update_channel_list()
 
 #last 20 downloadowed episodes
@@ -558,19 +561,19 @@ class BrePodder(MainUi):
             self.update_done()
             
     def create_new_foder(self):
-        text, ok = QtGui.QInputDialog.getText(MainWindow, 'Input Dialog', 'Enter name for new folder:')
+        text, ok = QtGui.QInputDialog.getText(self.MW, 'Input Dialog', 'Enter name for new folder:')
         
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        con.isolation_level = None
-        cur = con.cursor()
+#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+#        con.isolation_level = None
+#        cur = con.cursor()
 
         if ok:
-            con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-            con.isolation_level = None
-            cur2 = con.cursor()
-            cur2.execute('insert into sql_taxonomy(title) values (?)', (text.toUtf8().data(),))
-       
-        ui.update_channel_list()
+#            con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+#            con.isolation_level = None
+#            cur2 = con.cursor()
+#            cur2.execute('insert into sql_taxonomy(title) values (?)', (text.toUtf8().data(),))
+            self.db.insertFolder(text.toUtf8().data())
+        self.update_channel_list()
 
         
     def update_channel(self):

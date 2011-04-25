@@ -99,7 +99,8 @@ class MainUi(object):
         self.db = DBOperation()
         self.Sem = QtCore.QSemaphore(5)
         
-    def setupUi(self, MainWindow):      
+    def setupUi(self, MainWindow):     
+        self.MW =  MainWindow
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(QtCore.QSize(QtCore.QRect(0,0,600,400).size()).expandedTo(MainWindow.minimumSizeHint()))
         MainWindow.setWindowIcon(QtGui.QIcon("images/musicstore.png"))
