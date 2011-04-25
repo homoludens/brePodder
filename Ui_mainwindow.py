@@ -17,6 +17,7 @@ import sys
 import sqlite3
 from sql import *
 #from Ui_add_folder import *
+import feedparser
 
 #setup_all()
 
@@ -1012,8 +1013,7 @@ class BrePodder(object):
         self.updateProgressBar.setValue(0)
         self.updateProgressBar.setFormat(QtCore.QString("%v" + " of " + "%m"))
         j=0
-        for i in allChannels:    
-#            ui.Sem.acquire()
+        for i in allChannels:   
             updtChTr.append(updateChannelThread(i,j))
             self.TTThread.append(updtChTr[j])
             QtCore.QObject.connect(updtChTr[j],QtCore.SIGNAL("updateProgressSignal"),self.updateProgressBarFromThread,QtCore.Qt.BlockingQueuedConnection)
@@ -1099,8 +1099,9 @@ class updateChannelThread(QtCore.QThread):
 #        ui.freeBytes.acquire()
        
     def run(self):
-        ui.Mutex.lock()
-        
+#        ui.Mutex.lock()
+        print ui.Sem.available() 
+        ui.Sem.acquire(1)
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()
@@ -1110,14 +1111,14 @@ class updateChannelThread(QtCore.QThread):
         cur.close()
         if self.newEpisodeExists:
             self.emit(QtCore.SIGNAL("updatesignal2"))
-        ui.Mutex.unlock()
-#        ui.Sem.release()
+#        ui.Mutex.unlock()
+
+        #TODO problem sa prolaskom preko ove linije kada koristim semafore
         self.emit(QtCore.SIGNAL("updateProgressSignal"))
-        
         
         if self.updateProgress == 0:
             self.emit(QtCore.SIGNAL("updateDoneSignal"))
-
+        ui.Sem.release(1)
 #        if self.updateProgress == ui.numberOfChannels-1:
 #            ui.updateProgressBar.hide()
 #            ui.QLineEdit1.show()
@@ -1128,7 +1129,6 @@ class updateChannelThread(QtCore.QThread):
     
 
     def updateChannel(self, ch = None, cursor=None):
-        import feedparser
         newEpisode={}
         cur=cursor
         oldEpisodes=[]
