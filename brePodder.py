@@ -193,14 +193,9 @@ class BrePodder(MainUi):
     def EpisodeDoubleClicked(self, a):
 # TODO: change backgroundColor or something else with QBrush
         a.setFont(0, self.fontBold) 
-        #TODO: SQL++
-#        e=Episode.query.filter_by(title=a.text(0).toUtf8().data().decode('UTF8')).one())
         episodeTitle = a.text(0).toUtf8().data().decode('UTF8')
         e = self.db.getEpisodeByTitle( episodeTitle )
         channel = self.db.getChannelById( e.get("channel_id") )
-        print "e: "
-        print e
-#        p=re.compile("\W")  
         ChannelDir = self.p.sub("", channel.get("title") )
         
         os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
@@ -228,7 +223,6 @@ class BrePodder(MainUi):
         self.downloadList.append((downloadId, Download()))
         self.downloadList[downloadId][1].setup(self)
         self.downloadList[downloadId][1].downloadFile(e.get("enclosure").replace(" ", "%20"), item, downloadId)
- 
           
         os.chdir(os.path.expanduser('~')+'/.brePodder') 
 
