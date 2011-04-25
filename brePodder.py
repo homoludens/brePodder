@@ -12,7 +12,7 @@ class updateChannelThread(QtCore.QThread):
     def run(self):
 #        ui.Mutex.lock()
         self.ui.Sem.acquire(1)
-        
+        #TODO: SQL!!!
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()
@@ -37,10 +37,7 @@ class updateChannelThread(QtCore.QThread):
         newEpisode={}
         cur=cursor
         oldEpisodes=[]
-#        print "updateChannel: "
-#        print ch[1]
         if ch == None:
-#            print self.ui.CurrentChannel
             a,  tt = self.ui.db.getCurrentChannel(self.ui.CurrentChannel[1])
 #            cc = cur.execute('select id,title from sql_channel where title =?', (self.CurrentChannel,))
 #            a = cc.fetchone()
@@ -53,7 +50,6 @@ class updateChannelThread(QtCore.QThread):
             tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
             
         newEpisode['channel_id'] = a[0]    
-#        print a[1]
         epcount=0
         for j in tt:
             oldEpisodes.append(j[1])
@@ -108,12 +104,7 @@ class updateChannelThread(QtCore.QThread):
 #                    cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(j[0],) )
 
 
-class BrePodder(MainUi):
-#    def __init__(self):
-#        self.db = DBOperation()
-#        self.Sem = QtCore.QSemaphore(5)
-
-        
+class BrePodder(MainUi):        
     def memory_usage(a):
         """Memory usage of the current process in kilobytes."""
         status = None
@@ -135,7 +126,7 @@ class BrePodder(MainUi):
 # TODO: download images from episode description so i can show them in QTextBrowser
 # this is beta... :)
     def getImageFromDesc(self, desc,  channel):
-#        p=re.compile("\W")  
+        #TODO: SQL
         ChannelDir = self.p.sub("",channel.title)
         os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
         
