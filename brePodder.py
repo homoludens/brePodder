@@ -456,40 +456,31 @@ class BrePodder(MainUi):
         return sizeReadable
     
     def update_episode_list(self,channel_Title):
-#        cc = Channel.query.filter_by(title=channel_Title.toUtf8().data()).one()
-#        cc = Channel.query.filter_by(title=channel_Title).one()
-        
-#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = True)
-#        con.isolation_level = None
-#        cur = con.cursor()       
-#        cur.execute('select * from sql_channel where title = ?',(channel_Title,))
-#        cc = cur.fetchone()
-
         cc = self.db.getChannelByTitle(channel_Title)
         print cc
 #        self.QTextBrowser1.setHtml("<p><img src="+"'"+cc.logobig+"'"+"><br>\n\n</p><p>"+cc.description+"</p><p><b>Homepage: </b><a href="+cc.homepage+">"+cc.homepage+"</a><p>")
 #        self.QTextBrowser1.setHtml("<p>"+cc.description+"</p><p><b>Homepage: </b><a href="+cc.homepage+">"+cc.homepage+"</a></p>")
         self.QTextBrowser1.setHtml("<p>"+cc[4]+"</p><p><b>Homepage: </b><a href="+cc[3]+">"+cc[3]+"</a></p>")
 
-        #TODO: SQL
-        tt = Episode.query.filter(Episode.channel.has(title=channel_Title)).order_by(Episode.date.desc()).all() 
+        tt = self.db.getChannelEpisodes(channel_Title)
         self.treeWidget_2.clear()
         for t in tt:
             item2 = QtGui.QTreeWidgetItem(self.treeWidget_2)
-            if not t.localfile:
+            if not t[3]:#.localfile:
                 item2.setIcon(0,QtGui.QIcon("images/build.png"))
             else:
                 item2.setIcon(0,QtGui.QIcon("images/mp3.png"))
-            item2.setText(0,t.title)
-            item2.setText(1,self.getReadableSize(t.size))
+            item2.setText(0,t[1]) #.title
+            item2.setText(1,self.getReadableSize(t[3])) #.size
             try:
-                b=gmtime(float(t.date))
+                b=gmtime(float(t[5]))#.date
                 epDate=strftime("%x", b)
             except:
                 b=gmtime()
                 epDate=strftime("%x", b)
                 print "date exception"
             item2.setText(2,epDate)
+#            TODO: fix this error for setting font
 #            if t.status=='new':
 #                item2.setFont(0, self.fontBold)
          

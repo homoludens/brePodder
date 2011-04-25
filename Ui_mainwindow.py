@@ -46,7 +46,7 @@ class treeViewWidget(QtGui.QTreeWidget):
 #            ch=Channel.query.filter_by(title=self.selectedItems()[0].text(0)).one()
 #            tx=Taxonomy.query.filter_by(title=self.itemAt(event.pos()).text(0)).one()  
 
-            #TODO: SQL
+            #TODO: SQL--
             con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
             con.isolation_level = None
             cur = con.cursor()

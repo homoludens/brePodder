@@ -127,7 +127,12 @@ class DBOperation():
         self.cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id ORDER BY date DESC LIMIT 50')
         episodes = self.cur.fetchall()
         return episodes
-
+        
+    def getChannelEpisodes(self,  channelTitle):
+        self.cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id AND CH.title = (?) ORDER BY date DESC LIMIT 50',  (channelTitle,) )
+        episodes = self.cur.fetchall()
+        return episodes
+        
     def insertEpisode(self, ep):       
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
