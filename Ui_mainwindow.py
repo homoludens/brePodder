@@ -97,7 +97,7 @@ class MainUi(object):
         self.p=re.compile("\W")
         
         self.db = DBOperation()
-        self.Sem = QtCore.QSemaphore(1)
+        self.Sem = QtCore.QSemaphore(5)
         
     def setupUi(self, MainWindow):      
         MainWindow.setObjectName("MainWindow")

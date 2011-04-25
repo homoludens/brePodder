@@ -13,14 +13,14 @@ class updateChannelThread(QtCore.QThread):
 #        ui.Mutex.lock()
         self.ui.Sem.acquire(1)
         
-#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-#        con.isolation_level = None
-#        cur = con.cursor()
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+        con.isolation_level = None
+        cur = con.cursor()
         
-        self.updateChannel(self.channel)
+        self.updateChannel(self.channel,  cur)
        
-#        con.commit()
-#        cur.close()
+        con.commit()
+        cur.close()
         
         if self.newEpisodeExists:
             self.emit(QtCore.SIGNAL("updatesignal2"))
@@ -35,7 +35,7 @@ class updateChannelThread(QtCore.QThread):
 
     def updateChannel(self, ch = None, cursor=None):
         newEpisode={}
-#        cur=cursor
+        cur=cursor
         oldEpisodes=[]
 #        print "updateChannel: "
 #        print ch[1]
@@ -46,10 +46,11 @@ class updateChannelThread(QtCore.QThread):
 #            a = cc.fetchone()
 #            tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0]))
         else:
-            a,  tt = self.ui.db.getCurrentChannel(ch[1])
-#            cc = cur.execute('select id,title,link from sql_channel where title =?', (ch[1],))
-#            a = cc.fetchone()
-#            tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
+#            a,  tt = self.ui.db.getCurrentChannel(ch[1])
+            cc = cur.execute('select id,title,link from sql_channel where title =?', (ch[1],))
+            a = cc.fetchone()
+            tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
+            
         newEpisode['channel_id'] = a[0]    
 #        print a[1]
         epcount=0
