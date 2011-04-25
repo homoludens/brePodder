@@ -1,11 +1,10 @@
-from PyQt4 import QtCore, QtGui,  QtNetwork,  QtTest
+#from PyQt4 import QtCore, QtGui,  QtNetwork,  QtTest
 import feedparser
 from sql import *
-import os
+#import os
 from getfavicon import getIcoUrl
 import Image
 import re
-#import Ui_mainwindow
 from Ui_mainwindow import *
 
 class Download(QtCore.QObject):

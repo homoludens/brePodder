@@ -1,6 +1,3 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
 from PyQt4 import QtCore, QtGui, QtNetwork, QtWebKit
 #, QtNetwork,  QtTest,  QtWebKit
 #import feedparser
@@ -32,7 +29,7 @@ selectable = QtCore.Qt.ItemIsSelectable
 noflags = QtCore.Qt.NoItemFlags
 
 
-#override od treeViewWidger
+#override QTreeViewWidget for handling Drag & Drop events 
 class treeViewWidget(QtGui.QTreeWidget):
     def __init__(self, parent=None):
       super(treeViewWidget, self).__init__(parent)
@@ -76,7 +73,7 @@ class treeViewWidget(QtGui.QTreeWidget):
             print 'drag'
 
 
-
+#Main application interface
 class MainUi(object):
     def __init__(self, parent=None):
         self.http = []

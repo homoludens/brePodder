@@ -18,17 +18,17 @@ class updateChannelThread(QtCore.QThread):
        
         con.commit()
         cur.close()
+        
         if self.newEpisodeExists:
             self.emit(QtCore.SIGNAL("updatesignal2"))
 
-        #TODO problem sa prolaskom preko ove linije kada koristim semafore
         self.emit(QtCore.SIGNAL("updateProgressSignal"))
         
         if self.updateProgress == 0:
             self.emit(QtCore.SIGNAL("updateDoneSignal"))
 #        ui.Mutex.unlock()
         self.ui.Sem.release(1)
-    
+        
 
     def updateChannel(self, ch = None, cursor=None):
         newEpisode={}
@@ -96,8 +96,6 @@ class updateChannelThread(QtCore.QThread):
 
 
 class BrePodder(MainUi):
-    def setup(self,  ui):
-        self.ui = ui
         
     def memory_usage(a):
         """Memory usage of the current process in kilobytes."""
