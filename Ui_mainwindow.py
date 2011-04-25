@@ -46,7 +46,7 @@ class treeViewWidget(QtGui.QTreeWidget):
 #            ch=Channel.query.filter_by(title=self.selectedItems()[0].text(0)).one()
 #            tx=Taxonomy.query.filter_by(title=self.itemAt(event.pos()).text(0)).one()  
 
-            #TODO: SQL--
+            #TODO: SQL-- this on is out of scope and can not get to db object
             con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
             con.isolation_level = None
             cur = con.cursor()
@@ -57,8 +57,11 @@ class treeViewWidget(QtGui.QTreeWidget):
             cur.execute('update sql_channel set folder_id = :tx_id  where id = :ch_id', {"tx_id": tx_id, "ch_id": ch_id})
             con.commit()
             cur.close()
+#            channelTitle = self.selectedItems()[0].text(0).toUtf8().data()
+#            folderTitle = self.itemAt(event.pos()).text(0).toUtf8().data()
+#            self.parent.db.addChannelToFolder(self,  channelTitle,  folderTitle)
             
-            ui.update_channel_list()
+#            ui.update_channel_list()
         else:
             print 'not folder'
 
@@ -514,8 +517,7 @@ class MainUi(object):
                 MainWindow.show()
             else:
                 MainWindow.hide()
-                
-                
+
 
     def dialog_add(self):
         filename = QtGui.QFileDialog.getOpenFileName(MainWindow, 'Open file','/home')

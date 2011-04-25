@@ -236,8 +236,9 @@ class Download(QtCore.QObject):
 #                    Image.open('../images/musicstore.png').save(file, 'PNG')
             else:
                 try:
-                    episode = self.ui.db.getEpisodeByTitle(self.itemZaPrenos.text(1).toUtf8().data().decode('UTF8'))
-                    ep = (ChannelDir.decode('utf8')+'/'+ file.decode('utf8'),  u'downloaded',  episode[0])
+                    episodeTitle = self.itemZaPrenos.text(1).toUtf8().data().decode('UTF8')
+                    episode = self.ui.db.getEpisodeByTitle(episodeTitle)
+                    ep = ( ChannelDir.decode('utf8')+'/'+ file.decode('utf8'),  u'downloaded',  episode.get("id") )
                     self.ui.db.updateEpisode(ep)
                 except:
                     print 'InvalidRequestError'

@@ -12,7 +12,7 @@ class updateChannelThread(QtCore.QThread):
     def run(self):
 #        ui.Mutex.lock()
         self.ui.Sem.acquire(1)
-        #TODO: SQL!!!
+        #TODO: SQL--this one is in thread and is making problems
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()
@@ -44,7 +44,7 @@ class updateChannelThread(QtCore.QThread):
 #            tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0]))
         else:
 #            a,  tt = self.ui.db.getCurrentChannel(ch[1])
-            #TODO: SQL--
+            #TODO: SQL--this one is in thread and is making problems
             cc = cur.execute('select id,title,link from sql_channel where title =?', (ch[1],))
             a = cc.fetchone()
             tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
@@ -194,35 +194,40 @@ class BrePodder(MainUi):
 # TODO: change backgroundColor or something else with QBrush
         a.setFont(0, self.fontBold) 
         #TODO: SQL++
-        e=Episode.query.filter_by(title=a.text(0).toUtf8().data().decode('UTF8')).one()
+#        e=Episode.query.filter_by(title=a.text(0).toUtf8().data().decode('UTF8')).one())
+        episodeTitle = a.text(0).toUtf8().data().decode('UTF8')
+        e = self.db.getEpisodeByTitle( episodeTitle )
+        channel = self.db.getChannelById( e.get("channel_id") )
+        print "e: "
+        print e
 #        p=re.compile("\W")  
-        ChannelDir = self.p.sub("",e.channel.title)
+        ChannelDir = self.p.sub("", channel.get("title") )
         
         os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
         item = QtGui.QTreeWidgetItem(self.treeWidget)
-        item.setText(0,e.channel.title)
-        item.setText(1,e.title)
-        item.setText(2,self.getReadableSize(e.size))
-        item.setText(3,'0')
-        item.setText(4,'0')
+        item.setText(0, channel.get("title") )
+        item.setText(1, e.get("title") )
+        item.setText(2, self.getReadableSize( e.get("size") ) )
+        item.setText(3, '0')
+        item.setText(4, '0')
 
         try:
-            item.setText(5,e.enclosure)
+            item.setText(5,e.get("enclosure"))
         except TypeError:
             print TypeError
             item.setText(5,"No link")
         
-        session.commit()
+#        session.commit()
         
         if len(self.downloadList)>0:
             downloadId = self.downloadList[-1][0]+1
         else:
             downloadId = 0
 #        print "downloadId: " + str(downloadId)
-        self.itemsDownloading.append((downloadId, e.enclosure.replace(" ", "%20"))) 
+        self.itemsDownloading.append((downloadId, e.get("enclosure").replace(" ", "%20"))) 
         self.downloadList.append((downloadId, Download()))
         self.downloadList[downloadId][1].setup(self)
-        self.downloadList[downloadId][1].downloadFile(e.enclosure.replace(" ", "%20"), item, downloadId)
+        self.downloadList[downloadId][1].downloadFile(e.get("enclosure").replace(" ", "%20"), item, downloadId)
  
           
         os.chdir(os.path.expanduser('~')+'/.brePodder') 
@@ -343,6 +348,7 @@ class BrePodder(MainUi):
         newChannel = Channel(title=ChannelTitle,link=feedLink,description=ChannelSubtitle,logo=logo_file, logobig=logo_fileBig,homepage=ChannelHomepage)
         for i in w.entries:
             if i.has_key('title'):
+                #TODO: SQL++
                 newEpisode = Episode(title=i.title)
             else:
                 newEpisode = Episode(title=u'pajseri nisu stavili naziv epizode')

@@ -36,6 +36,17 @@ class DBOperation():
         childChannels = self.cur.fetchall()
         return childChannels
 
+    def getChannelById(self,  channel_id):
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+        con.isolation_level = "IMMEDIATE"
+        con.row_factory = sqlite3.Row
+        cur = con.cursor()       
+        cur.execute('select * from sql_channel where id = ?',(channel_id,))
+        channel = cur.fetchone()
+        cur.close()
+        
+        return dict(channel)
+
 
     def getChannelByTitle(self,  channel):
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
@@ -50,12 +61,14 @@ class DBOperation():
     def getEpisodeByTitle(self,  episodeTitle):
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = "IMMEDIATE"
+        con.row_factory = sqlite3.Row
         cur = con.cursor()       
         cur.execute('select * from sql_episode where title = ?',(episodeTitle,))
         episode = cur.fetchone()
+        episodeDict = dict(episode)
         cur.close()
         
-        return episode
+        return episodeDict
 
 #    def GETCHANNEL(self,  channel):
 #        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = True)
@@ -166,6 +179,18 @@ class DBOperation():
         cur = con.cursor()
         channel_id = self.getChannelByTitle(channelTitle)
         cur.execute('delete from  sql_channel where id = ?',(channel_id[0],) )
+        cur.close()
+    
+    def addChannelToFolder(self,  channelTitle,  folderTitle):
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+        con.isolation_level = None
+        cur = con.cursor()
+        cur.execute('select id from sql_channel where title = ?', [channelTitle,]) 
+        ch_id = cur.fetchone()[0]
+        cur.execute('select id from sql_taxonomy where title = ?', (folderTitle,))
+        tx_id = cur.fetchone()[0]   
+        cur.execute('update sql_channel set folder_id = :tx_id  where id = :ch_id', {"tx_id": tx_id, "ch_id": ch_id})
+        con.commit()
         cur.close()
         
 class Channel(Entity):
