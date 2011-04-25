@@ -20,7 +20,7 @@ from sql import *
 
 #setup_all()
 
-sys.setappdefaultencoding('utf-8')  
+sys.setappdefaultencoding('utf-8')
 # constants
 
 draggable = QtCore.Qt.ItemIsDragEnabled
@@ -47,7 +47,7 @@ class treeViewWidget(QtGui.QTreeWidget):
 #            where = self.itemAt(event.pos()).text(0)
 #            ch=Channel.query.filter_by(title=self.selectedItems()[0].text(0)).one()
 #            tx=Taxonomy.query.filter_by(title=self.itemAt(event.pos()).text(0)).one()           
-            con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+            con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
             con.isolation_level = None
             cur = con.cursor()
             cur.execute('select id from sql_channel where title = ?', [self.selectedItems()[0].text(0).toUtf8().data(),]) 
@@ -95,6 +95,7 @@ class BrePodder(object):
 #        self.freeBytes = QtCore.QSemaphore(self.BufferSize)
 #        self.usedBytes = QtCore.QSemaphore()
         self.Mutex = QtCore.QMutex()
+        self.Sem = QtCore.QSemaphore(5)
 #        self.freeBytes.acquire()
         self.itemsDownloading=[]
         self.p=re.compile("\W")
@@ -803,7 +804,7 @@ class BrePodder(object):
 #last 20 downloadowed episodes
     def update_lastest_episodes_list(self):
 
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()
         cur.execute('SELECT * FROM sql_episode WHERE status="downloaded" ORDER BY date DESC LIMIT 50')
@@ -821,7 +822,7 @@ class BrePodder(object):
             
 #newest episodes
     def update_newest_episodes_list(self):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()
         cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id ORDER BY date DESC LIMIT 50')
@@ -865,7 +866,7 @@ class BrePodder(object):
     def update_episode_list(self,channel_Title):
 #        cc = Channel.query.filter_by(title=channel_Title.toUtf8().data()).one()
 #        cc = Channel.query.filter_by(title=channel_Title).one()
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()       
         cur.execute('select * from sql_channel where title = ?',(channel_Title,))
@@ -897,7 +898,7 @@ class BrePodder(object):
          
     def update_channel_list(self):
         
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()
         
@@ -948,12 +949,12 @@ class BrePodder(object):
     def create_new_foder(self):
         text, ok = QtGui.QInputDialog.getText(MainWindow, 'Input Dialog', 'Enter name for new folder:')
         
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()
 
         if ok:
-            con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+            con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
             con.isolation_level = None
             cur2 = con.cursor()
             cur2.execute('insert into sql_taxonomy(title) values (?)', (text.toUtf8().data(),))
@@ -968,7 +969,7 @@ class BrePodder(object):
         self.updateProgressBar.show()
         self.numberOfChannels = 1
 
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()       
         cur.execute('select * from sql_channel where title = ?',(self.CurrentChannel,))
@@ -980,6 +981,7 @@ class BrePodder(object):
         
         self.ChannelForUpdate=ch
 #        print ch.title
+#        ui.Sem.acquire()
         updtChTr=updateChannelThread(ch,0)
         QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal"),self.update_channel_list,QtCore.Qt.QueuedConnection)
         QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal_episodelist(PyQt_PyObject)"),self.update_episode_list,QtCore.Qt.QueuedConnection)
@@ -998,7 +1000,7 @@ class BrePodder(object):
         updtChTr=[]
 #        allChannels=Channel.query.all()
         
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()       
         cur.execute('select * from sql_channel')
@@ -1010,7 +1012,8 @@ class BrePodder(object):
         self.updateProgressBar.setValue(0)
         self.updateProgressBar.setFormat(QtCore.QString("%v" + " of " + "%m"))
         j=0
-        for i in allChannels:       
+        for i in allChannels:    
+#            ui.Sem.acquire()
             updtChTr.append(updateChannelThread(i,j))
             self.TTThread.append(updtChTr[j])
             QtCore.QObject.connect(updtChTr[j],QtCore.SIGNAL("updateProgressSignal"),self.updateProgressBarFromThread,QtCore.Qt.BlockingQueuedConnection)
@@ -1047,7 +1050,7 @@ class BrePodder(object):
     
     def export_opml(self):
         import opml
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()       
         cur.execute('select * from sql_channel')
@@ -1097,7 +1100,8 @@ class updateChannelThread(QtCore.QThread):
        
     def run(self):
         ui.Mutex.lock()
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite")
+        
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()
         self.updateChannel(self.channel,cur)
@@ -1107,6 +1111,7 @@ class updateChannelThread(QtCore.QThread):
         if self.newEpisodeExists:
             self.emit(QtCore.SIGNAL("updatesignal2"))
         ui.Mutex.unlock()
+#        ui.Sem.release()
         self.emit(QtCore.SIGNAL("updateProgressSignal"))
         
         
@@ -1198,6 +1203,7 @@ if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     MainWindow = QtGui.QMainWindow()
     ui = BrePodder()
+    baza = BaseOperation()
 #    print ui.memory_usage()
     ui.setupUi(MainWindow)
     MainWindow.show()
