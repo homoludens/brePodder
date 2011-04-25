@@ -25,6 +25,11 @@ class DBOperation():
         self.cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(episodeId,) )
         cur.close()
 
+
+    def insertChannel(self, channel):              
+        self.cur.execute('insert into sql_channel(title, link, homepage, description, logo, logobig, folder_id) values (?,?,?,?,?,?,?) ', channel)
+        print channel
+
     def insertEpisode(self, episode):              
         self.cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', episode)
 

@@ -215,16 +215,16 @@ class BrePodder(MainUi):
 #        session.commit()
         
         if len(self.downloadList)>0:
-            downloadId = self.downloadList[-1][0]+1
+            downloadId = self.downloadList[-1][0] + 1
         else:
             downloadId = 0
 #        print "downloadId: " + str(downloadId)
-        self.itemsDownloading.append((downloadId, e.get("enclosure").replace(" ", "%20"))) 
+        self.itemsDownloading.append( (downloadId, e.get("enclosure").replace(" ", "%20"))) 
         self.downloadList.append((downloadId, Download()))
         self.downloadList[downloadId][1].setup(self)
-        self.downloadList[downloadId][1].downloadFile(e.get("enclosure").replace(" ", "%20"), item, downloadId)
+        self.downloadList[downloadId][1].downloadFile( e.get("enclosure").replace(" ", "%20"), item, downloadId )
           
-        os.chdir(os.path.expanduser('~')+'/.brePodder') 
+        os.chdir( os.path.expanduser('~')+'/.brePodder' ) 
 
     def AddChannel(self, newUrl = None):
         import feedparser
@@ -260,10 +260,7 @@ class BrePodder(MainUi):
 #            item.setText(0,w.feed.title)
                 item.setText(1,w.feed.image.href)
                 item.setText(5,w.feed.image.href)
- 
- 
-                 
-                
+
                 if len(self.downloadList)>0:
                     downloadId = self.downloadList[-1][0]+1
                 else:
@@ -337,9 +334,13 @@ class BrePodder(MainUi):
 #            ChannelHomepage = w.feed.links[1].href
         else:
             ChannelHomepage='http://google.com'
-
+            
+        #TODO: SQL++
 #        newChannel = Channel(title=ChannelTitle,link=feedLink,description=ChannelSubtitle,logo=logo_file, logobig=logo_fileBig)
-        newChannel = Channel(title=ChannelTitle,link=feedLink,description=ChannelSubtitle,logo=logo_file, logobig=logo_fileBig,homepage=ChannelHomepage)
+#        newChannel = Channel(title=ChannelTitle,link=feedLink,description=ChannelSubtitle,logo=logo_file, logobig=logo_fileBig,homepage=ChannelHomepage)
+#        newChannel = { "title":ChannelTitle, "link":feedLink, "description":ChannelSubtitle, "logo":logo_file, "logobig":logo_fileBig, "homepage":ChannelHomepage }
+        newChannel = ( ChannelTitle, feedLink, ChannelHomepage,  ChannelSubtitle, logo_file, logo_fileBig, '' )
+        self.db.insertChannel( tuple(newChannel) )
         for i in w.entries:
             if i.has_key('title'):
                 #TODO: SQL++
@@ -361,7 +362,7 @@ class BrePodder(MainUi):
                     newEpisode.date = epDate
                 else:
                     epDate=mktime(gmtime())
-
+            #TODO: SQL++
             newChannel.episode.append(newEpisode)
         session.commit()
         self.update_channel_list()
