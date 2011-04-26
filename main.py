@@ -15,8 +15,10 @@ from brePodder import *
 
 if __name__ == "__main__":
     os.chdir(os.path.expanduser('~'))
+    
     if not os.path.isdir('.brePodder'):
         os.makedirs('.brePodder')
+        
     os.chdir('.brePodder')
 #    os.makedirs('images')
     app = QtGui.QApplication(sys.argv)
@@ -25,6 +27,10 @@ if __name__ == "__main__":
 #    baza = DBOperation()
 #    print ui.memory_usage()
     ui.setupUi(MainWindow)
+    
+    if not os.path.isfile('.brePodder/podcasts.sqlite'):
+        ui.db.createDB()
+    
     MainWindow.show()
     ui.update_channel_list()
     ui.update_lastest_episodes_list()
