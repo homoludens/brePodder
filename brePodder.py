@@ -393,19 +393,11 @@ class BrePodder(MainUi):
             shutil.rmtree(ChannelDir)
             self.update_channel_list()
 
-#last 20 downloadowed episodes
+    # last 20 downloadowed episodes
     def update_lastest_episodes_list(self):
-
-#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-#        con.isolation_level = None
-#        cur = con.cursor()
-#        cur.execute('SELECT * FROM sql_episode WHERE status="downloaded" ORDER BY date DESC LIMIT 50')
-#        episodes = cur.fetchall()
-
         episodes = self.db.getLatestDownloads()
         self.treeWidget_4.clear()
 
-        #episodes=Episode.query.filter_by(status=u'downloaded').order_by(Episode.id.desc()).limit(50).all()
         for e in episodes:
             item = QtGui.QTreeWidgetItem(self.treeWidget_4)
             item.setText(0,str(e[8]))
@@ -413,16 +405,8 @@ class BrePodder(MainUi):
             item.setText(2,self.getReadableSize(e[4]))
             item.setText(3,os.path.expanduser('~')+'/.brePodder/'+str(e[3]))
             
-#newest episodes
+    # newest episodes
     def update_newest_episodes_list(self):
-#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-#        con.isolation_level = None
-#        cur = con.cursor()
-#        cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id ORDER BY date DESC LIMIT 50')
-#        episodes = cur.fetchall()
-        
-#        episodes=Episode.query.order_by(Episode.date.desc()).limit(40).all()
-
         episodes = self.db.getLatestEpisodes()
         self.treeWidget_5.clear()
         for e in episodes:
@@ -443,8 +427,8 @@ class BrePodder(MainUi):
             item.setText(3,epDate)
     
     def LastestEpisodeDoubleClicked(self, a):
-#        print  a.text(3).toUtf8().data().decode('UTF8')
-        os.system("mplayer "+a.text(3).toUtf8().data().decode('UTF8'))
+        print  a.text(3).toUtf8().data().decode('UTF8')
+        os.system( "mplayer " + a.text(3).toUtf8().data().decode('UTF8') )
         
     def getReadableSize(self,  size):
         if size:
