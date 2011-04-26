@@ -28,8 +28,8 @@ if __name__ == "__main__":
 #    print ui.memory_usage()
     ui.setupUi(MainWindow)
     
-    if not os.path.isfile('.brePodder/podcasts.sqlite'):
-        ui.db.createDB()
+    if not os.path.isfile('podcasts.sqlite'):
+        ui.db.create_DB()
     
     MainWindow.show()
     ui.update_channel_list()

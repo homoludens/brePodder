@@ -157,33 +157,49 @@ class BrePodder(MainUi):
         if self.treeWidget_2.selectedItems():
             selection = self.treeWidget_2.selectedItems()[0]
             try:
-                e = self.db.getEpisodeByTitle( selection.text(0).toUtf8().data().decode() ) 
-                print e
-                if e.get("enclosure"): 
-                    #enclosure
-                    enc = e.get("enclosure")
-                else:
-                    enc = 'None'
-                if e.get("description"):
-                    #description
-                    desc = e.get("description")
-                else:
-                    desc='None'
-                if e.get("localfile"):
-#                    localfile
-                    localFile = e.get("localfile")
-                else:
-                    localFile='None'
-    # TODO: download images from episode description so i can show them in QTextBrowser
-    #            desc_localimg = self.getImageFromDesc(desc, e.channel)
-    #            print desc_localimg
+                    e = self.db.getEpisodeByTitle( selection.text(0).toUtf8().data().decode() ) 
 
-                self.QTextBrowser1.setHtml("<p>"+desc+"</br>\n\r</p><p><b>FILE: </b><a href="+enc+">"+enc+"</a></p>\
-                                            <p><b>LOCALFILE: </b><a href="+localFile+">"+localFile+"</a></p>\
-                                            <p>PLAY:<audio_off  controls='controls' src='"+enc+"'/></p>")
+                    if e.get("enclosure"): 
+                        enc = e.get("enclosure")
+                    else:
+                        enc = 'None'
+                    if e.get("description"):
+                        desc = e.get("description")
+                    else:
+                        desc='None'
+                    if e.get("localfile"):
+                        localFile = e.get("localfile")
+                    else:
+                        localFile='None'
 
+            # TODO: download images from episode description so i can show them in QTextBrowser
+            #            desc_localimg = self.getImageFromDesc(desc, e.channel)
+            #            print desc_localimg
+
+                    self.QTextBrowser1.setHtml("<p>"+desc+"</br>\n\r</p><p><b>FILE: </b><a href="+enc+">"+enc+"</a></p>\
+                                                <p><b>LOCALFILE: </b><a href="+localFile+">"+localFile+"</a></p>\
+                                                <p>PLAY:<audio  controls='controls' src='"+enc+"'/></p>")
+
+                   # self.QTextBrowser1.settings().setAttribute(QtWebKit.QWebSettings.JavascriptEnabled, True)
+		    
+		    if localFile != 'None':
+		    	self.AudioPlayer.setUrl(localFile)
+		    else:
+		    	self.AudioPlayer.setUrl(enc)
+
+#                    self.QTextBrowser1.setHtml(b)
+                    
+#                    code = QtCore.QString("$('a').css('background-color', 'yellow')")
+#                    self.QTextBrowser1.page().mainFrame().evaluateJavaScript(code)
+                    
+#                    
+#                    self.QTextBrowser1.setUrl(QtCore.QUrl("static/jQuery.jPlayer.2.0.0/jplayer.html"))
+#                    self.QTextBrowser1.page().mainFrame().evaluateJavaScript(open('static/jQuery.jPlayer.2.0.0/js/jquery.min.js').read())
+#                    self.QTextBrowser1.page().mainFrame().evaluateJavaScript(open('static/jQuery.jPlayer.2.0.0/js/jquery.jplayer.min.js').read())
+#                    self.QTextBrowser1.page().mainFrame().evaluateJavaScript("""$(document).ready(function() { $("body").css("background", "#f00");});""")
+#                  
             except:
-                print "EpisodeActivated exception"
+                    print "EpisodeActivated exception"
     
     def DownloadActivated(self, a, i):
         self.itemZaPrekid=a
@@ -425,10 +441,10 @@ class BrePodder(MainUi):
                 b=gmtime()
                 epDate=strftime("%x", b)
             item.setText(3,epDate)
-    
+    #TODO: Send file to some media player
     def LastestEpisodeDoubleClicked(self, a):
         print  a.text(3).toUtf8().data().decode('UTF8')
-        os.system( "mplayer " + a.text(3).toUtf8().data().decode('UTF8') )
+        os.system( "mocp -a " + a.text(3).toUtf8().data().decode('UTF8') )
         
     def getReadableSize(self,  size):
         if size:
@@ -447,7 +463,7 @@ class BrePodder(MainUi):
     
     def update_episode_list(self,channel_Title):
         cc = self.db.getChannelByTitle(channel_Title)
-        print cc
+#        print cc
 #        self.QTextBrowser1.setHtml("<p><img src="+"'"+cc.logobig+"'"+"><br>\n\n</p><p>"+cc.description+"</p><p><b>Homepage: </b><a href="+cc.homepage+">"+cc.homepage+"</a><p>")
 #        self.QTextBrowser1.setHtml("<p>"+cc.description+"</p><p><b>Homepage: </b><a href="+cc.homepage+">"+cc.homepage+"</a></p>")
         self.QTextBrowser1.setHtml("<p>"+cc[4]+"</p><p><b>Homepage: </b><a href="+cc[3]+">"+cc[3]+"</a></p>")

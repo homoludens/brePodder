@@ -15,7 +15,7 @@ import sqlite3
 from sql import *
 #from Ui_add_folder import *
 import feedparser
-
+from audioplayer import AudioPlayer
 #setup_all()
 
 sys.setappdefaultencoding('utf-8')
@@ -220,7 +220,7 @@ class MainUi(object):
         self.treeWidget_2.setObjectName("treeWidget_2")
         
 #TODO: make settings fot choosing WebKit insted of QTextBrowser
-#        self.QTextBrowser1 = QtWebKit.QWebView(self.splitter) #Qt4.4
+        #self.QTextBrowser1 = QtWebKit.QWebView(self.splitter) #Qt4.4
         self.QTextBrowser1 = QtGui.QTextBrowser(self.splitter) # Qt4.3
 #        self.QTextBrowser1.setOpenExternalLinks(1)
 #        self.QTextBrowser1.setOpenLinks(1)
@@ -233,8 +233,12 @@ class MainUi(object):
         self.QTextBrowser1.setSizeIncrement(QtCore.QSize(4,0))
         self.QTextBrowser1.setBaseSize(QtCore.QSize(400,0))
         self.QTextBrowser1.setObjectName("QTextBrowser1")
+
+	self.AudioPlayer = AudioPlayer( "", self.splitter)
+
         self.gridlayout1.addWidget(self.splitter_2,0,0,1,1)
         self.tabWidget.addTab(self.tab,"")
+
 
         self.tab_2 = QtGui.QWidget()
         self.tab_2.setObjectName("tab_2")
