@@ -157,20 +157,21 @@ class BrePodder(MainUi):
         if self.treeWidget_2.selectedItems():
             selection = self.treeWidget_2.selectedItems()[0]
             try:
-                e = self.db.getEpisodeByTitle(selection.text(0).toUtf8().data().decode())
-                if e[2]: 
+                e = self.db.getEpisodeByTitle( selection.text(0).toUtf8().data().decode() ) 
+                print e
+                if e.get("enclosure"): 
                     #enclosure
-                    enc=e[2]
+                    enc = e.get("enclosure")
                 else:
-                    enc='None'
-                if e[6]:
+                    enc = 'None'
+                if e.get("description"):
                     #description
-                    desc=e[6]
+                    desc = e.get("description")
                 else:
                     desc='None'
-                if e[3]:
+                if e.get("localfile"):
 #                    localfile
-                    localFile=e[3]
+                    localFile = e.get("localfile")
                 else:
                     localFile='None'
     # TODO: download images from episode description so i can show them in QTextBrowser
@@ -339,34 +340,51 @@ class BrePodder(MainUi):
 #        newChannel = Channel(title=ChannelTitle,link=feedLink,description=ChannelSubtitle,logo=logo_file, logobig=logo_fileBig)
 #        newChannel = Channel(title=ChannelTitle,link=feedLink,description=ChannelSubtitle,logo=logo_file, logobig=logo_fileBig,homepage=ChannelHomepage)
 #        newChannel = { "title":ChannelTitle, "link":feedLink, "description":ChannelSubtitle, "logo":logo_file, "logobig":logo_fileBig, "homepage":ChannelHomepage }
-        newChannel = ( ChannelTitle, feedLink, ChannelHomepage,  ChannelSubtitle, logo_file, logo_fileBig, '' )
-        self.db.insertChannel( tuple(newChannel) )
+        newChannel = ( ChannelTitle, feedLink, ChannelHomepage,  ChannelSubtitle, logo_file, logo_fileBig )
+        self.db.insertChannel( newChannel )
+
+        ChannelId = self.db.getChannelByTitle(ChannelTitle)
+
         for i in w.entries:
+            newEpisode = []
             if i.has_key('title'):
                 #TODO: SQL++
-                newEpisode = Episode(title=i.title)
+#                newEpisode = Episode(title=i.title)
+                newEpisode.append(i.title)
             else:
-                newEpisode = Episode(title=u'pajseri nisu stavili naziv epizode')
+#                newEpisode = Episode(title=u'pajseri nisu stavili naziv epizode')
+                newEpisode.append(u'pajseri nisu stavili naziv epizode')
             if i.has_key('enclosures'):
-                newEpisode.enclosure = i.enclosures[0].href
+#                newEpisode.enclosure = i.enclosures[0].href
+                newEpisode.append(i.enclosures[0].href)
                 try:
-                    newEpisode.size = i.enclosures[0].length
+#                    newEpisode.size = i.enclosures[0].length
+                    newEpisode.append(i.enclosures[0].length)
                 except:
-                    newEpisode.size = 1
-            if i.has_key('summary_detail'):
-                newEpisode.description = i.summary_detail.value
+#                    newEpisode.size = 1
+                    newEpisode.append( 1 )
             if i.has_key('updated'):
 #                epDate=strftime("%x", i.updated_parsed)
                 if i.updated_parsed:
-                    epDate=mktime(i.updated_parsed)
-                    newEpisode.date = epDate
+                    epDate=mktime( i.updated_parsed )
+#                    newEpisode.date = epDate
                 else:
                     epDate=mktime(gmtime())
+                newEpisode.append(epDate)
+                
+            if i.has_key('summary_detail'):
+#                newEpisode.description = i.summary_detail.value
+                newEpisode.append(i.summary_detail.value)
+                
+            newEpisode.append('new')
+            newEpisode.append(ChannelId[0])
+            self.db.insertEpisode( newEpisode )
             #TODO: SQL++
-            newChannel.episode.append(newEpisode)
-        session.commit()
+#            newChannel.episode.append(newEpisode)
+
+#        session.commit()
         self.update_channel_list()
-        os.chdir(os.path.expanduser('~')+'/.brePodder') 
+        os.chdir( os.path.expanduser('~') + '/.brePodder' ) 
         
 
     def channel_activated(self):

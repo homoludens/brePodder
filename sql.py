@@ -22,16 +22,21 @@ class DBOperation():
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = "IMMEDIATE"
         cur = con.cursor()       
-        self.cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(episodeId,) )
+        cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(episodeId,) )
         cur.close()
 
-
-    def insertChannel(self, channel):              
-        self.cur.execute('insert into sql_channel(title, link, homepage, description, logo, logobig, folder_id) values (?,?,?,?,?,?,?) ', channel)
+#TODO: ovo ne radi
+    def insertChannel(self, channel):    
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+        con.isolation_level = None
+        cur = con.cursor()           
+        cur.execute('insert into sql_channel(title, link, homepage, description, logo, logobig) values (?,?,?,?,?,?) ', channel)
+        cur.close()
+        print "insertChannel: "
         print channel
 
-    def insertEpisode(self, episode):              
-        self.cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', episode)
+#    def insertEpisode(self, episode):              
+#        self.cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', episode)
 
     def close(self):
         self.cur.close()
@@ -154,7 +159,9 @@ class DBOperation():
         episodes = self.cur.fetchall()
         return episodes
         
-    def insertEpisode(self, ep):       
+    def insertEpisode(self, ep):   
+        print "ep: "
+        print ep
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()
