@@ -1,16 +1,16 @@
-from elixir import *
-import sqlalchemy
+#from elixir import *
+#import sqlalchemy
 import sys
 import sqlite3,  os
 
 sys.setappdefaultencoding('utf-8') 
 
 
-metadata.bind = "sqlite:////home/homoludens/.brePodder/podcasts.sqlite"
-metadata.bind.echo = False
+#metadata.bind = "sqlite:////home/homoludens/.brePodder/podcasts.sqlite"
+#metadata.bind.echo = False
 #options_defaults['autosetup'] = True
 
-setup_all()
+#setup_all()
 
 class DBOperation():
     def __init__(self):
@@ -204,38 +204,97 @@ class DBOperation():
         cur.execute('update sql_channel set folder_id = :tx_id  where id = :ch_id', {"tx_id": tx_id, "ch_id": ch_id})
         con.commit()
         cur.close()
-        
-class Channel(Entity):
-    title = Field(Unicode(30))
-    link = Field(Unicode(256))
-    homepage = Field(Unicode(256))
-    description = Field(Unicode(4096))
-    logo = Field(Unicode(256))
-    logobig = Field(Unicode(256))
-    episode = OneToMany('Episode')    # <-- add this line
-    folder = ManyToOne('Taxonomy') 
-    
-    def __repr__(self):
-        return ' "%s" (%s) ' % (self.title,self.link)
-        
-#    using_table_options(UniqueConstraint('title'))
-    
-class Episode(Entity):
-    title = Field(Unicode(60))
-    enclosure = Field(Unicode(256))
-    localfile = Field(Unicode(256))
-    size=Field(Integer)
-    date = Field(String(256))
-    description = Field(Unicode(4096))
-    status=Field(Unicode(16)) #status epizode: new, downloaded, deleted, old
-    channel = ManyToOne('Channel', ondelete="cascade")         # <-- and this one
-    
-class Taxonomy(Entity):
-    title = Field(Unicode(60))
-    folder = OneToMany('Channel')
 
-setup_all()
 
-setup_all(True)
+
+def _create_DB(self):
+    con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+    con.isolation_level = None
+    cur = con.cursor()  
+
+    try:
+        cur.execute('''CREATE TABLE IF NOT EXISTS sql_channel (
+                            id INTEGER NOT NULL, 
+                            title VARCHAR(30), 
+                            link VARCHAR(256), 
+                            homepage VARCHAR(256), 
+                            description VARCHAR(4096), 
+                            logo VARCHAR(256), 
+                            logobig VARCHAR(256), folder_id INTEGER, 
+                            folder INTEGER,
+                            PRIMARY KEY (id)
+                    )''')
+        con.commit()
+        cur.close()
+    except sqlite3.OperationalError:
+        print("table sql_channel already exists".format(self.table))
+    
+    try:
+        cur.execute('''CREATE TABLE IF NOT EXISTS sql_episode (
+                            id INTEGER NOT NULL, 
+                            title VARCHAR(60), 
+                            enclosure VARCHAR(256), 
+                            localfile VARCHAR(256), 
+                            size INTEGER, 
+                            date VARCHAR(256), 
+                            description VARCHAR(4096), 
+                            status VARCHAR(16), 
+                            channel_id INTEGER, 
+                            PRIMARY KEY (id), 
+                             CONSTRAINT sql_episode_channel_id_fk FOREIGN KEY(channel_id) REFERENCES sql_channel (id)
+                        )''')
+                        
+        con.commit()
+        cur.close()
+    except sqlite3.OperationalError:
+        print("table sql_channels already exists".format(self.table))
+        
+
+    try:
+        cur.execute('''CREATE TABLE IF NOT EXISTS sql_taxonomy (
+                        id INTEGER NOT NULL, 
+                        title VARCHAR(60), 
+                        PRIMARY KEY (id)
+                    )''')
+                    
+        con.commit()
+        cur.close()
+    except sqlite3.OperationalError:
+        print("table sql_channels already exists".format(self.table))
+#TODO: SQL
+#class Episode(Entity):
+#    title = Field(Unicode(60))
+#    enclosure = Field(Unicode(256))
+#    localfile = Field(Unicode(256))
+#    size=Field(Integer)
+#    date = Field(String(256))
+#    description = Field(Unicode(4096))
+#    status=Field(Unicode(16)) #status epizode: new, downloaded, deleted, old
+#    channel = ManyToOne('Channel', ondelete="cascade")         # <-- and this one
+#    
+#class Taxonomy(Entity):
+#    title = Field(Unicode(60))
+#    folder = OneToMany('Channel')
+#
+#class Channel(Entity):
+#    title = Field(Unicode(30))
+#    link = Field(Unicode(256))
+#    homepage = Field(Unicode(256))
+#    description = Field(Unicode(4096))
+#    logo = Field(Unicode(256))
+#    logobig = Field(Unicode(256))
+#    episode = OneToMany('Episode')    # <-- add this line
+#    folder = ManyToOne('Taxonomy') 
+#    
+#    def __repr__(self):
+#        return ' "%s" (%s) ' % (self.title,self.link)
+#        
+##    using_table_options(UniqueConstraint('title'))
+#    
+#
+#
+#setup_all()
+#
+#setup_all(True)
 
 
