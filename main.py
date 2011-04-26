@@ -15,11 +15,13 @@ from brePodder import *
 
 if __name__ == "__main__":
     os.chdir(os.path.expanduser('~'))
-    
+   
+    print "marko" 
     if not os.path.isdir('.brePodder'):
+	print os.getcwd()
         os.makedirs('.brePodder')
         
-    os.chdir('.brePodder')
+    os.chdir('~/.brePodder')
 #    os.makedirs('images')
     app = QtGui.QApplication(sys.argv)
     MainWindow = QtGui.QMainWindow()

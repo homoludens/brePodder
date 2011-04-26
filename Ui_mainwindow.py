@@ -18,7 +18,7 @@ import feedparser
 from audioplayer import AudioPlayer
 #setup_all()
 
-sys.setappdefaultencoding('utf-8')
+#sys.setappdefaultencoding('utf-8')
 # constants
 
 draggable = QtCore.Qt.ItemIsDragEnabled

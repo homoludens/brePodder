@@ -43,7 +43,7 @@ class AudioPlayer(QtGui.QWidget):
 	self.setUrl("http://www.jplayer.org/audio/ogg/Miaow-07-Bubble.ogg")
 
     def setUrl(self, url):
-	print url
+	#print url
 	self.player.setCurrentSource( Phonon.MediaSource(url) );
 
 

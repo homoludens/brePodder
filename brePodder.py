@@ -214,7 +214,9 @@ class BrePodder(MainUi):
         e = self.db.getEpisodeByTitle( episodeTitle )
         channel = self.db.getChannelById( e.get("channel_id") )
         ChannelDir = self.p.sub("", channel.get("title") )
-        
+        print "ChannelDir: "
+	print ChannelDir 
+ 
         os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
         item = QtGui.QTreeWidgetItem(self.treeWidget)
         item.setText(0, channel.get("title") )
@@ -245,6 +247,8 @@ class BrePodder(MainUi):
 
     def AddChannel(self, newUrl = None):
         import feedparser
+	os.chdir( os.path.expanduser('~')+'/.brePodder' )
+
         if newUrl == None:
             feedLink = self.QLineEdit1.text().toUtf8().data()
         else:
@@ -260,6 +264,9 @@ class BrePodder(MainUi):
             
 #        p=re.compile("\W")  
         ChannelDir = self.p.sub("",ChannelTitle)
+	print "ChannelDir: "
+	print ChannelDir
+	print os.getcwd()
         try:
             os.mkdir(ChannelDir)
         except:

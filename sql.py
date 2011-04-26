@@ -3,7 +3,7 @@
 import sys
 import sqlite3,  os
 
-sys.setappdefaultencoding('utf-8') 
+#sys.setappdefaultencoding('utf-8') 
 
 
 #metadata.bind = "sqlite:////home/homoludens/.brePodder/podcasts.sqlite"
@@ -224,7 +224,7 @@ class DBOperation():
                                 PRIMARY KEY (id)
                         )''')
             con.commit()
-            cur.close()
+           # cur.close()
         except sqlite3.OperationalError:
             print("table sql_channel already exists".format(self.table))
         
@@ -244,7 +244,7 @@ class DBOperation():
                             )''')
                             
             con.commit()
-            cur.close()
+            #cur.close()
         except sqlite3.OperationalError:
             print("table sql_channels already exists".format(self.table))
             
