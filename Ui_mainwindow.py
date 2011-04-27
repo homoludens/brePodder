@@ -137,6 +137,7 @@ class MainUi(object):
         self.splitter_2 = QtGui.QSplitter(self.tab)
         self.splitter_2.setOrientation(QtCore.Qt.Horizontal)
         #self.splitter_2.setObjectName("splitter_2")
+	#self.splitter_2.setSizes( ( 200, 500) )
 
 	self.splitter_22 = QtGui.QSplitter(self.splitter_2)
 	self.splitter_22.setOrientation(QtCore.Qt.Vertical)
@@ -146,8 +147,8 @@ class MainUi(object):
 	#self.splitter_222.setOrientation(QtCore.Qt.Horizontal)
 
 
-        self.widget = QtGui.QWidget(self.splitter_2)
-        self.widget.setObjectName("widget")
+        #self.widget = QtGui.QWidget(self.splitter_2)
+        #self.widget.setObjectName("widget")
 
         #self.vboxlayout = QtGui.QVBoxLayout(self.widget)
         #self.vboxlayout.setSpacing(-1)
@@ -202,9 +203,9 @@ class MainUi(object):
         #self.QLineEdit1.setMaximumSize(QtCore.QSize(16777215,16777215))
         #self.QLineEdit1.setObjectName("QLineEdit1")
 
-        self.splitter_222.addWidget( self.widget )
+        #self.splitter_222.addWidget( self.widget )
         
-        self.updateProgressBar = QtGui.QProgressBar(self.widget)
+        self.updateProgressBar = QtGui.QProgressBar(self.splitter_222)
         self.updateProgressBar.setValue(42);
         #self.updateProgressBar.setSizePolicy(sizePolicy)
         #self.updateProgressBar.setMinimumSize(QtCore.QSize(0,0))
@@ -212,7 +213,7 @@ class MainUi(object):
         self.updateProgressBar.hide();
         self.splitter_222.addWidget( self.updateProgressBar )
         
-        self.QPushButton1 = QtGui.QPushButton(self.widget)
+        self.QPushButton1 = QtGui.QPushButton(self.splitter_222)
 
         #sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum,QtGui.QSizePolicy.Fixed)
         #sizePolicy.setHorizontalStretch(0)
@@ -224,6 +225,8 @@ class MainUi(object):
         self.QPushButton1.setMaximumSize(QtCore.QSize(50,25))
         #self.QPushButton1.setObjectName("QPushButton1")
         self.splitter_222.addWidget(self.QPushButton1)
+
+	self.splitter_2.setSizes( ( 100, 50) )
 
         #self.vboxlayout.addLayout(self.hboxlayout)
 
@@ -263,6 +266,7 @@ class MainUi(object):
 	self.AudioPlayer = AudioPlayer( "", self.splitter)
 
         self.gridlayout1.addWidget( self.splitter_2, 0, 0, 1, 1 )
+
         self.tabWidget.addTab( self.tab,"" )
 
 
