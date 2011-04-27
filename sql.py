@@ -32,8 +32,8 @@ class DBOperation():
         cur = con.cursor()           
         cur.execute('insert into sql_channel(title, link, homepage, description, logo, logobig) values (?,?,?,?,?,?) ', channel)
         cur.close()
-        print "insertChannel: "
-        print channel
+        #print "insertChannel: "
+        #print channel
 
 #    def insertEpisode(self, episode):              
 #        self.cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', episode)
@@ -160,8 +160,6 @@ class DBOperation():
         return episodes
         
     def insertEpisode(self, ep):   
-        print "ep: "
-        print ep
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()

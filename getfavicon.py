@@ -8,6 +8,7 @@ def getIcoUrl(url):
     - Then try just /favicon.ico.
     - If neither found, return None
     """
+    #print url
     class FaviconFinder(sgmllib.SGMLParser):
         """
         A Parser class for finding the favicon used (if specified).
@@ -23,6 +24,8 @@ def getIcoUrl(url):
                 if 'rel' in attributes and 'icon' in attributes['rel']:
                     if 'href' in attributes:
                         self.favicon_url = attributes['href']
+
+
     # Try to parse html at url and get favicon
     if not url.startswith('http://') or url.startswith('https://'):
         url = 'http://%s' % url
@@ -39,7 +42,14 @@ def getIcoUrl(url):
     # AFTER finding the appropriate url.
     try:
         if favicon_parser.favicon_url:
-            return favicon_parser.favicon_url
+	    
+	   if (favicon_parser.favicon_url[0] == '/'):
+		imageURL = url +  favicon_parser.favicon_url
+	   else:
+		imageURL = favicon_parser.favicon_url
+
+           return imageURL
+
         else:
             url = '/'.join(url.split('/',3)[2:])
             root_directory = url.split('/')[0]

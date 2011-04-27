@@ -37,8 +37,8 @@ class Download(QtCore.QObject):
 #        httpIndex=self.ui.itemsDownloading.index(self.itemZaPrenos.text(5))
         
         # Qt 4.4+ doesn't wont to show images named favicon.ico, favicon.icon is ok
-#        if '.ico' in fileName:
-#            fileName = fileName.replace('.ico','.icon')
+        if '.ico' in fileName:
+            fileName = fileName.replace('.ico','.icon')
             
         if QtCore.QFile.exists(fileName):
             if self.locationRedirect:
@@ -206,19 +206,22 @@ class Download(QtCore.QObject):
             self.itemZaPrenos.setText(3,"DONE")
             url =  self.itemZaPrenos.text(5).toUtf8().data()
             ChannelDir = self.ui.p.sub("",self.itemZaPrenos.text(0).toUtf8().data())
-            #ova linija me nesto drka kada dodajem novi kanal. trebalo bi da je proverim i vidim sta ce mi
+            #ova linija me nesto #@!$ kada dodajem novi kanal. trebalo bi da je proverim i vidim sta ce mi
             url_done = QtCore.QUrl(url)
             fileInfo = QtCore.QFileInfo(url_done.path())
             file = QtCore.QString(fileInfo.fileName()).toUtf8().data()
             os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
+
             if file[-3:]=='ico' and self.faviconFound:
+		#print "favicon: "
+		#print file
                 self.faviconFound = False
                 #TODO: this is bad and system depended, but... 
                 #TODO: Remove this 'convert' command - maybe i don't even need it
-#                if os.system('convert '+file.replace(" ","\ ")+'[0] png:'+file.replace(" ","\ "))!=0:
-#                    print "convert fail"
+                if os.system('convert '+file.replace(" ","\ ")+'[0] png:'+file.replace(" ","\ "))!=0:
+                    print "convert fail"
 #                    os.system('cp ../images/musicstore.png '+file)
-#                    os.system('cp ../images/musicstore.png '+file+'n')
+                    os.system('cp ../images/musicstore.png '+file+'n')
             elif self.faviconFound:
                 print "favicon: "+file
             elif (file[-3:]=='png' or file[-3:]=='PNG' or file[-3:]=='jpg' or file[-3:]=='JPG'):

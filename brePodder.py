@@ -1,5 +1,6 @@
 from Download import *
 from sql import DBOperation
+from getfavicon import getIcoUrl
 
 class updateChannelThread(QtCore.QThread):
     def __init__(self,channel, ui,  updateProgress = 0):
@@ -253,9 +254,11 @@ class BrePodder(MainUi):
             feedLink = self.QLineEdit1.text().toUtf8().data()
         else:
             feedLink = newUrl
+
         w = feedparser.parse(feedLink)
         item = QtGui.QTreeWidgetItem(self.treeWidget)
-        if w.feed.has_key('title'):
+        
+	if w.feed.has_key('title'):
             ChannelTitle=w.feed.title
         elif w.feed.has_key('link'):
             ChannelTitle=w.feed.link
@@ -282,21 +285,27 @@ class BrePodder(MainUi):
             if w.feed.image.href != None:
 #            item = QtGui.QTreeWidgetItem(self.treeWidget)
 #            item.setText(0,w.feed.title)
-                item.setText(1,w.feed.image.href)
-                item.setText(5,w.feed.image.href)
+		if (w.feed.image.href[0] == '/'):
+			imageURL = w.feed.link +  w.feed.image.href
+		else:
+			imageURL = w.feed.image.href
+
+                item.setText(1, imageURL)
+                item.setText(5, imageURL)
 
                 if len(self.downloadList)>0:
                     downloadId = self.downloadList[-1][0]+1
                 else:
                     downloadId = 0
 #                print "downloadId: " + str(downloadId)
-                self.itemsDownloading.append((downloadId, w.feed.image.href))
+		
+                self.itemsDownloading.append((downloadId,imageURL))
                 self.downloadList.append((downloadId, Download()))
                 self.downloadList[downloadId][1].setup(self)
-                self.downloadList[downloadId][1].downloadFile(w.feed.image.href, item, downloadId)
+                self.downloadList[downloadId][1].downloadFile( imageURL, item, downloadId )
 
 
-                url_done = QtCore.QUrl(w.feed.image.href)
+                url_done = QtCore.QUrl(imageURL)
                 fileInfo = QtCore.QFileInfo(url_done.path())
                 fileName = QtCore.QString(fileInfo.fileName())
                 
@@ -305,15 +314,20 @@ class BrePodder(MainUi):
 
     # should we put original or 128px version of logo
                 logo_fileBig = ChannelDir+"/"+fileName.toUtf8().data()
-            else: logo_fileBig=u"images/musicstore2.png"
-        else: logo_fileBig=u"images/musicstore2.png"
-#  download favicon
-        from getfavicon import getIcoUrl
+            else: 
+		    logo_fileBig=u"images/musicstore2.png"
+        else: 
+		logo_fileBig=u"images/musicstore2.png"
+	
+	#  download favicon
         favicon_url=getIcoUrl("http://"+QtCore.QUrl(w.feed.link).host().toUtf8().data())
         if favicon_url:
             url = favicon_url
         else:
             url = "http://"+QtCore.QUrl(w.feed.link).host().toUtf8().data()+"/favicon.ico"
+
+	print "favicon_url:"
+	print favicon_url
         
         
         url_favicon = QtCore.QUrl(url)
@@ -322,16 +336,18 @@ class BrePodder(MainUi):
         
 #        ifavicon=url.rfind('/')
 #        favicon=url[ifavicon+1:]
-        logo_file=ChannelDir +'/'+favicon
-#        if '.ico' in logo_file :
-#            logo_file = logo_file.replace('.ico','.icon')
-        item2 = QtGui.QTreeWidgetItem(self.treeWidget)
+        logo_file=ChannelDir  + '/' + favicon
+
+        if '.ico' in logo_file :
+            logo_file = logo_file.replace('.ico','.icon')
+
+	item2 = QtGui.QTreeWidgetItem(self.treeWidget)
         item2.setText(0,w.feed.title)
         item2.setText(1,url)
         item2.setText(5,url)
         
         if len(self.downloadList)>0:
-            downloadId = self.downloadList[-1][0]+1
+            downloadId = self.downloadList[-1][0] + 1
         else:
             downloadId = 0
         self.itemsDownloading.append((downloadId, url))
@@ -389,6 +405,8 @@ class BrePodder(MainUi):
                 
             newEpisode.append('new')
             newEpisode.append(ChannelId[0])
+
+
             self.db.insertEpisode( newEpisode )
             
         self.update_channel_list()
@@ -448,6 +466,7 @@ class BrePodder(MainUi):
                 b=gmtime()
                 epDate=strftime("%x", b)
             item.setText(3,epDate)
+
     #TODO: Send file to some media player
     def LastestEpisodeDoubleClicked(self, a):
         print  a.text(3).toUtf8().data().decode('UTF8')
@@ -515,6 +534,8 @@ class BrePodder(MainUi):
             for childChannel in childChannels:
                 itemChildChannel = QtGui.QTreeWidgetItem(itemF)
                 itemChildChannel.setText(0, childChannel[1])
+		#print "Ch. icon: "
+		#print os.path.expanduser('~') + '/.brePodder/' + childChannel[5]
                 itemChildChannel.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+childChannel[5])))
                 itemF.addChild(itemChildChannel)
             
@@ -523,6 +544,7 @@ class BrePodder(MainUi):
 #            if channel.episode[-1].status == u'new':
 #                item.setFont(0, self.fontBold)
             item.setText(0, channel[1])
+	    print os.path.expanduser('~') + '/.brePodder/' + channel[5]
             item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+channel[5])))
 #            item.setToolTip(0,"<p><img src="+"'"+channel.logobig+"'"+"></p><p style='font-size:20pt'><b>"+channel.title+"</b></p><a href="+channel.link+">"+channel.link+"</a>")
             item.setFlags(enabled|draggable|selectable)
