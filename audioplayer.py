@@ -28,7 +28,7 @@ class AudioPlayer(QtGui.QWidget):
         self.play_pause.clicked.connect(self.playClicked)
         self.player.stateChanged.connect(self.stateChanged)
 
-        #self.slider = Phonon.SeekSlider(self.player , self)
+        self.slider = Phonon.SeekSlider(self.player , self)
         
         self.status = QtGui.QLabel(self)
         self.status.setAlignment(QtCore.Qt.AlignRight |
