@@ -30,7 +30,7 @@ noflags = QtCore.Qt.NoItemFlags
 
 
 #override QTreeViewWidget for handling Drag & Drop events 
-class treeViewWidget(QtGui.QTreeWidget):
+class treeViewWidget( QtGui.QTreeWidget ):
     def __init__(self, parent=None):
       super(treeViewWidget, self).__init__(parent)
       self.setAcceptDrops(True)
@@ -40,7 +40,7 @@ class treeViewWidget(QtGui.QTreeWidget):
       self.sortByColumn(0, 0)
 
     def dropEvent(self, event):
-        if self.itemAt(event.pos()).flags() & droppable:         
+        if self.itemAt( event.pos() ).flags() & droppable:         
 #            what = self.selectedItems()[0].text(0)
 #            where = self.itemAt(event.pos()).text(0)
 #            ch=Channel.query.filter_by(title=self.selectedItems()[0].text(0)).one()
@@ -52,7 +52,7 @@ class treeViewWidget(QtGui.QTreeWidget):
             cur = con.cursor()
             cur.execute('select id from sql_channel where title = ?', [self.selectedItems()[0].text(0).toUtf8().data(),]) 
             ch_id = cur.fetchone()[0]
-            cur.execute('select id from sql_taxonomy where title = ?', (self.itemAt(event.pos()).text(0).toUtf8().data(),))
+            cur.execute('select id from sql_taxonomy where title = ?', ( self.itemAt(event.pos()).text(0).toUtf8().data(), ) )
             tx_id = cur.fetchone()[0]   
             cur.execute('update sql_channel set folder_id = :tx_id  where id = :ch_id', {"tx_id": tx_id, "ch_id": ch_id})
             con.commit()
@@ -64,6 +64,14 @@ class treeViewWidget(QtGui.QTreeWidget):
 #            ui.update_channel_list()
         else:
             print 'not folder'
+            con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+            con.isolation_level = None
+            cur = con.cursor()
+            cur.execute('select id from sql_channel where title = ?', [self.selectedItems()[0].text(0).toUtf8().data(),])
+	    ch_id = cur.fetchone()[0]  	    
+	    cur.execute('update sql_channel set folder_id = NULL  where id = :ch_id', {"ch_id": ch_id})
+	    con.commit()
+ 	    cur.close()
 
 #      print dir(event)
 #      event.setDropAction(QtCore.Qt.MoveAction)
@@ -112,118 +120,136 @@ class MainUi(object):
         MainWindow.setWindowIcon(QtGui.QIcon("images/musicstore.png"))
 
         self.centralwidget = QtGui.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
+        #self.centralwidget.setObjectName("centralwidget")
 
         self.gridlayout = QtGui.QGridLayout(self.centralwidget)
-        self.gridlayout.setObjectName("gridlayout")
+        #self.gridlayout.setObjectName("gridlayout")
 
         self.tabWidget = QtGui.QTabWidget(self.centralwidget)
-        self.tabWidget.setObjectName("tabWidget")
+        #self.tabWidget.setObjectName("tabWidget")
 
         self.tab = QtGui.QWidget()
-        self.tab.setObjectName("tab")
+        #self.tab.setObjectName("tab")
 
         self.gridlayout1 = QtGui.QGridLayout(self.tab)
-        self.gridlayout1.setObjectName("gridlayout1")
+        #self.gridlayout1.setObjectName("gridlayout1")
 
         self.splitter_2 = QtGui.QSplitter(self.tab)
         self.splitter_2.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter_2.setObjectName("splitter_2")
+        #self.splitter_2.setObjectName("splitter_2")
+
+	self.splitter_22 = QtGui.QSplitter(self.splitter_2)
+	self.splitter_22.setOrientation(QtCore.Qt.Vertical)
+
+
+	#self.splitter_222 = QtGui.QSplitter(self.splitter_22)
+	#self.splitter_222.setOrientation(QtCore.Qt.Horizontal)
+
 
         self.widget = QtGui.QWidget(self.splitter_2)
         self.widget.setObjectName("widget")
 
-        self.vboxlayout = QtGui.QVBoxLayout(self.widget)
-        self.vboxlayout.setSpacing(-1)
-        self.vboxlayout.setObjectName("vboxlayout")
+        #self.vboxlayout = QtGui.QVBoxLayout(self.widget)
+        #self.vboxlayout.setSpacing(-1)
+        #self.vboxlayout.setObjectName("vboxlayout")
 
-        self.listWidget = treeViewWidget(self.widget)
+        self.listWidget = treeViewWidget( self.splitter_22 )
         
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred,QtGui.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.listWidget.sizePolicy().hasHeightForWidth())
-        self.listWidget.setSizePolicy(sizePolicy)
-        self.listWidget.setMaximumSize(QtCore.QSize(16777215,16777215))
-        self.listWidget.setSizeIncrement(QtCore.QSize(0,0))
-        self.listWidget.setBaseSize(QtCore.QSize(0,0))
+        #sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred,QtGui.QSizePolicy.Expanding)
+        #sizePolicy.setHorizontalStretch(0)
+        #sizePolicy.setVerticalStretch(0)
+        #sizePolicy.setHeightForWidth(self.listWidget.sizePolicy().hasHeightForWidth())
+        
+	#self.listWidget.setSizePolicy(sizePolicy)
+        #self.listWidget.setMaximumSize(QtCore.QSize(16777215,16777215))
+        #self.listWidget.setSizeIncrement(QtCore.QSize(0,0))
+        #self.listWidget.setBaseSize(QtCore.QSize(0,0))
         self.listWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.listWidget.setObjectName("listWidget")
+        #self.listWidget.setObjectName("listWidget")
         self.listWidget.setAlternatingRowColors(True)
-        self.listWidget.setLineWidth(5)
-        self.listWidget.setMidLineWidth(8)
+        #self.listWidget.setLineWidth(5)
+        #self.listWidget.setMidLineWidth(8)
         self.listWidget.setDragEnabled(True)
         self.listWidget.setDragDropOverwriteMode(True)
         self.listWidget.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
-        self.listWidget.setAlternatingRowColors(True)
-        self.listWidget.setIconSize(QtCore.QSize(18,-1))
-        self.listWidget.setIndentation(23)
-        self.listWidget.setRootIsDecorated(True)
-        self.listWidget.setUniformRowHeights(True)
-        self.listWidget.setSortingEnabled(True)
-        self.listWidget.setAnimated(True)
-        self.vboxlayout.addWidget(self.listWidget)
+        #self.listWidget.setAlternatingRowColors(True)
+        #self.listWidget.setIconSize(QtCore.QSize(18,-1))
+        #self.listWidget.setIndentation(23)
+        #self.listWidget.setRootIsDecorated(True)
+        #self.listWidget.setUniformRowHeights(True)
+        #self.listWidget.setSortingEnabled(True)
+        #self.listWidget.setAnimated(True)
+
+        #self.vboxlayout.addWidget( self.listWidget )
         
 
-        self.hboxlayout = QtGui.QHBoxLayout()
-        self.hboxlayout.setObjectName("hboxlayout")
+        #self.hboxlayout = QtGui.QHBoxLayout()
+        #self.hboxlayout.setObjectName("hboxlayout")
 
-        self.QLineEdit1 = QtGui.QLineEdit(self.widget)
+        self.splitter_222 = QtGui.QSplitter(self.splitter_22)
+        self.splitter_222.setOrientation(QtCore.Qt.Horizontal)
 
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding,QtGui.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.QLineEdit1.sizePolicy().hasHeightForWidth())
-        self.QLineEdit1.setSizePolicy(sizePolicy)
-        self.QLineEdit1.setMinimumSize(QtCore.QSize(0,0))
-        self.QLineEdit1.setMaximumSize(QtCore.QSize(16777215,16777215))
-        self.QLineEdit1.setObjectName("QLineEdit1")
-        self.hboxlayout.addWidget(self.QLineEdit1)
+
+        self.QLineEdit1 = QtGui.QLineEdit( self.splitter_222 )
+
+        #sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding,QtGui.QSizePolicy.Fixed)
+        #sizePolicy.setHorizontalStretch(0)
+        #sizePolicy.setVerticalStretch(0)
+        #sizePolicy.setHeightForWidth(self.QLineEdit1.sizePolicy().hasHeightForWidth())
+        
+	#self.QLineEdit1.setSizePolicy(sizePolicy)
+        #self.QLineEdit1.setMinimumSize(QtCore.QSize(0,0))
+        #self.QLineEdit1.setMaximumSize(QtCore.QSize(16777215,16777215))
+        #self.QLineEdit1.setObjectName("QLineEdit1")
+
+        self.splitter_222.addWidget( self.widget )
         
         self.updateProgressBar = QtGui.QProgressBar(self.widget)
         self.updateProgressBar.setValue(42);
-        self.updateProgressBar.setSizePolicy(sizePolicy)
-        self.updateProgressBar.setMinimumSize(QtCore.QSize(0,0))
-        self.updateProgressBar.setMaximumSize(QtCore.QSize(16777215,16777215))
+        #self.updateProgressBar.setSizePolicy(sizePolicy)
+        #self.updateProgressBar.setMinimumSize(QtCore.QSize(0,0))
+        #self.updateProgressBar.setMaximumSize(QtCore.QSize(16777215,16777215))
         self.updateProgressBar.hide();
-        self.hboxlayout.addWidget(self.updateProgressBar)
+        self.splitter_222.addWidget( self.updateProgressBar )
         
         self.QPushButton1 = QtGui.QPushButton(self.widget)
 
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum,QtGui.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.QPushButton1.sizePolicy().hasHeightForWidth())
-        self.QPushButton1.setSizePolicy(sizePolicy)
-        self.QPushButton1.setMinimumSize(QtCore.QSize(20,0))
-        self.QPushButton1.setMaximumSize(QtCore.QSize(50,16777215))
-        self.QPushButton1.setObjectName("QPushButton1")
-        self.hboxlayout.addWidget(self.QPushButton1)
+        #sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum,QtGui.QSizePolicy.Fixed)
+        #sizePolicy.setHorizontalStretch(0)
+        #sizePolicy.setVerticalStretch(0)
+        #sizePolicy.setHeightForWidth(self.QPushButton1.sizePolicy().hasHeightForWidth())
 
-        self.vboxlayout.addLayout(self.hboxlayout)
+        #self.QPushButton1.setSizePolicy(sizePolicy)
+        self.QPushButton1.setMinimumSize(QtCore.QSize(20,20))
+        self.QPushButton1.setMaximumSize(QtCore.QSize(50,25))
+        #self.QPushButton1.setObjectName("QPushButton1")
+        self.splitter_222.addWidget(self.QPushButton1)
+
+        #self.vboxlayout.addLayout(self.hboxlayout)
 
         self.splitter = QtGui.QSplitter(self.splitter_2)
         
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.splitter.sizePolicy().hasHeightForWidth())
-        self.splitter.setSizePolicy(sizePolicy)
+        #sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.Expanding)
+        #sizePolicy.setHorizontalStretch(0)
+        #sizePolicy.setVerticalStretch(0)
+        #sizePolicy.setHeightForWidth(self.splitter.sizePolicy().hasHeightForWidth())
+        #self.splitter.setSizePolicy(sizePolicy)
         
         self.splitter.setOrientation(QtCore.Qt.Vertical)
-        self.splitter.setObjectName("splitter")
+        #self.splitter.setObjectName("splitter")
 
-        self.treeWidget_2 = QtGui.QTreeWidget(self.splitter)
-        self.treeWidget_2.setItemsExpandable(False)
-        self.treeWidget_2.setAnimated(True)
+        self.treeWidget_2 = QtGui.QTreeWidget( self.splitter )
+        #self.treeWidget_2.setItemsExpandable(False)
+        #self.treeWidget_2.setAnimated(True)
         self.treeWidget_2.setAlternatingRowColors(True)
         self.treeWidget_2.setObjectName("treeWidget_2")
         
-#TODO: make settings fot choosing WebKit insted of QTextBrowser
+	#TODO: make settings fot choosing WebKit insted of QTextBrowser
         #self.QTextBrowser1 = QtWebKit.QWebView(self.splitter) #Qt4.4
         self.QTextBrowser1 = QtGui.QTextBrowser(self.splitter) # Qt4.3
 #        self.QTextBrowser1.setOpenExternalLinks(1)
 #        self.QTextBrowser1.setOpenLinks(1)
+
         #sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding,QtGui.QSizePolicy.Expanding)
         #sizePolicy.setHorizontalStretch(0)
         #sizePolicy.setVerticalStretch(0)
@@ -248,7 +274,7 @@ class MainUi(object):
 
         self.treeWidget = QtGui.QTreeWidget(self.tab_2)
         self.treeWidget.setAlternatingRowColors(True)
-        self.treeWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        #self.treeWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.treeWidget.setObjectName("treeWidget")
         self.gridlayout2.addWidget(self.treeWidget,0,0,1,1)
         self.tabWidget.addTab(self.tab_2,"")

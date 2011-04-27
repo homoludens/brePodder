@@ -105,13 +105,13 @@ class DBOperation():
         return channels
     
     def getAllChannelsWOFolder(self):
-        self.cur.execute('select * from sql_channel where folder_id IS NULL')
+        self.cur.execute('select * from sql_channel where folder_id IS NULL ORDER BY title')
         channels = self.cur.fetchall()
         
         return channels
     
     def getAllFolders(self):
-        self.cur.execute('select * from sql_taxonomy')
+        self.cur.execute('select * from sql_taxonomy ORDER BY title')
         folders = self.cur.fetchall()
         
         return folders
@@ -181,16 +181,26 @@ class DBOperation():
         con.isolation_level = None
         cur = con.cursor()
         channel_id = self.getChannelByTitle(channelTitle)
-        cur.execute('delete from  sql_episode where channel_id = ?',(channel_id[0],) )
+	try:
+        	cur.execute('delete from  sql_episode where channel_id = ?',(channel_id[0],) )
+	except:
+		pass
         cur.close()
 
     def deleteChannel(self,  channelTitle):
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
         cur = con.cursor()
-        channel_id = self.getChannelByTitle(channelTitle)
-        cur.execute('delete from  sql_channel where id = ?',(channel_id[0],) )
+        channel_id = self.getChannelByTitle( channelTitle )
+        cur.execute('delete from  sql_channel where id = ?', ( channel_id[0], ) )
         cur.close()
+
+    def deleteTaxonomy(self, folderTitle):
+	con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+	con.isolation_level = None
+	cur = con.cursor()
+	cur.execute('delete from  sql_taxonomy where title = ?', (folderTitle ,) )
+	cur.close()
     
     def addChannelToFolder(self,  channelTitle,  folderTitle):
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)

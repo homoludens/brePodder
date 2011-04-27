@@ -426,25 +426,37 @@ class BrePodder(MainUi):
         
 
     def channel_activated(self):
-        selection = self.listWidget.selectedItems()
+        #selection = self.listWidget.selectedItems()
+	selection =  self.listWidget.currentItem().text(0).toUtf8().data()
         if selection:
-            self.update_episode_list(selection[0].text(0).toUtf8().data().decode('UTF8'))
-            self.CurrentChannel = selection[0].text(0).toUtf8().data().decode('UTF8')
+	    self.CurrentChannel = selection
+	    try: 
+	    	self.update_episode_list( selection )
+	    except:
+		#if is folder
+		pass
+
+#            self.update_episode_list(selection[0].text(0).toUtf8().data().decode('UTF8'))
+#            self.CurrentChannel = selection[0].text(0).toUtf8().data().decode('UTF8')
             self.actionCancel.setToolTip("Delete Selected Channel")
             self.actionUpdateFeeds.setToolTip("Update Selected Channel")
         
     
     def delete_channel(self):
         if self.tab.isVisible():
-            self.db.deleteAllEpisodes(self.CurrentChannel)
-            self.db.deleteChannel(self.CurrentChannel)
+	    try:
+            	self.db.deleteAllEpisodes( self.CurrentChannel )
+            	self.db.deleteChannel( self.CurrentChannel )
 
-            os.chdir(os.path.expanduser('~')+'/.brePodder/')
-            ChannelDir = os.path.expanduser('~')+'/.brePodder/'+self.p.sub("", self.CurrentChannel)
+            	os.chdir(os.path.expanduser('~')+'/.brePodder/')
+            	ChannelDir = os.path.expanduser('~')+'/.brePodder/'+self.p.sub("", self.CurrentChannel)
             
-            import shutil
-            shutil.rmtree(ChannelDir)
-            self.update_channel_list()
+            	import shutil
+            	shutil.rmtree(ChannelDir)
+	    except:
+		 self.db.deleteTaxonomy( self.CurrentChannel )
+	     
+	    self.update_channel_list()
 
     # last 50 downloadowed episodes
     def update_lastest_episodes_list(self):
