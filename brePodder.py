@@ -2,6 +2,15 @@ from Download import *
 from sql import DBOperation
 from getfavicon import getIcoUrl
 
+
+
+draggable = QtCore.Qt.ItemIsDragEnabled
+droppable = QtCore.Qt.ItemIsDropEnabled
+editable  = QtCore.Qt.ItemIsEditable
+enabled   = QtCore.Qt.ItemIsEnabled
+selectable = QtCore.Qt.ItemIsSelectable 
+noflags = QtCore.Qt.NoItemFlags
+
 class updateChannelThread(QtCore.QThread):
     def __init__(self,channel, ui,  updateProgress = 0):
         QtCore.QThread.__init__(self)
