@@ -21,14 +21,14 @@ class AudioPlayer(QtGui.QWidget):
         self.player.tick.connect(self.tock)
 
         self.play_pause = QtGui.QPushButton(self)
-        self.play_pause.setMinimumSize(QtCore.QSize(20,20))
-        self.play_pause.setMaximumSize(QtCore.QSize(50,25))
+        #self.play_pause.setMinimumSize(QtCore.QSize(20,20))
+        #self.play_pause.setMaximumSize(QtCore.QSize(50,25))
         #self.play_pause.setIcon(QtGui.QIcon(':/icons/player_play.svg'))
 	self.play_pause.setText("Play")
         self.play_pause.clicked.connect(self.playClicked)
         self.player.stateChanged.connect(self.stateChanged)
 
-        self.slider = Phonon.SeekSlider(self.player , self)
+        #self.slider = Phonon.SeekSlider(self.player , self)
         
         self.status = QtGui.QLabel(self)
         self.status.setAlignment(QtCore.Qt.AlignRight |

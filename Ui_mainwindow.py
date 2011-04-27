@@ -90,12 +90,10 @@ class MainUi(object):
 	self.splitter_2.setSizes( ( 100, 50) )
 
         self.splitter = QtGui.QSplitter(self.splitter_2)
-        
         self.splitter.setOrientation(QtCore.Qt.Vertical)
 
         self.treeWidget_2 = QtGui.QTreeWidget( self.splitter )
         self.treeWidget_2.setAlternatingRowColors(True)
-        self.treeWidget_2.setObjectName("treeWidget_2")
         
 	#TODO: make settings fot choosing WebKit insted of QTextBrowser
         #self.QTextBrowser1 = QtWebKit.QWebView(self.splitter) #Qt4.4
@@ -103,14 +101,13 @@ class MainUi(object):
 #        self.QTextBrowser1.setOpenExternalLinks(1)
 #        self.QTextBrowser1.setOpenLinks(1)
 
-        self.QTextBrowser1.setObjectName("QTextBrowser1")
-
 	self.AudioPlayer = AudioPlayer( "", self.splitter)
 
         self.gridlayout1.addWidget( self.splitter_2, 0, 0, 1, 1 )
 
-        self.tabWidget.addTab( self.tab,"" )
 
+
+        self.tabWidget.addTab( self.tab,"" )
 
         self.tab_2 = QtGui.QWidget()
         self.tab_2.setObjectName("tab_2")
