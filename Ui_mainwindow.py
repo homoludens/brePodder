@@ -79,13 +79,24 @@ class MainUi(object):
         self.updateProgressBar = QtGui.QProgressBar(self.splitter_222)
         self.updateProgressBar.setValue(42);
         self.updateProgressBar.hide();
-        self.splitter_222.addWidget( self.updateProgressBar )
+        #self.splitter_222.addWidget( self.updateProgressBar )
         
         self.QPushButton1 = QtGui.QPushButton(self.splitter_222)
 
         self.QPushButton1.setMinimumSize(QtCore.QSize(20,20))
         self.QPushButton1.setMaximumSize(QtCore.QSize(50,25))
-        self.splitter_222.addWidget(self.QPushButton1)
+
+
+	#self.splitter_222.addWidget( self.updateProgressBar )
+        #self.splitter_222.addWidget(self.QPushButton1)
+
+
+	#self.layoutAddFeed = QtGui.QHBoxLayout(self.splitter_222)
+	#self.layoutAddFeed.addWidget(self.QLineEdit1)
+	#self.layoutAddFeed.addWidget(self.updateProgressBar)
+	#self.layoutAddFeed.addWidget(self.QPushButton1)
+
+	#self.splitter_222.addWidget(self.layoutAddFeed)
 
 	self.splitter_2.setSizes( ( 100, 50) )
 
