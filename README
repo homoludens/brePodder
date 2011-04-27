@@ -6,13 +6,12 @@ highly unstable and unrecomended
 
 curently using:
 
-- python
-- qt4
-- pyqt4
+- pyqt4  ( so python and qt4 )
 - feedparser
 - sqlite
-- sqlalchemy
-- elixir
+
+- phonon (optiona, for playing)
+- PIL (will lose this dep.)
 
 i will probably lose last two dependencies, they are getting to mine nerves
 
