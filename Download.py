@@ -216,16 +216,19 @@ class Download(QtCore.QObject):
 		#print "favicon: "
 		#print file
                 self.faviconFound = False
-                #TODO: this is bad and system depended, but... 
+
+
                 #TODO: Remove this 'convert' command - maybe i don't even need it
-                if os.system('convert '+file.replace(" ","\ ")+'[0] png:'+file.replace(" ","\ "))!=0:
-                    print "convert fail"
-#                    os.system('cp ../images/musicstore.png '+file)
-                    os.system('cp ../images/musicstore.png '+file+'n')
+                #if os.system('convert ' + file.replace(" ","\ ")+'[0] png:' + file.replace(" ","\ "))!=0:
+                   # print "convert fail"
+                    #os.system('cp ../images/musicstore.png '+file)
+                    #os.system('cp ../images/musicstore.png ' + file +'n'
+				    
             elif self.faviconFound:
-                print "favicon: "+file
+                print "faviconiFound: " + file
+
             elif (file[-3:]=='png' or file[-3:]=='PNG' or file[-3:]=='jpg' or file[-3:]=='JPG'):
-#                print 'logoBig:' +file
+#                print 'logoBig:' + file
                 size = 128, 128
                 try:
                     #TODO: convert image to 128x182

@@ -224,20 +224,20 @@ class MainUi(object):
         self.QTextBrowser1 = QtGui.QTextBrowser(self.splitter) # Qt4.3
 #        self.QTextBrowser1.setOpenExternalLinks(1)
 #        self.QTextBrowser1.setOpenLinks(1)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding,QtGui.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.QTextBrowser1.sizePolicy().hasHeightForWidth())
-        self.QTextBrowser1.setSizePolicy(sizePolicy)
-        self.QTextBrowser1.setMinimumSize(QtCore.QSize(0,0))
-        self.QTextBrowser1.setSizeIncrement(QtCore.QSize(4,0))
-        self.QTextBrowser1.setBaseSize(QtCore.QSize(400,0))
+        #sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding,QtGui.QSizePolicy.Expanding)
+        #sizePolicy.setHorizontalStretch(0)
+        #sizePolicy.setVerticalStretch(0)
+        #sizePolicy.setHeightForWidth(self.QTextBrowser1.sizePolicy().hasHeightForWidth())
+        #self.QTextBrowser1.setSizePolicy(sizePolicy)
+        #self.QTextBrowser1.setMinimumSize(QtCore.QSize(0,0))
+        #self.QTextBrowser1.setSizeIncrement(QtCore.QSize(4,0))
+        #self.QTextBrowser1.setBaseSize(QtCore.QSize(400,0))
         self.QTextBrowser1.setObjectName("QTextBrowser1")
 
 	self.AudioPlayer = AudioPlayer( "", self.splitter)
 
-        self.gridlayout1.addWidget(self.splitter_2,0,0,1,1)
-        self.tabWidget.addTab(self.tab,"")
+        self.gridlayout1.addWidget( self.splitter_2, 0, 0, 1, 1 )
+        self.tabWidget.addTab( self.tab,"" )
 
 
         self.tab_2 = QtGui.QWidget()
@@ -258,11 +258,11 @@ class MainUi(object):
         
         
         self.treeWidget_4 = QtGui.QTreeWidget(self.tab_3)
-        self.treeWidget_4.setWindowModality(QtCore.Qt.NonModal)
-        self.treeWidget_4.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.treeWidget_4.setItemsExpandable(False)
-        self.treeWidget_4.setSortingEnabled(True)
-        self.treeWidget_4.setAnimated(True)
+        #self.treeWidget_4.setWindowModality(QtCore.Qt.NonModal)
+        #self.treeWidget_4.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        #self.treeWidget_4.setItemsExpandable(False)
+        #self.treeWidget_4.setSortingEnabled(True)
+        #self.treeWidget_4.setAnimated(True)
         self.treeWidget_4.setObjectName("treeWidget_4")
         
         
@@ -271,26 +271,45 @@ class MainUi(object):
         self.gridlayout3.addWidget(self.treeWidget_4,0,0,1,1)
         self.tabWidget.addTab(self.tab_3,"")
         self.gridlayout.addWidget(self.tabWidget,0,0,1,1)
-        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.splitter_3 = QtGui.QSplitter(self.tab_3)
+        #self.splitter_3.setOrientation(QtCore.Qt.Horizontal)
+	self.gridlayout3.addWidget(self.splitter_3)
+	self.AudioPlayer_latestDownloads = AudioPlayer( "", self.splitter_3 )         
+	
+	MainWindow.setCentralWidget(self.centralwidget)
 
         #Tab with newest episodes
         self.tab_4 = QtGui.QWidget()
         self.tab_4.setObjectName("tab_4")    
         
-        self.treeWidget_5 = QtGui.QTreeWidget(self.tab_4)
-        self.treeWidget_5.setWindowModality(QtCore.Qt.NonModal)
-        self.treeWidget_5.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.treeWidget_5.setItemsExpandable(False)
-        self.treeWidget_5.setSortingEnabled(True)
-        self.treeWidget_5.setAnimated(True)
-        self.treeWidget_5.setObjectName("treeWidget_4")
-        
-        self.gridlayout4 = QtGui.QGridLayout(self.tab_4)
-        self.gridlayout4.setObjectName("gridlayout4")
-        self.gridlayout4.addWidget(self.treeWidget_5,0,0,1,1)
-        self.tabWidget.addTab(self.tab_4,"")
-        self.gridlayout.addWidget(self.tabWidget,0,0,1,1)
+        self.treeWidget_5 = QtGui.QTreeWidget( self.tab_4 )
+        #self.treeWidget_5.setWindowModality(QtCore.Qt.NonModal)
+        #self.treeWidget_5.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        #self.treeWidget_5.setItemsExpandable(False)
+        #self.treeWidget_5.setSortingEnabled(True)
+        #self.treeWidget_5.setAnimated(True)
+        #self.treeWidget_5.setObjectName("treeWidget_4")
+
+
+
+
+        self.gridlayout4 = QtGui.QGridLayout( self.tab_4 )
+        self.gridlayout4.setObjectName( "gridlayout4" )
+        self.gridlayout4.addWidget( self.treeWidget_5,0,0,1,1 )
+        self.tabWidget.addTab( self.tab_4,"" )
+        self.gridlayout.addWidget( self.tabWidget,0,0,1,1 )
+
+
+        self.splitter_4 = QtGui.QSplitter(self.tab_4)
+        #self.splitter_4.setOrientation(QtCore.Qt.Horizontal)
+	self.gridlayout4.addWidget(self.splitter_4)
+	self.AudioPlayer_newestEpisodes = AudioPlayer( "", self.splitter_4 )
+
         MainWindow.setCentralWidget(self.centralwidget)
+
+
+
 
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0,0,604,28))
@@ -395,6 +414,7 @@ class MainUi(object):
         QtCore.QObject.connect(self.treeWidget_2,QtCore.SIGNAL("itemSelectionChanged()"),self.episode_activated)
         QtCore.QObject.connect(self.treeWidget_2,QtCore.SIGNAL("itemDoubleClicked(QTreeWidgetItem*,int)"),self.EpisodeDoubleClicked)
         QtCore.QObject.connect(self.treeWidget_4,QtCore.SIGNAL("itemDoubleClicked(QTreeWidgetItem*,int)"),self.LastestEpisodeDoubleClicked)
+	QtCore.QObject.connect(self.treeWidget_5,QtCore.SIGNAL("itemDoubleClicked(QTreeWidgetItem*,int)"),self.NewestEpisodeDoubleClicked)
 
         QtCore.QObject.connect(self.treeWidget,QtCore.SIGNAL("itemClicked(QTreeWidgetItem*,int)"),self.DownloadActivated)
         QtCore.QObject.connect(self.trayIcon,QtCore.SIGNAL("activated(QSystemTrayIcon::ActivationReason)"),self.trayIconActivated)
@@ -490,7 +510,8 @@ class MainUi(object):
         self.treeWidget_5.headerItem().setText(1,QtGui.QApplication.translate("MainWindow", "Episode", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget_5.headerItem().setText(2,QtGui.QApplication.translate("MainWindow", "Size", None, QtGui.QApplication.UnicodeUTF8))
         self.treeWidget_5.headerItem().setText(3,QtGui.QApplication.translate("MainWindow", "Date", None, QtGui.QApplication.UnicodeUTF8))
-        self.treeWidget_5.header().resizeSection(0, 200)
+        self.treeWidget_5.headerItem().setText(4,QtGui.QApplication.translate("MainWindow", "Enclosure", None, QtGui.QApplication.UnicodeUTF8))
+	self.treeWidget_5.header().resizeSection(0, 200)
         self.treeWidget_5.header().resizeSection(1, 200)
         self.treeWidget_5.clear()
 

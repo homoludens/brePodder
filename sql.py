@@ -144,15 +144,16 @@ class DBOperation():
 
 
     def getLatestDownloads(self):
-        self.cur.execute('SELECT * FROM sql_episode WHERE status="downloaded" ORDER BY date DESC LIMIT 50')
+        self.cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id AND EP.status="downloaded" ORDER BY date DESC LIMIT 50')
         episodes = self.cur.fetchall()
 
         return episodes
 
     def getLatestEpisodes(self):
-        self.cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id ORDER BY date DESC LIMIT 50')
+        self.cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id  ORDER BY date DESC LIMIT 50')
         episodes = self.cur.fetchall()
-        return episodes
+        
+	return episodes
         
     def getChannelEpisodes(self,  channelTitle):
         self.cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id AND CH.title = (?) ORDER BY date DESC LIMIT 50',  (channelTitle,) )
