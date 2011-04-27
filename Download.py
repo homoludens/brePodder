@@ -3,7 +3,7 @@ import feedparser
 from sql import *
 #import os
 from getfavicon import getIcoUrl
-import Image
+#import Image
 import re
 from Ui_mainwindow import *
 
@@ -228,18 +228,16 @@ class Download(QtCore.QObject):
                 print "faviconiFound: " + file
 
             elif (file[-3:]=='png' or file[-3:]=='PNG' or file[-3:]=='jpg' or file[-3:]=='JPG'):
-#                print 'logoBig:' + file
-                size = 128, 128
+                #print 'logoBig:' + file
                 try:
-                    #TODO: convert image to 128x182
-#                    print "convert image to 128x182"
-                    import Image
-                    im = Image.open(file)
-                    im.thumbnail(size, Image.ANTIALIAS) #ovo ne daje bas dobar kvalitet
-                    im.save('128'+file)
+                    # convert image to 128x182"
+		    im_orig = QtGui.QImage( file )
+	            im = im_orig.scaled( 128, 128 )
+		    im.save( '128' + file, 'PNG' )
+
                 except IOError:
                     print IOError
-#                    Image.open('../images/musicstore.png').save(file, 'PNG')
+                    #Image.open('../images/musicstore.png').save(file, 'PNG')
             else:
                 try:
                     episodeTitle = self.itemZaPrenos.text(1).toUtf8().data().decode('UTF8')

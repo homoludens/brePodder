@@ -4,7 +4,7 @@ from PyQt4 import QtCore, QtGui, QtNetwork, QtWebKit
 import os
 #from getfavicon import getIcoUrl
 from Download import *
-import Image
+#import Image
 #import opml
 import re
 from time import gmtime, strftime, mktime, sleep
