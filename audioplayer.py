@@ -11,12 +11,9 @@ class AudioPlayer(QtGui.QWidget):
         self.url = url
         
         QtGui.QWidget.__init__(self, parent)
-        self.setSizePolicy(QtGui.QSizePolicy.Expanding,
-            QtGui.QSizePolicy.Preferred)
+        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
 
-
-        self.player = Phonon.createPlayer(Phonon.MusicCategory,
-             Phonon.MediaSource(url))
+        self.player = Phonon.createPlayer(Phonon.MusicCategory, Phonon.MediaSource(url))
         self.player.setTickInterval(100)
         self.player.tick.connect(self.tock)
 
@@ -47,7 +44,11 @@ class AudioPlayer(QtGui.QWidget):
 
     def setUrl(self, url):
 	#print url
-	self.player.setCurrentSource( Phonon.MediaSource(url) );
+	self.player.setCurrentSource( Phonon.MediaSource(url) )
+
+
+    def enqueue(self, url):
+	self.player.enqueue( Phonon.MediaSource(url) )
 
 
     def playClicked(self):

@@ -2,6 +2,10 @@ from Download import *
 from sql import DBOperation
 from getfavicon import getIcoUrl
 
+#import vimpdb; vimpdb.set_trace()
+
+import sys
+sys.setappdefaultencoding('utf-8')
 
 
 draggable = QtCore.Qt.ItemIsDragEnabled
@@ -20,7 +24,7 @@ class updateChannelThread(QtCore.QThread):
         self.newEpisodeExists = 0
        
     def run(self):
-#        ui.Mutex.lock()
+	#ui.Mutex.lock()
         self.ui.Sem.acquire(1)
         #TODO: SQL--this one is in thread and is making problems
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
@@ -39,7 +43,7 @@ class updateChannelThread(QtCore.QThread):
         
         if self.updateProgress == 0:
             self.emit(QtCore.SIGNAL("updateDoneSignal"))
-#        ui.Mutex.unlock()
+	#ui.Mutex.unlock()
         self.ui.Sem.release(1)
         
 
@@ -73,7 +77,7 @@ class updateChannelThread(QtCore.QThread):
                 aa=None
             
             if i.has_key('title') and aa==None:
-#                print 'epizoda NE postoji'
+		#print 'epizoda NE postoji'
                 self.newEpisodeExists=1
                 if i.title:
                     newEpisode['title']=i.title
@@ -104,14 +108,14 @@ class updateChannelThread(QtCore.QThread):
                 newEpisode['date'] = epDate
                 nEpisode=(newEpisode['title'], newEpisode['enclosure'], newEpisode['size'], newEpisode['date'], newEpisode['description'], newEpisode['status'], newEpisode['channel_id'])
                 self.ui.db.insertEpisode(nEpisode)
-#                cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', nEpisode)
+		#cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', nEpisode)
                 
             elif not i.has_key('title'):
                 print "NEMA NASLOVA EPIZODE"
             else:
                 if j[2]!=u"old":
                     self.ui.db.updateEpisodeStatus(j[0])
-#                    cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(j[0],) )
+		    #cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(j[0],) )
 
 
 class BrePodder(MainUi):        
@@ -150,7 +154,7 @@ class BrePodder(MainUi):
                 downloadId = self.downloadList[-1][0]+1
             else:
                 downloadId = 0
-#            print "downloadId: " + str(downloadId)
+	    #print "downloadId: " + str(downloadId)
             self.downloadList.append((downloadId, Download()))
             self.downloadList[downloadId][1].setup(self)
             
@@ -457,8 +461,8 @@ class BrePodder(MainUi):
             	self.db.deleteAllEpisodes( self.CurrentChannel )
             	self.db.deleteChannel( self.CurrentChannel )
 
-            	os.chdir(os.path.expanduser('~')+'/.brePodder/')
-            	ChannelDir = os.path.expanduser('~')+'/.brePodder/'+self.p.sub("", self.CurrentChannel)
+            	os.chdir(os.path.expanduser('~') + '/.brePodder/')
+            	ChannelDir = os.path.expanduser('~')+'/.brePodder/' + self.p.sub("", self.CurrentChannel)
             
             	import shutil
             	shutil.rmtree(ChannelDir)
@@ -472,15 +476,15 @@ class BrePodder(MainUi):
         episodes = self.db.getLatestDownloads()
         self.treeWidget_4.clear()
        
-	self.AudioPlayer_latestDownloads.setUrl( episodes[0][2] ) 
- 
-        for e in episodes:
+	self.AudioPlayer_latestDownloads.setUrl( episodes[0][3] ) 
+        
+	for e in episodes:
             item = QtGui.QTreeWidgetItem( self.treeWidget_4 ) 
             item.setText( 0, str(e[10]) )
-	    item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+e[14])))
+	    item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~') + '/.brePodder/' + e[14])))
             item.setText( 1, e[1] )
             item.setText( 2, self.getReadableSize(e[4]) )
-            item.setText( 3, os.path.expanduser('~')+'/.brePodder/'+str(e[3]) )
+            item.setText( 3, os.path.expanduser('~') + '/.brePodder/' + str(e[3]) )
             
     # newest episodes
     def update_newest_episodes_list(self):
@@ -492,7 +496,7 @@ class BrePodder(MainUi):
         for e in episodes:
             item = QtGui.QTreeWidgetItem( self.treeWidget_5 )
             item.setText( 0, str(e[10]) )
-            item.setIcon( 0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+e[14])) )
+            item.setIcon( 0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~') + '/.brePodder/' + e[14])) )
             item.setText( 1, e[1] )
             if e[4]:
                 item.setText(2,self.getReadableSize( e[4]) )
@@ -516,11 +520,17 @@ class BrePodder(MainUi):
     def LastestEpisodeDoubleClicked(self, a):
         #os.system( "mocp -a " + a.text(3).toUtf8().data().decode('UTF8') )
 	self.AudioPlayer_latestDownloads.setUrl( a.text(3).toUtf8().data().decode('UTF8') )
+	self.AudioPlayer_latestDownloads.playClicked()
+
+    def LastestEpisodeActivated(self, a):
+        #os.system( "mocp -a " + a.text(3).toUtf8().data().decode('UTF8') )
+	self.AudioPlayer_latestDownloads.setUrl( a.text(3).toUtf8().data().decode('UTF8') )
 
     def NewestEpisodeDoubleClicked( self, a):
 	#print  a.text(4).toUtf8().data().decode('UTF8')
 	episode = a.text(4).toUtf8().data().decode('UTF8')
 	#print episode.get("enclosure")
+	print episode + " added to queue"
 	self.AudioPlayer_newestEpisodes.setUrl( episode )
         
     def getReadableSize(self,  size):

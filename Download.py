@@ -249,6 +249,7 @@ class Download(QtCore.QObject):
             os.chdir(os.path.expanduser('~')+'/.brePodder')
             self.ui.update_lastest_episodes_list()
         else:
+	    # this happens on pausing dowloads, and for bad requests
             print "Download Error!"
         return
         

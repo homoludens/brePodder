@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+#import vimpdb; vimpdb.set_trace()
+
 from PyQt4 import QtCore, QtGui, QtNetwork, QtWebKit
 #, QtNetwork,  QtTest,  QtWebKit
 import os

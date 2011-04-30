@@ -77,7 +77,8 @@ class MainUi(object):
         self.QLineEdit1 = QtGui.QLineEdit( self.splitter_222 )
 
         self.updateProgressBar = QtGui.QProgressBar(self.splitter_222)
-        self.updateProgressBar.setValue(42);
+        #self.updateProgressBar.setValue(42);
+	self.updateProgressBar.setMaximumHeight( 25 )
         self.updateProgressBar.hide();
         #self.splitter_222.addWidget( self.updateProgressBar )
         
