@@ -1,4 +1,4 @@
-from Download import *
+from Download2 import *
 from sql import DBOperation
 from getfavicon import getIcoUrl
 
@@ -245,7 +245,6 @@ class BrePodder(MainUi):
             print TypeError
             item.setText(5,"No link")
         
-#        session.commit()
         
         if len(self.downloadList)>0:
             downloadId = self.downloadList[-1][0] + 1
@@ -253,10 +252,11 @@ class BrePodder(MainUi):
             downloadId = 0
 #        print "downloadId: " + str(downloadId)
         self.itemsDownloading.append( (downloadId, e.get("enclosure").replace(" ", "%20"))) 
-        self.downloadList.append((downloadId, Download( )))
-	#self.downloadList.append((downloadId, Download( e.get("enclosure").replace(" ", "%20"), item, downloadId )))
-        self.downloadList[downloadId][1].setup(self)
-        self.downloadList[downloadId][1].downloadFile( e.get("enclosure").replace(" ", "%20"), item, downloadId )
+        #self.downloadList.append((downloadId, Download( )))
+	self.downloadList.append((downloadId, Download( e.get("enclosure").replace(" ", "%20"), item, downloadId, self )))
+	self.downloadList[downloadId][1].downloadFile()
+        #self.downloadList[downloadId][1].setup(self)
+        #self.downloadList[downloadId][1].downloadFile( e.get("enclosure").replace(" ", "%20"), item, downloadId )
           
         os.chdir( os.path.expanduser('~')+'/.brePodder' ) 
 
@@ -660,7 +660,7 @@ class BrePodder(MainUi):
         self.ChannelForUpdate=ch
 #        print ch.title
 #        ui.Sem.acquire()
-        updtChTr=updateChannelThread(ch,self,  0)
+        updtChTr=updateChannelThread(ch, self,  0)
         QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal"),self.update_channel_list,QtCore.Qt.QueuedConnection)
         QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal_episodelist(PyQt_PyObject)"),self.update_episode_list,QtCore.Qt.QueuedConnection)
         QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updateDoneSignal"),self.update_done, QtCore.Qt.BlockingQueuedConnection)
