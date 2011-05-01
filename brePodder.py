@@ -253,7 +253,8 @@ class BrePodder(MainUi):
             downloadId = 0
 #        print "downloadId: " + str(downloadId)
         self.itemsDownloading.append( (downloadId, e.get("enclosure").replace(" ", "%20"))) 
-        self.downloadList.append((downloadId, Download()))
+        self.downloadList.append((downloadId, Download( )))
+	#self.downloadList.append((downloadId, Download( e.get("enclosure").replace(" ", "%20"), item, downloadId )))
         self.downloadList[downloadId][1].setup(self)
         self.downloadList[downloadId][1].downloadFile( e.get("enclosure").replace(" ", "%20"), item, downloadId )
           
@@ -333,7 +334,10 @@ class BrePodder(MainUi):
 		logo_fileBig=u"images/musicstore2.png"
 	
 	#  download favicon
-        favicon_url = getIcoUrl("http://"+QtCore.QUrl(w.feed.link).host().toUtf8().data())
+	if w.feed.has_key("link"):
+        	favicon_url = getIcoUrl("http://"+QtCore.QUrl(w.feed.link).host().toUtf8().data())
+	else:
+		favicon_url = "http://www.google.com/favicon.ico"
         
 	if favicon_url:
             url = favicon_url
