@@ -313,8 +313,13 @@ class BrePodder(MainUi):
         logo_file = ChannelDir  + '/' + favicon
 
 	item2 = QtGui.QTreeWidgetItem(self.treeWidget)
-        item2.setText(0,w.feed.title)
-        item2.setText(1,url)
+
+	if w.feed.has_key('title'):
+        	item2.setText(0,w.feed.title)
+	else:
+		item2.setText(0, "No title")
+        
+	item2.setText(1,url)
         item2.setText(5,url)
         
         if len( self.downloadList )>0:
@@ -333,7 +338,7 @@ class BrePodder(MainUi):
         if w.feed.has_key('subtitle'):
             ChannelSubtitle=w.feed.subtitle
         else:
-            ChannelSubtitle=u'Nema opisa'
+            ChannelSubtitle=u'No description'
 
 
         if w.feed.has_key('links'): 

@@ -408,15 +408,18 @@ class MainUi(object):
 	if opml is None:
         	import opml
 
-        filename = QtGui.QFileDialog.getOpenFileName(MainWindow, 'Open file','/home')
+        filename = QtGui.QFileDialog.getOpenFileName(self.MW, 'Open file','/home')
 #        i = opml.Importer('brePodderImport.opml')
         i = opml.Importer(filename.toAscii().data())
         i.get_model()
-	channels = self.db.getAllChannels()
+	channels = self.db.getAllChannelsLinks()
+	#print channels
 
         for ch in i.items:
-	    if ch['url'] not in channels:
+	    if (ch['url'], ) not in channels:
+	    	#print ch['url']
             	self.AddChannel(ch['url'])
+		
             
     def activeMenuChannels(self, pos):
         self.actionCancel.setText(QtGui.QApplication.translate("MainWindow", "Delete feed", None, QtGui.QApplication.UnicodeUTF8))

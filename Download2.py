@@ -87,8 +87,8 @@ class Download(QtCore.QObject):
 	print "replyFinished"
         self.finishedDownloading = True;
 
-        if not(self.startedSaving):
-            return;
+        #if not(self.startedSaving):
+        #    return;
 
         if not(self.fp == None or self.fp.closed):
             self.fp.close()
