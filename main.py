@@ -3,12 +3,12 @@
 
 #import vimpdb; vimpdb.set_trace()
 
-from PyQt4 import QtCore, QtGui, QtNetwork, QtWebKit
+from PyQt4 import QtCore, QtGui #, QtNetwork #, QtWebKit
 #, QtNetwork,  QtTest,  QtWebKit
-import os
+import os, sys
 #from getfavicon import getIcoUrl
 #import opml
-import sys
+#import sys
 #from sql import *
 #from Ui_add_folder import *
 #import feedparser

@@ -7,7 +7,7 @@ from getfavicon import getIcoUrl
 import sys
 sys.setappdefaultencoding('utf-8')
 
-
+feedparser = None
 draggable = QtCore.Qt.ItemIsDragEnabled
 droppable = QtCore.Qt.ItemIsDropEnabled
 editable  = QtCore.Qt.ItemIsEditable
@@ -48,14 +48,18 @@ class updateChannelThread(QtCore.QThread):
         
 
     def updateChannel(self, ch = None, cursor=None):
+
+	global feedparser
+	if  feedparser is None:
+        	import feedparser
+
         newEpisode={}
         cur=cursor
         oldEpisodes=[]
         if ch == None:
             a,  tt = self.ui.db.getCurrentChannel(self.ui.CurrentChannel[1])
 #            cc = cur.execute('select id,title from sql_channel where title =?', (self.CurrentChannel,))
-#            a = cc.fetchone()
-#            tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0]))
+#            a = cc.fetchone()#            tt = cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0]))
         else:
 #            a,  tt = self.ui.db.getCurrentChannel(ch[1])
             #TODO: SQL--this one is in thread and is making problems
@@ -212,7 +216,11 @@ class BrePodder(MainUi):
         os.chdir( os.path.expanduser('~')+'/.brePodder' ) 
 
     def AddChannel(self, newUrl = None):
-        import feedparser
+
+	global feedparser
+	if  feedparser is None:
+        	import feedparser
+
 	os.chdir( os.path.expanduser('~')+'/.brePodder' )
 
         if newUrl == None:

@@ -1,20 +1,20 @@
-from PyQt4 import QtCore, QtGui, QtNetwork #, QtWebKit
-import os
-from Download import *
-import re
+from PyQt4 import QtCore, QtGui#, QtNetwork #, QtWebKit
+import os, re, sys
+#from Download import *
 from time import gmtime, strftime, mktime, sleep
-import sys
 import sqlite3
 from sql import *
 #from Ui_add_folder import *
-import feedparser
+#import feedparser
 from audioplayer import AudioPlayer
 from treeviewwidget import treeViewWidget
 
 
+opml = None
 
 #Main application interface
 class MainUi(object):
+
     def __init__(self, parent=None):
         self.http = []
         self.httpGetId = []
@@ -420,16 +420,24 @@ class MainUi(object):
     
     
     def export_opml(self):
-        import opml
+
+    	global opml
+	if opml is None:
+        	import opml
+
         channels = self.db.getAllChannels()
         o=opml.Exporter('brePodder.opml')
         o.write(channels)
         
     def import_opml(self):
-        import opml
+
+    	global opml
+	if opml is None:
+        	import opml
+
         filename = QtGui.QFileDialog.getOpenFileName(MainWindow, 'Open file','/home')
 #        i=opml.Importer('brePodderImport.opml')
-        i=opml.Importer(filename.toAscii().data())
+        i = opml.Importer(filename.toAscii().data())
         i.get_model()
         for ch in i.items:
             self.AddChannel(ch['url'])

@@ -1,5 +1,5 @@
 #from PyQt4 import QtCore, QtGui,  QtNetwork,  QtTest
-import feedparser
+#import feedparser
 from sql import *
 #import os
 from getfavicon import getIcoUrl

@@ -1,6 +1,6 @@
 import urllib, sys, os
 
-import feedparser
+#import feedparser
 from sql import *
 from getfavicon import getIcoUrl
 import re
