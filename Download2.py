@@ -41,6 +41,7 @@ class Download(QtCore.QObject):
         self.i = 0
 	self.downloadFile()
 	
+
     def downloadFile(self):
 
 	self.header =  QtNetwork.QNetworkRequest(self.link)
@@ -56,14 +57,9 @@ class Download(QtCore.QObject):
 	self.reply.readyRead.connect(self.on_reply_readyRead)
 	#self.connect(self.reply, QtCore.SIGNAL("readyRead()"), self.on_reply_readyRead)
 
-
-
         QtCore.QObject.connect( self.Parent.actionCancel, QtCore.SIGNAL("activated()"), self.cancelDownload )
         QtCore.QObject.connect( self.Parent.actionPause,  QtCore.SIGNAL("activated()"), self.pauseDownload )
         QtCore.QObject.connect( self.Parent.actionResume, QtCore.SIGNAL("activated()"), self.resumeDownload )
-
- 
-
 
 
     def updateDataReadProgress(self, bytesRead, totalBytes):
@@ -86,6 +82,7 @@ class Download(QtCore.QObject):
 
 	self.itemZaPrenos.setText(3, str(round(( float(self.bytesRead) / float(self.totalBytes) ) * 100)))
 
+
     def replyFinished(self, reply, file):
 	print "replyFinished"
         self.finishedDownloading = True;
@@ -99,7 +96,6 @@ class Download(QtCore.QObject):
         self._status = "downloaded"
         self.emit(QtCore.SIGNAL("statusChanged()"))
         self.emit(QtCore.SIGNAL("finished()"))
-
 
 
     def on_reply_readyRead(self):
@@ -119,11 +115,11 @@ class Download(QtCore.QObject):
         self._status = "paused"
         self.emit(QtCore.SIGNAL("statusChanged()"))
 
+
     def resumeDownload(self):
 	if (self._status == "paused"):
 		self.fp = open( self.saveFileName, "a")
 		self.downloadFile()
-
 
         
     def cancelDownload(self):
@@ -135,15 +131,12 @@ class Download(QtCore.QObject):
 		self.remove_file()
 
 
-
     def remove_file(self):
         if not(self.fp == None or self.fp.closed):
             self.fp.close()
 
         if (os.path.exists(self.saveFileName)):
             os.remove(self.saveFileName)
-
-
 
 
     def on_reply_error(self, code):
