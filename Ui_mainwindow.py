@@ -19,9 +19,7 @@ class MainUi(object):
         self.http = []
         self.httpGetId = []
         self.outFile = []
-#        self.itemZaPrenos = []
         self.downloadList=[]
-#        self.itemZaPrenos = None
         self.rawstr = r"""(?:\<img.*?\c=")(.*?)(?:\")"""  #it's better with "\src" (not "\c") but that doesn't work
         self.compile_obj = re.compile(self.rawstr, re.I)
         self.fontBold = QtGui.QFont()
@@ -31,8 +29,6 @@ class MainUi(object):
         self.TTThread=[]
 #        self.BufferSize = 5
 #        self.Mutex = QtCore.QMutex()
-        
-#        self.freeBytes.acquire()
         self.itemsDownloading=[]
         self.p=re.compile("\W")
         
@@ -77,7 +73,6 @@ class MainUi(object):
         self.QLineEdit1 = QtGui.QLineEdit( self.splitter_222 )
 
         self.updateProgressBar = QtGui.QProgressBar(self.splitter_222)
-        #self.updateProgressBar.setValue(42);
 	self.updateProgressBar.setMaximumHeight( 25 )
         self.updateProgressBar.hide();
         #self.splitter_222.addWidget( self.updateProgressBar )
@@ -86,18 +81,6 @@ class MainUi(object):
 
         self.QPushButton1.setMinimumSize(QtCore.QSize(20,20))
         self.QPushButton1.setMaximumSize(QtCore.QSize(50,25))
-
-
-	#self.splitter_222.addWidget( self.updateProgressBar )
-        #self.splitter_222.addWidget(self.QPushButton1)
-
-
-	#self.layoutAddFeed = QtGui.QHBoxLayout(self.splitter_222)
-	#self.layoutAddFeed.addWidget(self.QLineEdit1)
-	#self.layoutAddFeed.addWidget(self.updateProgressBar)
-	#self.layoutAddFeed.addWidget(self.QPushButton1)
-
-	#self.splitter_222.addWidget(self.layoutAddFeed)
 
 	self.splitter_2.setSizes( ( 100, 50) )
 
@@ -326,12 +309,7 @@ class MainUi(object):
         self.treeWidget_2.header().resizeSection(0, 300)
         self.treeWidget_2.clear()
 
-#        item2 = QtGui.QTreeWidgetItem(self.treeWidget_2)
-#        item2.setIcon(0,QtGui.QIcon("images/build.png"))
-#        item2.setText(0,QtGui.QApplication.translate("MainWindow", "naziv", None, QtGui.QApplication.UnicodeUTF8))
-#        item2.setText(1,QtGui.QApplication.translate("MainWindow", "33 MB", None, QtGui.QApplication.UnicodeUTF8))
-#        self.QTextBrowser1.setStatusTip(QtGui.QApplication.translate("MainWindow", "opis", None, QtGui.QApplication.UnicodeUTF8))
-        self.QTextBrowser1.setHtml(QtGui.QApplication.translate("MainWindow", "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+	self.QTextBrowser1.setHtml(QtGui.QApplication.translate("MainWindow", "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
         "p, li { white-space: pre-wrap; }\n"
         "</style></head><body style=\" font-family:\'Sans Serif\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
         "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">tekst u tekst browseru</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
@@ -346,15 +324,7 @@ class MainUi(object):
         self.treeWidget.header().resizeSection(0, 200)
         self.treeWidget.header().resizeSection(1, 200)
         self.treeWidget.clear()
-
-#        item3 = QtGui.QTreeWidgetItem(self.treeWidget)
-#        item3.setText(0,QtGui.QApplication.translate("MainWindow", "dl-ch", None, QtGui.QApplication.UnicodeUTF8))
-#        item3.setText(1,QtGui.QApplication.translate("MainWindow", "dl-ep", None, QtGui.QApplication.UnicodeUTF8))
-#        item3.setText(2,QtGui.QApplication.translate("MainWindow", "dl-size", None, QtGui.QApplication.UnicodeUTF8))
-#        item3.setText(3,QtGui.QApplication.translate("MainWindow", "dl-proc", None, QtGui.QApplication.UnicodeUTF8))
-#        item3.setText(4,QtGui.QApplication.translate("MainWindow", "dl-speed", None, QtGui.QApplication.UnicodeUTF8))
-#        item3.setText(5,QtGui.QApplication.translate("MainWindow", "dl-link", None, QtGui.QApplication.UnicodeUTF8))
-        
+       
         
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QtGui.QApplication.translate("MainWindow", "Downloads", None, QtGui.QApplication.UnicodeUTF8))
         
