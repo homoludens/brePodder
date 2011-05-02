@@ -47,11 +47,7 @@ class Download(QtCore.QObject):
 	if (self._status == "paused"):
 	     print "resuming"
 	     self.header.setRawHeader("Range", "bytes="+str(self.bytesRead)+"-")
-	     #self.reply.setRawHeader("Accept-Ranges", "bytes " + str(self.bytesRead) + "-" + str(self.totalBytes) + "/" + str(self.totalBytes) )
-	     self._status == "downlaod"
-	     #print self.reply
 
-	#print self.header.rawHeaderList()
         self.reply = self.manager.get(self.header)
 	self.reply.setParent(self)
 
@@ -71,18 +67,23 @@ class Download(QtCore.QObject):
 
 
     def updateDataReadProgress(self, bytesRead, totalBytes):
+
         if self.httpRequestAborted:
             return
 
         if not self._status == "paused":
             if self.tempBytes == 0:
                 self.totalBytes = totalBytes
+	    self.bytesRead = bytesRead
             
         if self._status == "paused":
-            #self._status = "downloading"
+            self._status = "downloading"
             self.tempBytes = self.bytesRead
+	    #self.bytesRead = self.bytesRead + bytesRead 
 
-        self.bytesRead = self.tempBytes + bytesRead     
+        self.bytesRead = self.tempBytes + bytesRead    
+	#print "bytesRead: " + str(bytesRead)  + "	self.totalBytes: " + str(self.totalBytes)
+
 	self.itemZaPrenos.setText(3, str(round(( float(self.bytesRead) / float(self.totalBytes) ) * 100)))
 
     def replyFinished(self, reply, file):
@@ -95,7 +96,7 @@ class Download(QtCore.QObject):
         if not(self.fp == None or self.fp.closed):
             self.fp.close()
 
-        self._status = "download"
+        self._status = "downloaded"
         self.emit(QtCore.SIGNAL("statusChanged()"))
         self.emit(QtCore.SIGNAL("finished()"))
 

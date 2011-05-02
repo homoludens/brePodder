@@ -209,11 +209,6 @@ class BrePodder(MainUi):
 	self.itemsDownloading.append( (downloadId, e.get("enclosure").replace(" ", "%20"))) 
         self.downloadList.append((downloadId, Download( e.get("enclosure").replace(" ", "%20"), item, downloadId, self )))
 
-	#self.downloadList.append((downloadId, Download( )))
-	#self.downloadList[downloadId][1].downloadFile()
-        #self.downloadList[downloadId][1].setup(self)
-        #self.downloadList[downloadId][1].downloadFile( e.get("enclosure").replace(" ", "%20"), item, downloadId )
-          
         os.chdir( os.path.expanduser('~')+'/.brePodder' ) 
 
     def AddChannel(self, newUrl = None):
@@ -235,7 +230,6 @@ class BrePodder(MainUi):
         else:
             ChannelTitle=feedLink
             
-#        p=re.compile("\W")  
         ChannelDir = self.p.sub("",ChannelTitle)
 	print "ChannelDir: "
 	print ChannelDir
@@ -244,17 +238,13 @@ class BrePodder(MainUi):
             os.mkdir(ChannelDir)
         except:
             print "directory exists"
-        os.chdir(ChannelDir)
-#        os.makedirs(ChannelTitle.decode())
-#        os.chdir(ChannelTitle)
 
-#        logo_file=ChannelTitle + '/favicon.png' 
+        os.chdir(ChannelDir)
         item.setText(0,ChannelTitle)
-# download Channel logo
+
+	# download Channel logo
         if w.feed.has_key('image'):
             if w.feed.image.href != None:
-#            item = QtGui.QTreeWidgetItem(self.treeWidget)
-#            item.setText(0,w.feed.title)
 		if (w.feed.image.href[0] == '/'):
 			imageURL = w.feed.link +  w.feed.image.href
 		else:
@@ -327,13 +317,6 @@ class BrePodder(MainUi):
         else:
             ChannelSubtitle=u'Nema opisa'
 
-#        convert logo_file png:logo_file
-#        p = QPixmap(logo_file)
-#        im=p.convertToImage()
-##            im=im.smoothScale(50,50,QImage.ScaleMin)
-#        p.convertFromImage(im)
-#        p.save(logo_file,'PNG')
-#        os.makedirs(w.feed.title)
 
         if w.feed.has_key('links'): 
             ChannelHomepage = w.feed.links[0].href
