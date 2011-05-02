@@ -267,29 +267,16 @@ class BrePodder(MainUi):
                     downloadId = self.downloadList[-1][0]+1
                 else:
                     downloadId = 0
-#                print "downloadId: " + str(downloadId)
-	
-
 
 		        
 		self.itemsDownloading.append( (downloadId, imageURL)) 
         	self.downloadList.append((downloadId, Download( imageURL, item, downloadId, self )))
 
 
-                #self.itemsDownloading.append((downloadId,imageURL))
-                #self.downloadList.append((downloadId, Download()))
-                #self.downloadList[downloadId][1].setup(self)
-                #self.downloadList[downloadId][1].downloadFile( imageURL, item, downloadId )
-
-
                 url_done = QtCore.QUrl(imageURL)
                 fileInfo = QtCore.QFileInfo(url_done.path())
                 fileName = QtCore.QString(fileInfo.fileName())
-                
-    #            i = w.feed.image.href.rfind('/')
-    #            logo_fileBig = ChannelTitle+"/"+w.feed.image.href[i+1:]
-
-    # should we put original or 128px version of logo
+	        #TODO: should we put original or 128px version of logo
                 logo_fileBig = ChannelDir+"/"+fileName.toUtf8().data()
             else: 
 		    logo_fileBig=u"images/musicstore2.png"
@@ -315,12 +302,7 @@ class BrePodder(MainUi):
         faviconInfo = QtCore.QFileInfo( url_favicon.path() )
         favicon = QtCore.QString( faviconInfo.fileName() ).toUtf8().data()
         
-#        ifavicon=url.rfind('/')
-#        favicon=url[ifavicon+1:]
         logo_file = ChannelDir  + '/' + favicon
-
-        if '.ico' in logo_file :
-            logo_file = logo_file.replace('.ico','.icon')
 
 	item2 = QtGui.QTreeWidgetItem(self.treeWidget)
         item2.setText(0,w.feed.title)
@@ -336,16 +318,9 @@ class BrePodder(MainUi):
 
                 
 	self.itemsDownloading.append( (downloadId, url )) 
-        self.downloadList.append((downloadId, Download( url, itemi2, downloadId, self )))
+        self.downloadList.append((downloadId, Download( url, item2, downloadId, self )))
 
-
-
-        #self.itemsDownloading.append((downloadId, url))
-        #self.downloadList.append((downloadId, Download()))
-        #self.downloadList[downloadId][1].setup(self)
         self.downloadList[downloadId][1].faviconFound=True
-        #self.downloadList[downloadId][1].downloadFile(url, item2, downloadId)
-        
         
         if w.feed.has_key('subtitle'):
             ChannelSubtitle=w.feed.subtitle
@@ -525,7 +500,6 @@ class BrePodder(MainUi):
     
     def update_episode_list(self,channel_Title):
         cc = self.db.getChannelByTitle(channel_Title)
-#        print cc
 #        self.QTextBrowser1.setHtml("<p><img src="+"'"+cc.logobig+"'"+"><br>\n\n</p><p>"+cc.description+"</p><p><b>Homepage: </b><a href="+cc.homepage+">"+cc.homepage+"</a><p>")
 #        self.QTextBrowser1.setHtml("<p>"+cc.description+"</p><p><b>Homepage: </b><a href="+cc.homepage+">"+cc.homepage+"</a></p>")
 	self.QTextBrowser1.setHtml("<p>" +cc[4] + "</p>     <p> <b>Feed link:</b> <a href=" + cc[2] + ">" + cc[2]  +  "</a></p> <p><b>Homepage: </b><a href=" + cc[3] + ">" + cc[3] + "</a></p>")
@@ -549,8 +523,9 @@ class BrePodder(MainUi):
                 print "date exception"
             item2.setText(2,epDate)
 #            TODO: fix this error for setting font
-#            if t.status=='new':
-#                item2.setFont(0, self.fontBold)
+            if t[7] == 'new':
+	    	print "new"
+                item2.setFont(0, self.fontBold)
          
     def update_channel_list(self):
         channels =  self.db.getAllChannelsWOFolder()
