@@ -138,45 +138,7 @@ class BrePodder(MainUi):
         return result
                
 
-    '''
-
-
-
-	# TODO: download images from episode description so i can show them in QTextBrowser
-	# this is beta... :)
-    def getImageFromDesc(self, desc,  channel):
-        ChannelDir = self.p.sub("",channel.title)
-        os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
-        
-        match_obj = self.compile_obj.findall(desc)
-        
-        for image in match_obj:
-            p = re.compile(image)
-            i=image.rfind('/')
-            desc = p.sub( os.getcwd()+image[i:], desc)
-            
-            if len(self.downloadList)>0:
-                downloadId = self.downloadList[-1][0]+1
-            else:
-                downloadId = 0
-	    #print "downloadId: " + str(downloadId)
-            self.downloadList.append((downloadId, Download()))
-            self.downloadList[downloadId][1].setup(self)
-            
-            item = QtGui.QTreeWidgetItem(self.treeWidget)
-            item.setText(0,channel.title)
-            item.setText(5,image)
-            
-            self.downloadList[downloadId][1].downloadFile(image.replace(" ", "%20"), item, downloadId)
-            
-        os.chdir(os.path.expanduser('~')+'/.brePodder')            
-        return desc
-
-
-
-    '''
-
-    
+   
     def episode_activated(self):
         if self.treeWidget_2.selectedItems():
             selection = self.treeWidget_2.selectedItems()[0]
@@ -196,32 +158,15 @@ class BrePodder(MainUi):
                     else:
                         localFile='None'
 
-            # TODO: download images from episode description so i can show them in QTextBrowser
-            #            desc_localimg = self.getImageFromDesc(desc, e.channel)
-            #            print desc_localimg
-
                     self.QTextBrowser1.setHtml("<p>"+desc+"</br>\n\r</p><p><b>FILE: </b><a href="+enc+">"+enc+"</a></p>\
                                                 <p><b>LOCALFILE: </b><a href="+localFile+">"+localFile+"</a></p>\
                                                 <p>PLAY:<audio  controls='controls' src='"+enc+"'/></p>")
 
-                   # self.QTextBrowser1.settings().setAttribute(QtWebKit.QWebSettings.JavascriptEnabled, True)
 		    
 		    if localFile != 'None':
 		    	self.AudioPlayer.setUrl(localFile)
 		    else:
 		    	self.AudioPlayer.setUrl(enc)
-
-#                    self.QTextBrowser1.setHtml(b)
-                    
-#                    code = QtCore.QString("$('a').css('background-color', 'yellow')")
-#                    self.QTextBrowser1.page().mainFrame().evaluateJavaScript(code)
-                    
-#                    
-#                    self.QTextBrowser1.setUrl(QtCore.QUrl("static/jQuery.jPlayer.2.0.0/jplayer.html"))
-#                    self.QTextBrowser1.page().mainFrame().evaluateJavaScript(open('static/jQuery.jPlayer.2.0.0/js/jquery.min.js').read())
-#                    self.QTextBrowser1.page().mainFrame().evaluateJavaScript(open('static/jQuery.jPlayer.2.0.0/js/jquery.jplayer.min.js').read())
-#                    self.QTextBrowser1.page().mainFrame().evaluateJavaScript("""$(document).ready(function() { $("body").css("background", "#f00");});""")
-#                  
             except:
                     print "EpisodeActivated exception"
     
@@ -232,7 +177,7 @@ class BrePodder(MainUi):
         self.actionResume.setToolTip("Resume Selected Download")
     
     def EpisodeDoubleClicked(self, a):
-# TODO: change backgroundColor or something else with QBrush
+	# TODO: change backgroundColor or something else with QBrush
         a.setFont(0, self.fontBold) 
         episodeTitle = a.text(0).toUtf8().data().decode('UTF8')
         e = self.db.getEpisodeByTitle( episodeTitle )

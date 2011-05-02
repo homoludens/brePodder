@@ -85,12 +85,6 @@ class Download(QtCore.QObject):
 	self.itemZaPrenos.setText(3, str(round(( float(self.bytesRead) / float(self.totalBytes) ) * 100)))
 
     def replyFinished(self, reply, file):
-	#self.reply = reply
-	#os.chdir(self.CurDir)
-        #output = open(file,'wb')
-        #alltext = self.reply.readAll()
-        #output.write(alltext)
-        #self.fp.close()
 	print "replyFinished"
         self.finishedDownloading = True;
 
@@ -107,15 +101,8 @@ class Download(QtCore.QObject):
 
 
     def on_reply_readyRead(self):
-	#print dir(self.reply)
-	#print self.reply.rawHeader("Accept-Ranges")
-#PyQt4.QtCore.QByteArray('Server'), PyQt4.QtCore.QByteArray('Date'), PyQt4.QtCore.QByteArray('Content-Type'), PyQt4.QtCore.QByteArray('Content-Length'), PyQt4.QtCore.QByteArray('Last-Modified'), PyQt4.QtCore.QByteArray('Connection'), PyQt4.QtCore.QByteArray('Keep-Alive'), PyQt4.QtCore.QByteArray('Expires'), PyQt4.QtCore.QByteArray('Cache-Control'), PyQt4.QtCore.QByteArray('Accept-Ranges')
-
         if (self.fp == None or self.fp.closed):
-            #dir = os.path.dirname(self.CurDir)
-            #if not(os.path.exists(dir)):
-            #    os.mkdir(dir)
-            self.fp = open( self.saveFileName, "w")
+           self.fp = open( self.saveFileName, "w")
         read = self.reply.readAll()
         self.fp.write(read)
         self.fp.flush()
@@ -153,7 +140,6 @@ class Download(QtCore.QObject):
 
         if (os.path.exists(self.saveFileName)):
             os.remove(self.saveFileName)
-
 
 
 
