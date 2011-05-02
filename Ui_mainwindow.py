@@ -1,4 +1,4 @@
-from PyQt4 import QtCore, QtGui#, QtNetwork #, QtWebKit
+from PyQt4 import QtCore, QtGui, QtNetwork #, QtWebKit
 import os, re, sys
 #from Download import *
 from time import gmtime, strftime, mktime, sleep
@@ -418,7 +418,8 @@ class MainUi(object):
         print "dialog_add"
         print filename
     
-    
+
+
     def export_opml(self):
 
     	global opml
@@ -426,9 +427,11 @@ class MainUi(object):
         	import opml
 
         channels = self.db.getAllChannels()
-        o=opml.Exporter('brePodder.opml')
+        o = opml.Exporter('brePodder.opml')
         o.write(channels)
-        
+
+
+
     def import_opml(self):
 
     	global opml
@@ -436,11 +439,14 @@ class MainUi(object):
         	import opml
 
         filename = QtGui.QFileDialog.getOpenFileName(MainWindow, 'Open file','/home')
-#        i=opml.Importer('brePodderImport.opml')
+#        i = opml.Importer('brePodderImport.opml')
         i = opml.Importer(filename.toAscii().data())
         i.get_model()
+	channels = self.db.getAllChannels()
+
         for ch in i.items:
-            self.AddChannel(ch['url'])
+	    if ch['url'] not in channels:
+            	self.AddChannel(ch['url'])
             
     def activeMenuChannels(self, pos):
         self.actionCancel.setText(QtGui.QApplication.translate("MainWindow", "Delete feed", None, QtGui.QApplication.UnicodeUTF8))

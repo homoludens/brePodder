@@ -1,6 +1,6 @@
 from Download2 import *
 from sql import DBOperation
-from getfavicon import getIcoUrl
+#from getfavicon import getIcoUrl
 
 #import vimpdb; vimpdb.set_trace()
 
@@ -8,6 +8,10 @@ import sys
 sys.setappdefaultencoding('utf-8')
 
 feedparser = None
+getfavicon = None
+
+
+
 draggable = QtCore.Qt.ItemIsDragEnabled
 droppable = QtCore.Qt.ItemIsDropEnabled
 editable  = QtCore.Qt.ItemIsEditable
@@ -220,6 +224,12 @@ class BrePodder(MainUi):
 	global feedparser
 	if  feedparser is None:
         	import feedparser
+
+	global getfavicon
+	if  getfavicon is None:
+       		from getfavicon import getIcoUrl
+
+
 
 	os.chdir( os.path.expanduser('~')+'/.brePodder' )
 
