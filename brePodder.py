@@ -136,7 +136,12 @@ class BrePodder(MainUi):
             if status is not None:
                 status.close()
         return result
-                
+               
+
+    '''
+
+
+
 	# TODO: download images from episode description so i can show them in QTextBrowser
 	# this is beta... :)
     def getImageFromDesc(self, desc,  channel):
@@ -166,7 +171,12 @@ class BrePodder(MainUi):
             
         os.chdir(os.path.expanduser('~')+'/.brePodder')            
         return desc
-        
+
+
+
+    '''
+
+    
     def episode_activated(self):
         if self.treeWidget_2.selectedItems():
             selection = self.treeWidget_2.selectedItems()[0]
@@ -250,11 +260,12 @@ class BrePodder(MainUi):
             downloadId = self.downloadList[-1][0] + 1
         else:
             downloadId = 0
-#        print "downloadId: " + str(downloadId)
-        self.itemsDownloading.append( (downloadId, e.get("enclosure").replace(" ", "%20"))) 
-        #self.downloadList.append((downloadId, Download( )))
-	self.downloadList.append((downloadId, Download( e.get("enclosure").replace(" ", "%20"), item, downloadId, self )))
-	self.downloadList[downloadId][1].downloadFile()
+        
+	self.itemsDownloading.append( (downloadId, e.get("enclosure").replace(" ", "%20"))) 
+        self.downloadList.append((downloadId, Download( e.get("enclosure").replace(" ", "%20"), item, downloadId, self )))
+
+	#self.downloadList.append((downloadId, Download( )))
+	#self.downloadList[downloadId][1].downloadFile()
         #self.downloadList[downloadId][1].setup(self)
         #self.downloadList[downloadId][1].downloadFile( e.get("enclosure").replace(" ", "%20"), item, downloadId )
           
@@ -312,11 +323,18 @@ class BrePodder(MainUi):
                 else:
                     downloadId = 0
 #                print "downloadId: " + str(downloadId)
-		
-                self.itemsDownloading.append((downloadId,imageURL))
-                self.downloadList.append((downloadId, Download()))
-                self.downloadList[downloadId][1].setup(self)
-                self.downloadList[downloadId][1].downloadFile( imageURL, item, downloadId )
+	
+
+
+		        
+		self.itemsDownloading.append( (downloadId, imageURL)) 
+        	self.downloadList.append((downloadId, Download( imageURL, item, downloadId, self )))
+
+
+                #self.itemsDownloading.append((downloadId,imageURL))
+                #self.downloadList.append((downloadId, Download()))
+                #self.downloadList[downloadId][1].setup(self)
+                #self.downloadList[downloadId][1].downloadFile( imageURL, item, downloadId )
 
 
                 url_done = QtCore.QUrl(imageURL)
@@ -369,11 +387,19 @@ class BrePodder(MainUi):
         else:
             downloadId = 0
 
-        self.itemsDownloading.append((downloadId, url))
-        self.downloadList.append((downloadId, Download()))
-        self.downloadList[downloadId][1].setup(self)
+
+
+                
+	self.itemsDownloading.append( (downloadId, url )) 
+        self.downloadList.append((downloadId, Download( url, itemi2, downloadId, self )))
+
+
+
+        #self.itemsDownloading.append((downloadId, url))
+        #self.downloadList.append((downloadId, Download()))
+        #self.downloadList[downloadId][1].setup(self)
         self.downloadList[downloadId][1].faviconFound=True
-        self.downloadList[downloadId][1].downloadFile(url, item2, downloadId)
+        #self.downloadList[downloadId][1].downloadFile(url, item2, downloadId)
         
         
         if w.feed.has_key('subtitle'):
