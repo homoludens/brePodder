@@ -46,9 +46,10 @@ class Download(QtCore.QObject):
 	self.header =  QtNetwork.QNetworkRequest(self.link)
 	if (self._status == "paused"):
 	     print "resuming"
+	     self.header.setRawHeader("Range", "bytes="+str(self.bytesRead)+"-")
 	     #self.reply.setRawHeader("Accept-Ranges", "bytes " + str(self.bytesRead) + "-" + str(self.totalBytes) + "/" + str(self.totalBytes) )
 	     self._status == "downlaod"
-	     print self.reply
+	     #print self.reply
 
 	#print self.header.rawHeaderList()
         self.reply = self.manager.get(self.header)

@@ -508,6 +508,7 @@ class BrePodder(MainUi):
         self.treeWidget_2.clear()
         for t in tt:
             item2 = QtGui.QTreeWidgetItem(self.treeWidget_2)
+
             if not t[3]:#.localfile:
                 item2.setIcon(0,QtGui.QIcon("images/build.png"))
             else:
@@ -522,9 +523,8 @@ class BrePodder(MainUi):
                 epDate=strftime("%x", b)
                 print "date exception"
             item2.setText(2,epDate)
-#            TODO: fix this error for setting font
+
             if t[7] == 'new':
-	    	print "new"
                 item2.setFont(0, self.fontBold)
          
     def update_channel_list(self):
