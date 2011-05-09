@@ -1,4 +1,4 @@
-from Download2 import *
+from download import *
 from sql import DBOperation
 #from getfavicon import getIcoUrl
 
