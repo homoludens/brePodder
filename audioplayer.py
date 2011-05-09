@@ -2,7 +2,10 @@
 
 import sys, os
 from PyQt4 import QtCore, QtGui, uic
-from PyQt4.phonon import Phonon
+try:
+	from PyQt4.phonon import Phonon
+except:
+	print "brePodder: No Phonon -> No Player!"
 #import icons_rc
 
 class AudioPlayer(QtGui.QWidget):
@@ -40,7 +43,7 @@ class AudioPlayer(QtGui.QWidget):
         layout.addWidget(self.status)
         layout.addWidget(self.download)
 
-	self.setUrl("http://www.jplayer.org/audio/ogg/Miaow-07-Bubble.ogg")
+	self.setUrl("")
 
     def setUrl(self, url):
 	#print url

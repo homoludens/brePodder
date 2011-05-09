@@ -6,7 +6,12 @@ import sqlite3
 from sql import *
 #from Ui_add_folder import *
 #import feedparser
-from audioplayer import AudioPlayer
+AudioPlayer = None
+try:
+	from audioplayer import AudioPlayer
+except:
+	print "No player"
+
 from treeviewwidget import treeViewWidget
 
 
@@ -95,8 +100,8 @@ class MainUi(object):
         self.QTextBrowser1 = QtGui.QTextBrowser(self.splitter) # Qt4.3
 #        self.QTextBrowser1.setOpenExternalLinks(1)
 #        self.QTextBrowser1.setOpenLinks(1)
-
-	self.AudioPlayer = AudioPlayer( "", self.splitter)
+	if AudioPlayer:
+		self.AudioPlayer = AudioPlayer( "", self.splitter)
 
         self.gridlayout1.addWidget( self.splitter_2, 0, 0, 1, 1 )
 
@@ -134,7 +139,9 @@ class MainUi(object):
         self.splitter_3 = QtGui.QSplitter(self.tab_3)
         self.splitter_3.setOrientation(QtCore.Qt.Horizontal)
 	self.gridlayout3.addWidget(self.splitter_3)
-	self.AudioPlayer_latestDownloads = AudioPlayer( "", self.splitter_3 )         
+
+	if AudioPlayer:
+		self.AudioPlayer_latestDownloads = AudioPlayer( "", self.splitter_3 )         
 	
 	MainWindow.setCentralWidget(self.centralwidget)
 
@@ -153,7 +160,9 @@ class MainUi(object):
         self.splitter_4 = QtGui.QSplitter(self.tab_4)
         self.splitter_4.setOrientation(QtCore.Qt.Horizontal)
 	self.gridlayout4.addWidget(self.splitter_4)
-	self.AudioPlayer_newestEpisodes = AudioPlayer( "", self.splitter_4 )
+
+	if AudioPlayer:
+		self.AudioPlayer_newestEpisodes = AudioPlayer( "", self.splitter_4 )
 
         MainWindow.setCentralWidget(self.centralwidget)
 

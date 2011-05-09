@@ -4,8 +4,8 @@ from sql import DBOperation
 
 #import vimpdb; vimpdb.set_trace()
 
-import sys
-sys.setappdefaultencoding('utf-8')
+#import sys
+#sys.setdefaultencoding('utf-8')
 
 feedparser = None
 getfavicon = None
@@ -52,7 +52,7 @@ class updateChannelThread(QtCore.QThread):
         
 
     def updateChannel(self, ch = None, cursor=None):
-
+	
 	global feedparser
 	if  feedparser is None:
         	import feedparser
@@ -92,7 +92,11 @@ class updateChannelThread(QtCore.QThread):
                 else:
                     newEpisode['title']=u'No Title'
                 if i.has_key('enclosures'):
-                    newEpisode['enclosure'] = i.enclosures[0].href
+		    try:
+                    	newEpisode['enclosure'] = i.enclosures[0].href
+		    except:
+			newEpisode['enclosure'] = "None"
+
                     try:
                         newEpisode['size'] = int(i.enclosures[0].length)
                     except:
@@ -121,8 +125,13 @@ class updateChannelThread(QtCore.QThread):
             elif not i.has_key('title'):
                 print "NEMA NASLOVA EPIZODE"
             else:
-                if j[2]!=u"old":
-                    self.ui.db.updateEpisodeStatus(j[0])
+                if j[2] != u"old":
+		    try:
+		    	#print "old"
+                    	self.ui.db.updateEpisodeStatus(j[0])
+		    except Exception as ex:
+			print ex
+		    	print j
 		    #cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(j[0],) )
 
 
@@ -171,7 +180,7 @@ class BrePodder(MainUi):
                                                 <p>PLAY:<audio  controls='controls' src='"+enc+"'/></p>")
 
 		    
-		    if localFile != 'None':
+		    if (localFile != 'None') & (AudioPlayer):
 		    	self.AudioPlayer.setUrl(localFile)
 		    else:
 		    	self.AudioPlayer.setUrl(enc)
@@ -191,8 +200,8 @@ class BrePodder(MainUi):
         e = self.db.getEpisodeByTitle( episodeTitle )
         channel = self.db.getChannelById( e.get("channel_id") )
         ChannelDir = self.p.sub("", channel.get("title") )
-        print "ChannelDir: "
-	print ChannelDir 
+        #print "ChannelDir: "
+	#print ChannelDir 
  
         os.chdir(os.path.expanduser('~')+'/.brePodder/'+ChannelDir)
         item = QtGui.QTreeWidgetItem(self.treeWidget)
@@ -432,7 +441,7 @@ class BrePodder(MainUi):
         episodes = self.db.getLatestDownloads()
         self.treeWidget_4.clear()
        
-	self.AudioPlayer_latestDownloads.setUrl( episodes[0][3] ) 
+	#self.AudioPlayer_latestDownloads.setUrl( episodes[0][3] ) 
         
 	for e in episodes:
             item = QtGui.QTreeWidgetItem( self.treeWidget_4 ) 
@@ -447,11 +456,11 @@ class BrePodder(MainUi):
         episodes = self.db.getLatestEpisodes()
         self.treeWidget_5.clear()
 
-	self.AudioPlayer_newestEpisodes.setUrl( episodes[0][2] ) 
+	#self.AudioPlayer_newestEpisodes.setUrl( episodes[0][2] ) 
 
         for e in episodes:
             item = QtGui.QTreeWidgetItem( self.treeWidget_5 )
-            item.setText( 0, str(e[10]) )
+            item.setText( 0, e[10] )
             item.setIcon( 0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~') + '/.brePodder/' + e[14])) )
             item.setText( 1, e[1] )
             if e[4]:
@@ -480,7 +489,8 @@ class BrePodder(MainUi):
 
     def LastestEpisodeActivated(self, a):
         #os.system( "mocp -a " + a.text(3).toUtf8().data().decode('UTF8') )
-	self.AudioPlayer_latestDownloads.setUrl( a.text(3).toUtf8().data().decode('UTF8') )
+	#self.AudioPlayer_latestDownloads.setUrl( a.text(3).toUtf8().data().decode('UTF8') )
+	pass
 
     def NewestEpisodeDoubleClicked( self, a):
 	#print  a.text(4).toUtf8().data().decode('UTF8')
@@ -520,7 +530,7 @@ class BrePodder(MainUi):
             else:
                 item2.setIcon(0,QtGui.QIcon("images/mp3.png"))
             item2.setText(0,t[1]) #.title
-            item2.setText(1,self.getReadableSize(t[3])) #.size
+            item2.setText(1, self.getReadableSize(t[4])) #.size
             try:
                 b=gmtime(float(t[5]))#.date
                 epDate=strftime("%x", b)

@@ -166,27 +166,27 @@ class DBOperation():
         return episodes
         
     def insertEpisode(self, ep):   
-        #con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        #con.isolation_level = None
-        #cur = con.cursor()
-        self.cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', ep)
-        #cur.close()
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+        con.isolation_level = None
+        cur = con.cursor()
+        cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', ep)
+        cur.close()
 
     def updateEpisode(self,  episode):
-        #con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        #con.isolation_level = None
-        #cur = con.cursor()
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+        con.isolation_level = None
+        cur = con.cursor()
         cur.execute('update sql_episode set localfile = ?, status = ?  where id = ?', episode)
-        #cur.close()
+        cur.close()
 #        self.cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(epId,) )
 
  
     def updateEpisodeStatus(self, episodeId):
-        #con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        #con.isolation_level = "IMMEDIATE"
-        #cur = con.cursor()       
-        self.cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(episodeId,) )
-        #cur.close()
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
+        con.isolation_level = "IMMEDIATE"
+        cur = con.cursor()       
+        cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(episodeId,) )
+        cur.close()
 
        
     def deleteAllEpisodes(self,  channelTitle):
