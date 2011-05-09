@@ -663,13 +663,14 @@ class BrePodder(MainUi):
     
     def sendMessage(self, message):
         try:
-            import pynotify
-            if pynotify.init("brePodder"):
-                n = pynotify.Notification("brePodder", message)
+	    print message
+            #import pynotify
+            #if pynotify.init("brePodder"):
+            #    n = pynotify.Notification("brePodder", message)
 #                n = pynotify.Notification("Title", "message", "icon-name")
-                n.show()
-            else:
-                print "there was a problem initializing the pynotify module"
+            #    n.show()
+            #else:
+            #    print "there was a problem initializing the pynotify module"
         except:
             print "you don't seem to have pynotify installed"        
 
