@@ -33,7 +33,7 @@ if __name__ == "__main__":
     MainWindow = QtGui.QMainWindow()
     ui = BrePodder()
 #    baza = DBOperation()
-#    print ui.memory_usage()
+    print ui.memory_usage()
     ui.setupUi(MainWindow)
     
     if not os.path.isfile('podcasts.sqlite'):
@@ -43,5 +43,5 @@ if __name__ == "__main__":
     ui.update_channel_list()
     ui.update_lastest_episodes_list()
     ui.update_newest_episodes_list()
-#    print ui.memory_usage()
+    print ui.memory_usage()
     sys.exitui = BrePodder()(app.exec_())

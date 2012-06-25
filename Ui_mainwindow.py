@@ -8,6 +8,7 @@ from sql import *
 #import feedparser
 AudioPlayer = None
 try:
+	from PyQt4.phonon import Phonon
 	from audioplayer import AudioPlayer
 except:
 	print "No player"
