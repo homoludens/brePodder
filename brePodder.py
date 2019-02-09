@@ -369,8 +369,7 @@ class BrePodder(MainUi):
         ChannelId = self.db.getChannelByTitle(ChannelTitle)
 
         for i in w.entries:
-            print("episode: ")
-            print(i)
+
             newEpisode = []
 
             if i.has_key('title'):
@@ -407,7 +406,6 @@ class BrePodder(MainUi):
             newEpisode.append('new')
             newEpisode.append(ChannelId[0])
 
-            print(newEpisode)
             self.db.insertEpisode( newEpisode )
 
         self.update_channel_list()
@@ -563,7 +561,7 @@ class BrePodder(MainUi):
         for folder in folders:
             itemF = QtWidgets.QTreeWidgetItem(self.listWidget)
             itemF.setText(0, folder[1])
-            itemF.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/images/directory.png')))
+            itemF.setIcon(0, QtGui.QIcon(':/icons/folder-blue.png'))
             itemF.setFlags(enabled|droppable)
 #            cur.execute('select * from sql_channel where folder_id = ?',(folder[0],))
 #            childChannels = cur.fetchall()
@@ -596,7 +594,7 @@ class BrePodder(MainUi):
             self.update_done()
 
     def create_new_foder(self):
-        text, ok = QtGui.QInputDialog.getText(self.MW, 'Input Dialog', 'Enter name for new folder:')
+        text, ok = QtWidgets.QInputDialog.getText(self.MW, 'Input Dialog', 'Enter name for new folder:')
 
 #        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
 #        con.isolation_level = None
@@ -639,7 +637,7 @@ class BrePodder(MainUi):
         #QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updatesignal_episodelist(PyQt_PyObject)"),self.update_episode_list,QtCore.Qt.QueuedConnection)
         updtChTr.updatesignal_episodelist.connect(self.update_episode_list, QtCore.Qt.QueuedConnection)
         #QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updateDoneSignal"),self.update_done, QtCore.Qt.BlockingQueuedConnection)
-        pdtChTr.updateDoneSignal.connect(self.update_done, QtCore.Qt.BlockingQueuedConnection)
+        updtChTr.updateDoneSignal.connect(self.update_done, QtCore.Qt.BlockingQueuedConnection)
         self.ttthread=updtChTr
         updtChTr.start()
 
