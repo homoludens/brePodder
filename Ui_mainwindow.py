@@ -65,6 +65,8 @@ class MainUi(object):
         self.splitter_22.setOrientation(QtCore.Qt.Vertical)
 
         self.listWidget = treeViewWidget( self.splitter_22 )
+        self.listWidget.updateChannelList.connect(self.update_channel_list)
+        self.listWidget.updateChannelList_db.connect(self.db.addChannelToFolder)
 
         self.listWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.listWidget.setAlternatingRowColors(True)

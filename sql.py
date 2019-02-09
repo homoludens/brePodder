@@ -213,6 +213,7 @@ class DBOperation():
         cur.execute('delete from  sql_taxonomy where title = ?', (folderTitle ,) )
         cur.close()
 
+
     def addChannelToFolder(self,  channelTitle,  folderTitle):
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
         con.isolation_level = None
@@ -223,8 +224,14 @@ class DBOperation():
         if folderTitle == None:
             cur.execute('update sql_channel set folder_id = NULL  where id = :ch_id', {"ch_id": ch_id})
         else:
-            cur.execute('select id from sql_taxonomy where title = ?', (folderTitle,))
-            tx_id = cur.fetchone()[0]
+            cur.execute('select * from sql_channel where title = ?',(folderTitle,))
+            cc = cur.fetchone()
+            if not cc:
+                cur.execute('select id from sql_taxonomy where title = ?', (folderTitle,))
+                tx_id = cur.fetchone()[0]
+            else:
+                tx_id = cc[7]
+
             cur.execute('update sql_channel set folder_id = :tx_id  where id = :ch_id', {"tx_id": tx_id, "ch_id": ch_id})
         con.commit()
         cur.close()
