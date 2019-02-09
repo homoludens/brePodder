@@ -219,9 +219,13 @@ class DBOperation():
         cur = con.cursor()
         cur.execute('select id from sql_channel where title = ?', [channelTitle,])
         ch_id = cur.fetchone()[0]
-        cur.execute('select id from sql_taxonomy where title = ?', (folderTitle,))
-        tx_id = cur.fetchone()[0]
-        cur.execute('update sql_channel set folder_id = :tx_id  where id = :ch_id', {"tx_id": tx_id, "ch_id": ch_id})
+
+        if folderTitle == None:
+            cur.execute('update sql_channel set folder_id = NULL  where id = :ch_id', {"ch_id": ch_id})
+        else:
+            cur.execute('select id from sql_taxonomy where title = ?', (folderTitle,))
+            tx_id = cur.fetchone()[0]
+            cur.execute('update sql_channel set folder_id = :tx_id  where id = :ch_id', {"tx_id": tx_id, "ch_id": ch_id})
         con.commit()
         cur.close()
 
