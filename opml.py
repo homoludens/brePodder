@@ -2,7 +2,7 @@ import xml.dom.minidom
 import xml.sax.saxutils
 
 import urllib
-import urllib2
+#import urllib3
 import os.path
 
 import datetime
@@ -25,8 +25,8 @@ class Exporter(object):
 
     def create_node( self, doc, name, content):
         """
-        Creates a simple XML Element node in a document 
-        with tag name "name" and text content "content", 
+        Creates a simple XML Element node in a document
+        with tag name "name" and text content "content",
         as in <name>content</name> and returns the element.
         """
         node = doc.createElement( name)
@@ -47,15 +47,15 @@ class Exporter(object):
 
     def write( self, channels):
         """
-        Creates a XML document containing metadata for each 
-        channel object in the "channels" parameter, which 
+        Creates a XML document containing metadata for each
+        channel object in the "channels" parameter, which
         should be a list of channel objects.
 
-        Returns True on success or False when there was an 
+        Returns True on success or False when there was an
         error writing the file.
         """
         doc = xml.dom.minidom.Document()
-        
+
         opml = doc.createElement( 'opml')
         opml.setAttribute( 'version', '1.1')
         doc.appendChild(opml)
@@ -75,16 +75,16 @@ class Exporter(object):
             fp.write( doc.toprettyxml( encoding = 'utf-8'))
             fp.close()
         except:
-            log( 'Could not open file for writing: %s', self.filename, sender = self)
+            #log( 'Could not open file for writing: %s', self.filename, sender = self)
             return False
 
         return True
 
-        
+
 class Importer(object):
     """
     Helper class to import an OPML feed from protocols
-    supported by urllib2 (e.g. HTTP) and return a GTK 
+    supported by urllib2 (e.g. HTTP) and return a GTK
     ListStore that can be displayed in the GUI.
 
     This class should support standard OPML feeds and
@@ -94,12 +94,12 @@ class Importer(object):
     VALID_TYPES = ( 'rss', 'link' )
 
     def read_url( self, url):
-        request = urllib2.Request( url, headers = {'User-agent': brePodder.user_agent})
-        return urllib2.urlopen( request).read()
+        request = urllib.Request( url, headers = {'User-agent': brePodder.user_agent})
+        return urllib.urlopen( request).read()
 
     def __init__( self, url):
         """
-        Parses the OPML feed from the given URL into 
+        Parses the OPML feed from the given URL into
         a local data structure containing channel metadata.
         """
         self.items = []
@@ -126,10 +126,10 @@ class Importer(object):
 
                     self.items.append( channel)
             if not len(self.items):
-                print 'OPML import finished, but no items found: '+ url
+                print('OPML import finished, but no items found: '+ url)
 #                log( 'OPML import finished, but no items found: %s', url, sender = self)
         except:
-            print 'Cannot import OPML from URL: '+ url
+            print('Cannot import OPML from URL: '+ url)
 #            log( 'Cannot import OPML from URL: %s', url, sender = self)
 
     def format_channel( self, channel):
