@@ -2,7 +2,7 @@ import urllib, sys, os
 
 #import feedparser
 from sql import *
-from getfavicon import getIcoUrl
+#from getfavicon import getIcoUrl
 import re
 from Ui_mainwindow import *
 import pprint

@@ -15,6 +15,7 @@ except:
 
 from treeviewwidget import treeViewWidget
 
+import resources
 
 opml = None
 
@@ -45,7 +46,7 @@ class MainUi(object):
         self.MW =  MainWindow
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(QtCore.QSize(QtCore.QRect(0,0,600,400).size()).expandedTo(MainWindow.minimumSizeHint()))
-        MainWindow.setWindowIcon(QtGui.QIcon("images/musicstore.png"))
+        MainWindow.setWindowIcon(QtGui.QIcon(":/icons/musicstore.png"))
 
         self.centralwidget = QtWidgets.QWidget(MainWindow)
 
@@ -184,24 +185,24 @@ class MainUi(object):
         self.menuDownloads.setObjectName("menuDownloads")
 
         self.actionNew = QtWidgets.QAction(MainWindow)
-        self.actionNew.setIcon(QtGui.QIcon("images/add.png"))
+        self.actionNew.setIcon(QtGui.QIcon(":/icons/edit_add.png"))
         self.actionNew.setObjectName("actionNew")
 
         self.actionUpdateAllChannels = QtWidgets.QAction(MainWindow)
-        #self.actionUpdateAllChannels.setIcon(QtGui.QIcon("images/reload.png"))
-        self.actionUpdateAllChannels.setIcon(QtGui.QIcon.fromTheme("call-start"))
+        self.actionUpdateAllChannels.setIcon(QtGui.QIcon(":/icons/reload.png"))
+        #self.actionUpdateAllChannels.setIcon(QtGui.QIcon.fromTheme("call-start"))
         self.actionUpdateAllChannels.setObjectName("actionUpdate")
 
         self.actionImport = QtWidgets.QAction(MainWindow)
-        self.actionImport.setIcon(QtGui.QIcon("images/fileimport.png"))
+        self.actionImport.setIcon(QtGui.QIcon(":/icons/fileimport.png"))
         self.actionImport.setObjectName("actionImport")
 
         self.actionExport = QtWidgets.QAction(MainWindow)
-        self.actionExport.setIcon(QtGui.QIcon("images/fileexport.png"))
+        self.actionExport.setIcon(QtGui.QIcon(":/icons/fileexport.png"))
         self.actionExport.setObjectName("actionExport")
 
         self.actionQuit = QtWidgets.QAction(MainWindow)
-        self.actionQuit.setIcon(QtGui.QIcon("images/exit.png"))
+        self.actionQuit.setIcon(QtGui.QIcon(":/icons/exit.png"))
         self.actionQuit.setObjectName("actionQuit")
 
         self.menuPodcasts.addAction(self.actionNew)
@@ -226,24 +227,24 @@ class MainUi(object):
         self.menubar.addAction(self.menuPodcasts.menuAction())
 
         self.actionUpdateFeeds = QtWidgets.QAction(MainWindow)
-        #self.actionUpdateFeeds.setIcon(QtGui.QIcon("images/reload.png"))
-        self.actionUpdateFeeds.setIcon(QtGui.QIcon.fromTheme("call-start"))
+        self.actionUpdateFeeds.setIcon(QtGui.QIcon(":/icons/reload.png"))
+        #self.actionUpdateFeeds.setIcon(QtGui.QIcon.fromTheme("call-start"))
         self.actionUpdateFeeds.setObjectName("actionUpdateFeeds")
 
         self.actionNewFolder = QtWidgets.QAction(MainWindow)
-        self.actionNewFolder.setIcon(QtGui.QIcon("images/reload.png"))
+        self.actionNewFolder.setIcon(QtGui.QIcon(":/icons/reload.png"))
         self.actionNewFolder.setObjectName("actionNewFolder")
 
         self.actionCancel = QtWidgets.QAction(MainWindow)
-        self.actionCancel.setIcon(QtGui.QIcon("images/cancel.png"))
+        self.actionCancel.setIcon(QtGui.QIcon(":/icons/cancel.png"))
         self.actionCancel.setObjectName("actionCancel")
 
         self.actionPause = QtWidgets.QAction(MainWindow)
-        self.actionPause.setIcon(QtGui.QIcon("images/pause.png"))
+        self.actionPause.setIcon(QtGui.QIcon(":/icons/pause.png"))
         self.actionPause.setObjectName("actionPause")
 
         self.actionResume = QtWidgets.QAction(MainWindow)
-        self.actionResume.setIcon(QtGui.QIcon("images/resume.png"))
+        self.actionResume.setIcon(QtGui.QIcon(":/icons/resume.png"))
         self.actionResume.setObjectName("actionResume")
 
         self.menubar.addAction(self.menuPodcasts.menuAction())
@@ -262,7 +263,7 @@ class MainUi(object):
         self.menuDownloads.addAction(self.actionUpdateFeeds)
         self.menuDownloads.addAction(self.actionCancel)
 
-        self.trayIcon = QtWidgets.QSystemTrayIcon(QtGui.QIcon("images/musicstore.png"),MainWindow)
+        self.trayIcon = QtWidgets.QSystemTrayIcon(QtGui.QIcon(":/icons/musicstore.png"),MainWindow)
         self.trayIcon.setContextMenu(self.menuPodcasts)
         self.trayIcon.show()
 
@@ -323,7 +324,7 @@ class MainUi(object):
 
         item = QtWidgets.QTreeWidgetItem(self.listWidget)
         item.setText(0, QtWidgets.QApplication.translate("MainWindow", "naziv podkasta", None))
-        item.setIcon(0, QtGui.QIcon("images/musicstore.png"))
+        item.setIcon(0, QtGui.QIcon(":/icons/musicstore.png"))
         self.listWidget.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channels", None))
         item1 = QtWidgets.QTreeWidgetItem(self.listWidget)
         item1.setText(0, QtWidgets.QApplication.translate("MainWindow", "New Item", None))

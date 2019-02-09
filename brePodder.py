@@ -537,9 +537,9 @@ class BrePodder(MainUi):
             item2 = QtWidgets.QTreeWidgetItem(self.treeWidget_2)
 
             if not t[3]:#.localfile:
-                item2.setIcon(0,QtGui.QIcon("images/build.png"))
+                item2.setIcon(0,QtGui.QIcon(":/icons/build.png"))
             else:
-                item2.setIcon(0,QtGui.QIcon("images/mp3.png"))
+                item2.setIcon(0,QtGui.QIcon(":/icons/mp3.png"))
             item2.setText(0,t[1]) #.title
             item2.setText(1, self.getReadableSize(t[4])) #.size
             try:
