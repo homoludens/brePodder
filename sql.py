@@ -221,7 +221,7 @@ class DBOperation():
         cur.execute('select id from sql_channel where title = ?', [channelTitle,])
         ch_id = cur.fetchone()[0]
 
-        if folderTitle == None:
+        if not folderTitle:
             cur.execute('update sql_channel set folder_id = NULL  where id = :ch_id', {"ch_id": ch_id})
         else:
             cur.execute('select * from sql_channel where title = ?',(folderTitle,))

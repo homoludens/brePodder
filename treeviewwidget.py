@@ -2,8 +2,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets, QtNetwork #, QtWebKit
 import sqlite3, os
 
 
-
-
 #override QTreeViewWidget for handling Drag & Drop events
 class treeViewWidget( QtWidgets.QTreeWidget ):
 
@@ -20,7 +18,7 @@ class treeViewWidget( QtWidgets.QTreeWidget ):
       self.Parent = parent
 
     def dropEvent(self, event):
-        if self.itemAt( event.pos() ).flags() & QtCore.Qt.ItemIsDropEnabled:
+        if (self.itemAt(event.pos()) is not None) and (self.itemAt(event.pos()).flags() & QtCore.Qt.ItemIsDropEnabled):
             channelTitle = self.selectedItems()[0].text(0)
             folderTitle = self.itemAt(event.pos()).text(0)
         else:
