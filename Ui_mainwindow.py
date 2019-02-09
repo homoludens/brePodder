@@ -64,7 +64,6 @@ class MainUi(object):
         self.splitter_22 = QtWidgets.QSplitter(self.splitter_2)
         self.splitter_22.setOrientation(QtCore.Qt.Vertical)
 
-
         self.listWidget = treeViewWidget( self.splitter_22 )
 
         self.listWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -427,8 +426,8 @@ class MainUi(object):
             import opml
 
         channels = self.db.getAllChannels()
-        o = opml.Exporter('brePodder.opml')
-        o.write(channels)
+        opml_file = opml.Exporter('brePodder.opml')
+        opml_file.write(channels)
 
 
     def import_opml(self):
@@ -444,8 +443,8 @@ class MainUi(object):
         channels = self.db.getAllChannelsLinks()
         #print channels
 
-        for ch in i.items:
-            if (ch['url'], ) not in channels:
+        for channel in i.items:
+            if (channel['url'], ) not in channels:
                 #print ch['url']
                 self.AddChannel(ch['url'])
 
