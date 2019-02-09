@@ -1,4 +1,4 @@
-podcast client writen in PyQt4
+podcast client writen in PyQt5
 
 this is learning project - it mostly does not work
 highly unstable and unrecomended
@@ -6,11 +6,11 @@ highly unstable and unrecomended
 
 curently using:
 
-- pyqt4  ( so python and qt4 )
+- pyqt5  ( so python and qt5 )
 - feedparser
 - sqlite
 
-- phonon (optiona, for playing)
+- phonon (optional, for playing)
 - PIL (will lose this dep.)
 
 i will probably lose last two dependencies, they are getting to mine nerves
