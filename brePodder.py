@@ -304,7 +304,7 @@ class BrePodder(MainUi):
         fileInfo = QtCore.QFileInfo(url_done.path())
         fileName = fileInfo.fileName()
         #TODO: should we put original or 128px version of logo
-        logo_fileBig = ChannelDir+"/"+fileName
+        logo_fileBig = ChannelDir + "/" + fileName
             #~ else:
                 #~ logo_fileBig=u"images/musicstore2.png"
         #~ else:
@@ -470,7 +470,7 @@ class BrePodder(MainUi):
         for e in episodes:
             item = QtWidgets.QTreeWidgetItem( self.treeWidget_5 )
             item.setText( 0, e[10] )
-            item.setIcon( 0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~') + '/.brePodder/' + e[14])) )
+            item.setIcon( 0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~') + '/.brePodder/' + e[15])) )
             item.setText( 1, e[1] )
             if e[4]:
                 item.setText(2,self.getReadableSize( e[4]) )
@@ -563,6 +563,7 @@ class BrePodder(MainUi):
             itemF.setText(0, folder[1])
             itemF.setIcon(0, QtGui.QIcon(':/icons/folder-blue.png'))
             itemF.setFlags(enabled|droppable)
+            itemF.setExpanded(True)
 #            cur.execute('select * from sql_channel where folder_id = ?',(folder[0],))
 #            childChannels = cur.fetchall()
             childChannels = self.db.getFolderChannels(folder[0])
@@ -572,7 +573,7 @@ class BrePodder(MainUi):
                 itemChildChannel.setText(0, childChannel[1])
 		#print "Ch. icon: "
 		#print os.path.expanduser('~') + '/.brePodder/' + childChannel[5]
-                itemChildChannel.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+childChannel[5])))
+                itemChildChannel.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+childChannel[6])))
                 itemF.addChild(itemChildChannel)
 
         for channel in channels:
@@ -580,8 +581,8 @@ class BrePodder(MainUi):
 #            if channel.episode[-1].status == u'new':
 #                item.setFont(0, self.fontBold)
             item.setText(0, channel[1])
-	    #print os.path.expanduser('~') + '/.brePodder/' + channel[5]
-            item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+channel[5])))
+            #~ print(channel[6])
+            item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~')+'/.brePodder/'+channel[6])))
 #            item.setToolTip(0,"<p><img src="+"'"+channel.logobig+"'"+"></p><p style='font-size:20pt'><b>"+channel.title+"</b></p><a href="+channel.link+">"+channel.link+"</a>")
             item.setFlags(enabled|draggable|selectable)
 # dodati bold za channel koji ima novu epizodu. mislim da je to najefikasnije preko novog polja u bazi.

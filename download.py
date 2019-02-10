@@ -15,7 +15,11 @@ class Download(QtCore.QObject):
     def __init__(self, link, item, downloadId, parent = None):
 
         QtCore.QObject.__init__(self)
-        self.fileName = link.split('/')[-1]
+
+        url_done = QtCore.QUrl(link)
+        fileInfo = QtCore.QFileInfo(url_done.path())
+        self.fileName = fileInfo.fileName()
+
         self._status = "downloading"
         self.downloadId = downloadId
         self.CurDir = os.getcwd()
