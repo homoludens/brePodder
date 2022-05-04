@@ -1,13 +1,5 @@
-import urllib, sys, os
+from ui.Ui_mainwindow import *
 
-#import feedparser
-from sql import *
-#from getfavicon import getIcoUrl
-import re
-from Ui_mainwindow import *
-import pprint
-
-#import vimpdb; vimpdb.set_trace()
 
 class Download(QtCore.QObject):
     fp = None
@@ -27,7 +19,7 @@ class Download(QtCore.QObject):
         self.itemZaPrenos = item
 
         self.Parent = parent
-        self.manager =  QtNetwork.QNetworkAccessManager()
+        self.manager = QtNetwork.QNetworkAccessManager()
         self.link = QtCore.QUrl(link)
 
         self.CurrentChannel = None
@@ -43,7 +35,6 @@ class Download(QtCore.QObject):
         self.faviconFound=False
         self.i = 0
         self.downloadFile()
-
 
     def downloadFile(self):
 
@@ -121,8 +112,6 @@ class Download(QtCore.QObject):
             print("Network Error")
             print(status)
 
-
-
     def on_reply_readyRead(self):
         if (self.fp == None or self.fp.closed):
            self.fp = open( self.saveFileName, "wb")
@@ -132,7 +121,6 @@ class Download(QtCore.QObject):
 
         if (read.length() > 0):
             self.startedSaving  = True
-
 
     def pauseDownload(self):
         self.reply.abort()
@@ -155,14 +143,12 @@ class Download(QtCore.QObject):
                 self._status = "stoped"
                 self.remove_file()
 
-
     def remove_file(self):
         if not(self.fp == None or self.fp.closed):
             self.fp.close()
 
         if (os.path.exists(self.saveFileName)):
             os.remove(self.saveFileName)
-
 
     def on_reply_error(self, code):
         print("on_reply_error")

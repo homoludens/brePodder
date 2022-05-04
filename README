@@ -17,3 +17,7 @@ i will probably lose last two dependencies, they are getting to mine nerves
 
 
 start with: $ python main.py
+
+
+TODO:
+add support for gpodder.net with https://github.com/gpodder/mygpoclient/  https://github.com/gpodder/mygpoclient/blob/master/doc/manual.rst

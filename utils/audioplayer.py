@@ -4,8 +4,8 @@ import sys, os
 from PyQt5 import QtCore, QtGui, uic
 try:
 	from PyQt5.phonon import Phonon
-except:
-	print "brePodder: No Phonon -> No Player!"
+except ModuleNotFoundError:
+	print("brePodder: No Phonon -> No Player!")
 #import icons_rc
 
 class AudioPlayer(QtGui.QWidget):

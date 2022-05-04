@@ -1,51 +1,43 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtNetwork #, QtWebKit
-import os, re, sys
-#from Download import *
-from time import gmtime, strftime, mktime, sleep
-import sqlite3
+import re
 from sql import *
-#from Ui_add_folder import *
-#import feedparser
+from ui.treeviewwidget import TreeViewWidget
+
 AudioPlayer = None
 try:
     from PyQt5.phonon import Phonon
-    from audioplayer import AudioPlayer
+    from utils.audioplayer import AudioPlayer
 except:
     print("No player")
-
-from treeviewwidget import treeViewWidget
-
-import resources
-
 opml = None
 
-#Main application interface
+
 class MainUi(object):
 
     def __init__(self, parent=None):
         self.http = []
         self.httpGetId = []
         self.outFile = []
-        self.downloadList=[]
+        self.downloadList = []
         self.rawstr = r"""(?:\<img.*?\src=")(.*?)(?:\")"""  #it's better with "\src" (not "\c") but that doesn't work
         self.compile_obj = re.compile(self.rawstr, re.I)
         self.fontBold = QtGui.QFont()
         self.fontBold.setWeight(75)
         self.fontBold.setBold(True)
-        self.ChannelForUpdate=None
-        self.TTThread=[]
+        self.ChannelForUpdate = None
+        self.TTThread = []
 #        self.BufferSize = 5
 #        self.Mutex = QtCore.QMutex()
-        self.itemsDownloading=[]
-        self.p=re.compile("\W")
+        self.itemsDownloading = []
+        self.p = re.compile("\\W")
 
         self.db = DBOperation()
         self.Sem = QtCore.QSemaphore(5)
 
     def setupUi(self, MainWindow):
-        self.MW =  MainWindow
+        self.MW = MainWindow
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(QtCore.QSize(QtCore.QRect(0,0,600,400).size()).expandedTo(MainWindow.minimumSizeHint()))
+        MainWindow.resize(QtCore.QSize(QtCore.QRect(0, 0, 600, 400).size()).expandedTo(MainWindow.minimumSizeHint()))
         MainWindow.setWindowIcon(QtGui.QIcon(":/icons/musicstore.png"))
 
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -64,7 +56,7 @@ class MainUi(object):
         self.splitter_22 = QtWidgets.QSplitter(self.splitter_2)
         self.splitter_22.setOrientation(QtCore.Qt.Vertical)
 
-        self.listWidget = treeViewWidget( self.splitter_22 )
+        self.listWidget = TreeViewWidget(self.splitter_22)
         self.listWidget.updateChannelList.connect(self.update_channel_list)
         self.listWidget.updateChannelList_db.connect(self.db.addChannelToFolder)
 
@@ -108,8 +100,6 @@ class MainUi(object):
 
         self.gridlayout1.addWidget( self.splitter_2, 0, 0, 1, 1 )
 
-
-
         self.tabWidget.addTab( self.tab,"" )
 
         self.tab_2 = QtWidgets.QWidget()
@@ -128,10 +118,8 @@ class MainUi(object):
         self.tab_3 = QtWidgets.QWidget()
         self.tab_3.setObjectName("tab_3")
 
-
         self.treeWidget_4 = QtWidgets.QTreeWidget(self.tab_3)
         self.treeWidget_4.setObjectName("treeWidget_4")
-
 
         self.gridlayout3 = QtWidgets.QGridLayout(self.tab_3)
         self.gridlayout3.setObjectName("gridlayout3")
@@ -144,7 +132,7 @@ class MainUi(object):
         self.gridlayout3.addWidget(self.splitter_3)
 
         if AudioPlayer:
-            self.AudioPlayer_latestDownloads = AudioPlayer( "", self.splitter_3 )
+            self.AudioPlayer_latestDownloads = AudioPlayer("", self.splitter_3)
 
         MainWindow.setCentralWidget(self.centralwidget)
 
@@ -152,28 +140,25 @@ class MainUi(object):
         self.tab_4 = QtWidgets.QWidget()
         self.tab_4.setObjectName("tab_4")
 
-        self.treeWidget_5 = QtWidgets.QTreeWidget( self.tab_4 )
+        self.treeWidget_5 = QtWidgets.QTreeWidget(self.tab_4)
 
-        self.gridlayout4 = QtWidgets.QGridLayout( self.tab_4 )
-        self.gridlayout4.setObjectName( "gridlayout4" )
-        self.gridlayout4.addWidget( self.treeWidget_5,0,0,1,1 )
-        self.tabWidget.addTab( self.tab_4,"" )
-        self.gridlayout.addWidget( self.tabWidget,0,0,1,1 )
+        self.gridlayout4 = QtWidgets.QGridLayout(self.tab_4)
+        self.gridlayout4.setObjectName("gridlayout4")
+        self.gridlayout4.addWidget(self.treeWidget_5, 0, 0, 1, 1)
+        self.tabWidget.addTab(self.tab_4, "")
+        self.gridlayout.addWidget(self.tabWidget, 0, 0, 1, 1)
 
         self.splitter_4 = QtWidgets.QSplitter(self.tab_4)
         self.splitter_4.setOrientation(QtCore.Qt.Horizontal)
         self.gridlayout4.addWidget(self.splitter_4)
 
         if AudioPlayer:
-            self.AudioPlayer_newestEpisodes = AudioPlayer( "", self.splitter_4 )
+            self.AudioPlayer_newestEpisodes = AudioPlayer("", self.splitter_4)
 
         MainWindow.setCentralWidget(self.centralwidget)
 
-
-
-
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0,0,604,28))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 604, 28))
         self.menubar.setObjectName("menubar")
 
         self.menuPodcasts = QtWidgets.QMenu(self.menubar)
@@ -402,27 +387,22 @@ class MainUi(object):
         self.actionUpdateFeeds.setText(QtWidgets.QApplication.translate("MainWindow", "Fetch Feed", None))
         self.actionNewFolder.setText(QtWidgets.QApplication.translate("MainWindow", "New Folder", None))
 
-
     def trayIconActivated(self, reason):
-        if reason==3  or reason ==2:
-            if MainWindow.isHidden():
-                MainWindow.show()
+        if reason == 3 or reason == 2:
+            if self.MW.isHidden():
+                self.MW.show()
             else:
-                MainWindow.hide()
-
+                self.MW.hide()
 
     def dialog_add(self):
-        filename = QtWidgets.QFileDialog.getOpenFileName(MainWindow, 'Open file','/home')
+        filename = QtWidgets.QFileDialog.getOpenFileName(self.MW, 'Open file', '/home')
 #        file=open(filename)
 #        cd = OpenFile()
 #        cd.showDialog()
         print("dialog_add")
         print(filename)
 
-
-
     def export_opml(self):
-
         global opml
         if opml is None:
             import opml
@@ -431,14 +411,12 @@ class MainUi(object):
         opml_file = opml.Exporter('brePodder.opml')
         opml_file.write(channels)
 
-
     def import_opml(self):
-
         global opml
         if opml is None:
             import opml
 
-        filename = QtWidgets.QFileDialog.getOpenFileName(self.MW, 'Open file','/home')
+        filename = QtWidgets.QFileDialog.getOpenFileName(self.MW, 'Open file', '/home')
 #        i = opml.Importer('brePodderImport.opml')
         i = opml.Importer(filename.toAscii().data())
         i.get_model()
@@ -448,22 +426,20 @@ class MainUi(object):
         for channel in i.items:
             if (channel['url'], ) not in channels:
                 #print ch['url']
-                self.AddChannel(ch['url'])
-
+                self.AddChannel(channel['url'])
 
     def activeMenuChannels(self, pos):
         self.actionCancel.setText(QtWidgets.QApplication.translate("MainWindow", "Delete feed", None))
         globalPos = self.listWidget.mapToGlobal(pos)
         globalPos.setY(globalPos.y() + 25)
-        t=self.listWidget.indexAt(pos)
+        t = self.listWidget.indexAt(pos)
         self.menuChannels.popup(globalPos)
-
 
     def activeMenuDownloads(self, pos):
         self.actionCancel.setText(QtWidgets.QApplication.translate("MainWindow", "Cancel downlaod", None))
         globalPos = self.treeWidget.mapToGlobal(pos)
         globalPos.setY(globalPos.y() + 25)
-        t=self.treeWidget.indexAt(pos)
+        t = self.treeWidget.indexAt(pos)
         self.menuDownloads.popup(globalPos)
 
     def app_quit(self):
