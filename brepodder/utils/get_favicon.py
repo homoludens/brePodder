@@ -3,19 +3,40 @@ import favicon
 
 
 def get_icon_url(url):
-    icons = favicon.get(url)
-    icon = icons[0]
-    return icon.url
+    try:
+        icons = favicon.get(url)
+        icon = icons[0]
+        return icon.url
+    except requests.exceptions.ConnectionError as e:
+        print('404')
+        print(e)
+    except IndexError as e:
+        print('no icon')
+        print(e)
 
 
 def get_icon(url, local_file_name):
-    icons = favicon.get(url)
-    icon = icons[0]
-    download_image(url, f'{local_file_name}.{format(icon.format)}')
+    try:
+        icons = favicon.get(url)
+        icon = icons[0]
+        download_image(url, f'{local_file_name}.{format(icon.format)}')
+    except requests.exceptions.HTTPError as e:
+        print('404')
+        print(e)
+    except requests.exceptions.ConnectionError as e:
+        print('404')
+        print(e)
+    except:
+        print('error')
 
 
 def download_image(url, local_file_path):
-    response = requests.get(url, stream=True)
+    try:
+        response = requests.get(url, stream=True)
+    except requests.exceptions.HTTPError as e:
+        print('404')
+        print(e)
+
     with open(local_file_path, 'wb') as image:
         for chunk in response.iter_content(1024):
             image.write(chunk)

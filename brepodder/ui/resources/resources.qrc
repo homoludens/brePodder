@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/bottom.png</file>
+        <file>icons/build.png</file>
+        <file>icons/edit_add.png</file>
+        <file>icons/exit.png</file>
+        <file>icons/fileexport.png</file>
+        <file>icons/fileimport.png</file>
+        <file>icons/mp3.png</file>
+        <file>icons/musicstore2.png</file>
+        <file>icons/musicstore.png</file>
+        <file>icons/pause.png</file>
+        <file>icons/resume.png</file>
+        <file>icons/reload.png</file>
+        <file>icons/viewmag+.png</file>
+        <file>icons/cancel.png</file>
+        <file>icons/folder-blue.png</file>
+    </qresource>
+</RCC>
+
+<!-- genrate .py file with: pyrcc5 -o resources.py resources/resources.qrc -->

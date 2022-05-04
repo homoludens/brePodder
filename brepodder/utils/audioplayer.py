@@ -6,7 +6,7 @@ try:
 	from PyQt5.phonon import Phonon
 except ModuleNotFoundError:
 	print("brePodder: No Phonon -> No Player!")
-#import icons_rc
+# import icons_rc
 
 class AudioPlayer(QtGui.QWidget):
     def __init__(self, url, parent = None):

@@ -1,7 +1,16 @@
+from io import BytesIO
+
+from PyQt5 import QtCore, QtWidgets, QtGui
 from time import gmtime, strftime, mktime
 from utils.download import *
 from utils.get_favicon import get_icon_url, get_icon, download_image
 import feedparser
+import requests
+import os
+import sqlite3
+from ui.Ui_mainwindow import MainUi
+import logging
+
 
 draggable = QtCore.Qt.ItemIsDragEnabled
 droppable = QtCore.Qt.ItemIsDropEnabled
@@ -71,9 +80,19 @@ class UpdateChannelThread(QtCore.QThread):
             epcount = epcount + 1
 
         feed_link = a[2]
-        w = feedparser.parse(feed_link)
 
-        for i in w.entries:
+        # Do request using requests library and timeout
+        try:
+            resp = requests.get(feed_link, timeout=10.0)
+        except requests.ReadTimeout:
+            # logger.warn("Timeout when reading RSS %s", rss_feed)
+            return
+        # Put it to memory stream object universal feedparser
+        content = BytesIO(resp.content)
+
+        feed = feedparser.parse(content)
+
+        for i in feed.entries:
             try:
                 aa = old_episodes.index(i.title)
             except ValueError:
@@ -105,20 +124,21 @@ class UpdateChannelThread(QtCore.QThread):
                     new_episode['description'] = i.summary_detail.value
                 else:
                     new_episode['description'] = u'No description'
+
                 if 'updated' in i:
                     if i.updated_parsed:
                         episode_date = mktime(i.updated_parsed)
-                    else:
-                        episode_date = mktime(gmtime())
+                elif 'published' in i:
+                    episode_date = mktime(i.published_parsed)
                 else:
                     episode_date = mktime(gmtime())
-                new_episode['date'] = episode_date
-                nEpisode = (new_episode['title'], new_episode['enclosure'], new_episode['size'], new_episode['date'],
-                            new_episode['description'], new_episode['status'], new_episode['channel_id'])
-                self.ui.db.insertEpisode(nEpisode)
-            # cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', nEpisode)
 
-            elif not 'title' in i:
+                new_episode['date'] = episode_date
+                new_episode_tupple = (new_episode['title'], new_episode['enclosure'], new_episode['size'], new_episode['date'],
+                            new_episode['description'], new_episode['status'], new_episode['channel_id'])
+                self.ui.db.insertEpisode(new_episode_tupple)
+
+            elif 'title' not in i:
                 print("No title")
             else:
                 if j[2] != u"old":
@@ -234,14 +254,25 @@ class BrePodder(MainUi):
             feed_link = new_url
 
         print(feed_link)
-        w = feedparser.parse(feed_link)
+        try:
+            resp = requests.get(feed_link, timeout=10.0)
+        except requests.ReadTimeout:
+            # logger.warn("Timeout when reading RSS %s", rss_feed)
+            return
+        except requests.exceptions.ConnectTimeout:
+            return
+        # Put it to memory stream object universal feedparser
+        content = BytesIO(resp.content)
+
+        feed_content = feedparser.parse(content)
+
         # item = QtWidgets.QTreeWidgetItem(self.treeWidget)
         item = QtWidgets.QTreeWidgetItem(self.treeWidget)
 
-        if 'title' in w.feed:
-            ChannelTitle = w.feed.title
-        elif w.feed.has_key('link'):
-            ChannelTitle = w.feed.link
+        if 'title' in feed_content.feed:
+            ChannelTitle = feed_content.feed.title
+        elif 'link' in feed_content.feed:
+            ChannelTitle = feed_content.feed.link
         else:
             ChannelTitle = feed_link
 
@@ -258,54 +289,57 @@ class BrePodder(MainUi):
         item.setText(0, ChannelTitle)
 
         # download Channel logo
-        if 'image' in w.feed:
-            if w.feed.image.href is not None:
-                if w.feed.image.href[0] == '/':
-                    imageURL = w.feed.link + w.feed.image.href
+        logo_fileBig = ''
+        if 'image' in feed_content.feed:
+            if feed_content.feed.image.href is not None:
+                if feed_content.feed.image.href[0] == '/':
+                    imageURL = feed_content.feed.link + feed_content.feed.image.href
                 else:
-                    imageURL = w.feed.image.href
+                    imageURL = feed_content.feed.image.href
 
                 item.setText(1, imageURL)
                 item.setText(5, imageURL)
 
-        if len(self.downloadList) > 0:
-            downloadId = self.downloadList[-1][0] + 1
-        else:
-            downloadId = 0
+            if len(self.downloadList) > 0:
+                downloadId = self.downloadList[-1][0] + 1
+            else:
+                downloadId = 0
 
-        self.itemsDownloading.append((downloadId, imageURL))
-        self.downloadList.append((downloadId, Download(imageURL, item, downloadId, self)))
+            self.itemsDownloading.append((downloadId, imageURL))
+            self.downloadList.append((downloadId, Download(imageURL, item, downloadId, self)))
 
-        url_done = QtCore.QUrl(imageURL)
-        fileInfo = QtCore.QFileInfo(url_done.path())
-        fileName = fileInfo.fileName()
-        # TODO: should we put original or 128px version of logo
-        logo_fileBig = ChannelDir + "/" + fileName
+            url_done = QtCore.QUrl(imageURL)
+            fileInfo = QtCore.QFileInfo(url_done.path())
+            fileName = fileInfo.fileName()
+            # TODO: should we put original or 128px version of logo
+            logo_fileBig = ChannelDir + "/" + fileName
         # download_image(imageURL,  logo_fileBig)
 
         #  download favicon
-        if "link" in w.feed:
-            # favicon_url = getIcoUrl("http://" + QtCore.QUrl(w.feed.link).host())
-            favicon_url = get_icon_url(QtCore.QUrl(w.feed.link).host())
+        if "link" in feed_content.feed:
+            # favicon_url = get_icon_url(w.feed.link)
+            favicon_url = get_icon_url("https://" + QtCore.QUrl(feed_content.feed.link).host())
+            # favicon_url = get_icon_url(QtCore.QUrl(w.feed.link).host())
         else:
-            favicon_url = "https://www.google.com/favicon.ico"
+            favicon_url = get_icon_url(feed_link)
 
         if favicon_url:
             url = favicon_url
         else:
-            url = "https://" + QtCore.QUrl(w.feed.link).host() + "/favicon.ico"
+            url = ''
+            # url = "https://" + QtCore.QUrl(feed_content.feed.link).host() + "/favicon.ico"
 
         url_favicon = QtCore.QUrl(url)
         faviconInfo = QtCore.QFileInfo(url_favicon.path())
         favicon = faviconInfo.fileName()
         logo_file = ChannelDir + '/' + favicon
 
-        # get_icon(url_favicon, logo_file)
+        get_icon(url, logo_file)
 
         item2 = QtWidgets.QTreeWidgetItem(self.treeWidget)
 
-        if 'title' in w.feed:
-            item2.setText(0, w.feed.title)
+        if 'title' in feed_content.feed:
+            item2.setText(0, feed_content.feed.title)
         else:
             item2.setText(0, "No title")
 
@@ -322,13 +356,13 @@ class BrePodder(MainUi):
 
         self.downloadList[downloadId][1].faviconFound = True
 
-        if 'subtitle' in w.feed:
-            ChannelSubtitle = w.feed.subtitle
+        if 'subtitle' in feed_content.feed:
+            ChannelSubtitle = feed_content.feed.subtitle
         else:
             ChannelSubtitle = u'No description'
 
-        if 'links' in w.feed:
-            ChannelHomepage = w.feed.links[0].href
+        if 'links' in feed_content.feed:
+            ChannelHomepage = feed_content.feed.links[0].href
         #            ChannelHomepage = w.feed.links[1].href
         else:
             ChannelHomepage = 'http://google.com'
@@ -338,52 +372,55 @@ class BrePodder(MainUi):
 
         ChannelId = self.db.getChannelByTitle(ChannelTitle)
 
-        for i in w.entries:
-
-            newEpisode = []
-
-            if 'title' in i:
-                newEpisode.append(i.title)
-            else:
-                newEpisode.append(u'pajseri nisu stavili naziv epizode')
-
-            if 'enclosures' in i:
-                try:
-                    newEpisode.append(i.enclosures[0].href)
-                except:
-                    newEpisode.append(None)
-
-                try:
-                    newEpisode.append(i.enclosures[0].length)
-                except:
-                    newEpisode.append(1)
-            else:
-                newEpisode.append("None")
-                newEpisode.append(0)
-
-            if 'updated' in i:
-                # epDate=strftime("%x", i.updated_parsed)
-                if i.updated_parsed:
-                    epDate = mktime(i.updated_parsed)
-            elif 'published' in i:
-                epDate = mktime(i.published_parsed)
-            else:
-                epDate = mktime(gmtime())
-
-            newEpisode.append(epDate)
-
-            if 'summary_detail' in i:
-                newEpisode.append(i.summary_detail.value)
-            else:
-                newEpisode.append('')
-
-            newEpisode.append('new')
-            newEpisode.append(ChannelId[0])
-
-            self.db.insertEpisode(newEpisode)
+        for episode in feed_content.entries:
+            self.add_episode(ChannelId[0], episode)
 
         self.update_channel_list()
         os.chdir(os.path.expanduser('~') + '/.brePodder')
+
+    def add_episode(self, channel_id, episode):
+        new_episode = {'title': '',
+                       'enclosure': '',
+                       'size': 0,
+                       'date': '',
+                       'description': '',
+                       'status': 'new',
+                       'channel_id': channel_id
+                       }
+
+        if 'title' in episode:
+            new_episode['title'] = episode.title
+
+        if 'enclosures' in episode:
+            try:
+                new_episode['enclosure'] = episode.enclosures[0].href
+                new_episode['size'] = episode.enclosures[0].length
+            except IndexError:
+                pass
+            except AttributeError:
+                pass
+
+        if 'yt_videoid' in episode:
+            try:
+                new_episode['enclosure'] = episode.link
+            except AttributeError:
+                pass
+
+        if 'updated_parsed' in episode:
+            new_episode['date'] = mktime(episode.updated_parsed)
+        elif 'published_parsed' in episode:
+            new_episode['date'] = mktime(episode.published_parsed)
+        else:
+            new_episode['date'] = mktime(gmtime())
+
+        if 'summary_detail' in episode:
+            try:
+                new_episode['description'] = episode.summary_detail.value
+            except AttributeError:
+                pass
+
+        print(tuple(new_episode.values()))
+        self.db.insertEpisode(tuple(new_episode.values()))
 
     def channel_activated(self):
         # selection = self.listWidget.selectedItems()
@@ -457,7 +494,7 @@ class BrePodder(MainUi):
 
             item.setText(3, epDate)
 
-            if e[2] and e[2] is not 'None':
+            if e[2] and e[2] is not None:
                 item.setText(4, e[2])
 
     # TODO: Send file to some media player
@@ -612,7 +649,7 @@ class BrePodder(MainUi):
         updtChTr.updatesignal_episodelist.connect(self.update_episode_list, QtCore.Qt.QueuedConnection)
         # QtCore.QObject.connect(updtChTr,QtCore.SIGNAL("updateDoneSignal"),self.update_done, QtCore.Qt.BlockingQueuedConnection)
         updtChTr.updateDoneSignal.connect(self.update_done, QtCore.Qt.BlockingQueuedConnection)
-        self.ttthread = updtChTr
+        self.update_channel_threads = updtChTr
         updtChTr.start()
 
     def update_all_channels(self):
@@ -639,7 +676,7 @@ class BrePodder(MainUi):
         j = 0
         for i in allChannels:
             updtChTr.append(UpdateChannelThread(i, self, j))
-            self.TTThread.append(updtChTr[j])
+            self.update_channel_threads.append(updtChTr[j])
             # QtCore.QObject.connect(updtChTr[j],QtCore.SIGNAL("updateProgressSignal"),self.updateProgressBarFromThread,QtCore.Qt.BlockingQueuedConnection)
             updtChTr[j].updateProgressSignal.connect(self.updateProgressBarFromThread,
                                                      QtCore.Qt.BlockingQueuedConnection)

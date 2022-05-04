@@ -1,16 +1,16 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtNetwork #, QtWebKit
 import re
-from sql import *
+from utils import opml
+from utils.sql import *
 from ui.treeviewwidget import TreeViewWidget
+import resources
 
 AudioPlayer = None
 try:
     from PyQt5.phonon import Phonon
-    from utils.audioplayer import AudioPlayer
+    from ..utils.audioplayer import AudioPlayer
 except:
     print("No player")
-opml = None
-
 
 class MainUi(object):
 
@@ -25,7 +25,7 @@ class MainUi(object):
         self.fontBold.setWeight(75)
         self.fontBold.setBold(True)
         self.ChannelForUpdate = None
-        self.TTThread = []
+        self.update_channel_threads = []
 #        self.BufferSize = 5
 #        self.Mutex = QtCore.QMutex()
         self.itemsDownloading = []
@@ -112,8 +112,8 @@ class MainUi(object):
         self.treeWidget.setAlternatingRowColors(True)
         #self.treeWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.treeWidget.setObjectName("treeWidget")
-        self.gridlayout2.addWidget(self.treeWidget,0,0,1,1)
-        self.tabWidget.addTab(self.tab_2,"")
+        self.gridlayout2.addWidget(self.treeWidget, 0, 0, 1, 1)
+        self.tabWidget.addTab(self.tab_2, "")
 
         self.tab_3 = QtWidgets.QWidget()
         self.tab_3.setObjectName("tab_3")
@@ -403,22 +403,14 @@ class MainUi(object):
         print(filename)
 
     def export_opml(self):
-        global opml
-        if opml is None:
-            import opml
-
         channels = self.db.getAllChannels()
         opml_file = opml.Exporter('brePodder.opml')
         opml_file.write(channels)
 
     def import_opml(self):
-        global opml
-        if opml is None:
-            import opml
-
-        filename = QtWidgets.QFileDialog.getOpenFileName(self.MW, 'Open file', '/home')
+        filename = QtWidgets.QFileDialog.getOpenFileName(self.MW, 'Open OPML file for import', '/home',  "(*.opml)")
 #        i = opml.Importer('brePodderImport.opml')
-        i = opml.Importer(filename.toAscii().data())
+        i = opml.Importer(filename[0])
         i.get_model()
         channels = self.db.getAllChannelsLinks()
         #print channels
