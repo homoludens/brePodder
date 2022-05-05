@@ -4,13 +4,7 @@ from utils import opml
 from utils.sql import *
 from ui.treeviewwidget import TreeViewWidget
 import resources
-
-AudioPlayer = None
-try:
-    from PyQt5.phonon import Phonon
-    from ..utils.audioplayer import AudioPlayer
-except:
-    print("No player")
+from utils.audioplayer import AudioPlayer
 
 class MainUi(object):
 
@@ -33,6 +27,7 @@ class MainUi(object):
 
         self.db = DBOperation()
         self.Sem = QtCore.QSemaphore(5)
+
 
     def setupUi(self, MainWindow):
         self.MW = MainWindow
@@ -95,8 +90,7 @@ class MainUi(object):
         self.QTextBrowser1 = QtWidgets.QTextBrowser(self.splitter) # Qt4.3
 #        self.QTextBrowser1.setOpenExternalLinks(1)
 #        self.QTextBrowser1.setOpenLinks(1)
-        if AudioPlayer:
-            self.AudioPlayer = AudioPlayer( "", self.splitter)
+        self.AudioPlayer = AudioPlayer("", self.splitter)
 
         self.gridlayout1.addWidget( self.splitter_2, 0, 0, 1, 1 )
 
@@ -131,8 +125,7 @@ class MainUi(object):
         self.splitter_3.setOrientation(QtCore.Qt.Horizontal)
         self.gridlayout3.addWidget(self.splitter_3)
 
-        if AudioPlayer:
-            self.AudioPlayer_latestDownloads = AudioPlayer("", self.splitter_3)
+        self.AudioPlayer_latestDownloads = AudioPlayer("", self.splitter_3)
 
         MainWindow.setCentralWidget(self.centralwidget)
 
@@ -152,8 +145,7 @@ class MainUi(object):
         self.splitter_4.setOrientation(QtCore.Qt.Horizontal)
         self.gridlayout4.addWidget(self.splitter_4)
 
-        if AudioPlayer:
-            self.AudioPlayer_newestEpisodes = AudioPlayer("", self.splitter_4)
+        self.AudioPlayer_newestEpisodes = AudioPlayer("", self.splitter_4)
 
         MainWindow.setCentralWidget(self.centralwidget)
 
@@ -249,7 +241,7 @@ class MainUi(object):
         self.menuDownloads.addAction(self.actionUpdateFeeds)
         self.menuDownloads.addAction(self.actionCancel)
 
-        self.trayIcon = QtWidgets.QSystemTrayIcon(QtGui.QIcon(":/icons/musicstore.png"),MainWindow)
+        self.trayIcon = QtWidgets.QSystemTrayIcon(QtGui.QIcon(":/icons/musicstore.png"), MainWindow)
         self.trayIcon.setContextMenu(self.menuPodcasts)
         self.trayIcon.show()
 
@@ -269,6 +261,7 @@ class MainUi(object):
         self.treeWidget_4.itemDoubleClicked.connect(self.LastestEpisodeDoubleClicked)
         #QtCore.QObject.connect(self.treeWidget_5,QtCore.SIGNAL("itemDoubleClicked(QTreeWidgetItem*,int)"),self.NewestEpisodeDoubleClicked)
         self.treeWidget_5.itemDoubleClicked.connect(self.NewestEpisodeDoubleClicked)
+        self.treeWidget_5.itemClicked.connect(self.NewestEpisodeClicked)
         #QtCore.QObject.connect(self.treeWidget,QtCore.SIGNAL("itemClicked(QTreeWidgetItem*,int)"),self.DownloadActivated)
         self.treeWidget.itemClicked.connect(self.DownloadActivated)
         #QtCore.QObject.connect(self.trayIcon,QtCore.SIGNAL("activated(QSystemTrayIcon::ActivationReason)"),self.trayIconActivated)
@@ -368,10 +361,10 @@ class MainUi(object):
         self.treeWidget_5.clear()
 
         item6 = QtWidgets.QTreeWidgetItem(self.treeWidget_4)
-        item6.setText(0,QtWidgets.QApplication.translate("MainWindow", "ch", None))
-        item6.setText(1,QtWidgets.QApplication.translate("MainWindow", "ep", None))
-        item6.setText(2,QtWidgets.QApplication.translate("MainWindow", "size", None))
-        item6.setText(3,QtWidgets.QApplication.translate("MainWindow", "local file", None))
+        item6.setText(0, QtWidgets.QApplication.translate("MainWindow", "ch", None))
+        item6.setText(1, QtWidgets.QApplication.translate("MainWindow", "ep", None))
+        item6.setText(2, QtWidgets.QApplication.translate("MainWindow", "size", None))
+        item6.setText(3, QtWidgets.QApplication.translate("MainWindow", "local file", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), QtWidgets.QApplication.translate("MainWindow", "Lastest downloads", None))
 
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), QtWidgets.QApplication.translate("MainWindow", "Newest Episodes", None))

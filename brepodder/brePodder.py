@@ -194,6 +194,7 @@ class BrePodder(MainUi):
                                             <p><b>LOCALFILE: </b><a href=" + local_file + ">" + local_file + "</a></p>\
                                             <p>PLAY:<audio  controls='controls' src='" + enc + "'/></p>")
 
+                self.AudioPlayer.setUrl(enc)
                 # ~ if (local_file != 'None') & (AudioPlayer):
                 # ~ self.AudioPlayer.setUrl(local_file)
                 # ~ else:
@@ -508,12 +509,17 @@ class BrePodder(MainUi):
         # self.AudioPlayer_latestDownloads.setUrl( a.text(3).toUtf8().data().decode('UTF8') )
         pass
 
+    def NewestEpisodeClicked(self, item):
+        episode = item.text(4)
+        self.AudioPlayer_newestEpisodes.setUrl(episode)
+
     def NewestEpisodeDoubleClicked(self, a):
         # print  a.text(4).toUtf8().data().decode('UTF8')
         episode = a.text(4)
         # print episode.get("enclosure")
         print(episode + " added to queue")
         self.AudioPlayer_newestEpisodes.setUrl(episode)
+        self.AudioPlayer_newestEpisodes.play()
 
     def getReadableSize(self, size):
         if size:
