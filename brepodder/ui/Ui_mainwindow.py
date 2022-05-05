@@ -64,37 +64,36 @@ class MainUi(object):
         self.splitter_222 = QtWidgets.QSplitter(self.splitter_22)
         self.splitter_222.setOrientation(QtCore.Qt.Horizontal)
 
-
-        self.QLineEdit1 = QtWidgets.QLineEdit( self.splitter_222 )
+        self.QLineEdit1 = QtWidgets.QLineEdit(self.splitter_222)
 
         self.updateProgressBar = QtWidgets.QProgressBar(self.splitter_222)
-        self.updateProgressBar.setMaximumHeight( 25 )
-        self.updateProgressBar.hide();
+        self.updateProgressBar.setMaximumHeight(25)
+        self.updateProgressBar.hide()
         #self.splitter_222.addWidget( self.updateProgressBar )
 
         self.QPushButton1 = QtWidgets.QPushButton(self.splitter_222)
 
-        self.QPushButton1.setMinimumSize(QtCore.QSize(20,20))
-        self.QPushButton1.setMaximumSize(QtCore.QSize(50,25))
+        self.QPushButton1.setMinimumSize(QtCore.QSize(20, 20))
+        self.QPushButton1.setMaximumSize(QtCore.QSize(50, 25))
 
-        self.splitter_2.setSizes( ( 100, 50) )
+        self.splitter_2.setSizes((100, 50))
 
         self.splitter = QtWidgets.QSplitter(self.splitter_2)
         self.splitter.setOrientation(QtCore.Qt.Vertical)
 
-        self.treeWidget_2 = QtWidgets.QTreeWidget( self.splitter )
+        self.treeWidget_2 = QtWidgets.QTreeWidget(self.splitter)
         self.treeWidget_2.setAlternatingRowColors(True)
 
         #TODO: make settings fot choosing WebKit insted of QTextBrowser
         #self.QTextBrowser1 = QtWebKit.QWebView(self.splitter) #Qt4.4
-        self.QTextBrowser1 = QtWidgets.QTextBrowser(self.splitter) # Qt4.3
+        self.QTextBrowser1 = QtWidgets.QTextBrowser(self.splitter)  # Qt4.3
 #        self.QTextBrowser1.setOpenExternalLinks(1)
 #        self.QTextBrowser1.setOpenLinks(1)
         self.AudioPlayer = AudioPlayer("", self.splitter)
 
-        self.gridlayout1.addWidget( self.splitter_2, 0, 0, 1, 1 )
+        self.gridlayout1.addWidget(self.splitter_2, 0, 0, 1, 1)
 
-        self.tabWidget.addTab( self.tab,"" )
+        self.tabWidget.addTab(self.tab, "")
 
         self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setObjectName("tab_2")
@@ -117,9 +116,9 @@ class MainUi(object):
 
         self.gridlayout3 = QtWidgets.QGridLayout(self.tab_3)
         self.gridlayout3.setObjectName("gridlayout3")
-        self.gridlayout3.addWidget(self.treeWidget_4,0,0,1,1)
-        self.tabWidget.addTab(self.tab_3,"")
-        self.gridlayout.addWidget(self.tabWidget,0,0,1,1)
+        self.gridlayout3.addWidget(self.treeWidget_4, 0, 0, 1, 1)
+        self.tabWidget.addTab(self.tab_3, "")
+        self.gridlayout.addWidget(self.tabWidget, 0, 0, 1, 1)
 
         self.splitter_3 = QtWidgets.QSplitter(self.tab_3)
         self.splitter_3.setOrientation(QtCore.Qt.Horizontal)
@@ -308,7 +307,7 @@ class MainUi(object):
         item1 = QtWidgets.QTreeWidgetItem(self.listWidget)
         item1.setText(0, QtWidgets.QApplication.translate("MainWindow", "New Item", None))
 
-        self.QLineEdit1.setText(QtWidgets.QApplication.translate("MainWindow", "https://audioboom.com/channels/4912144.rss", None))
+        self.QLineEdit1.setText(QtWidgets.QApplication.translate("MainWindow", "Copy RSS or Youtube link", None))
         self.QLineEdit1.selectAll()
         self.QPushButton1.setText(QtWidgets.QApplication.translate("MainWindow", "Add", None))
         self.treeWidget_2.setStatusTip(QtWidgets.QApplication.translate("MainWindow", "epizode", None))

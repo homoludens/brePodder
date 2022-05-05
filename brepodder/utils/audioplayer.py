@@ -4,6 +4,7 @@ https://github.com/pyqt/examples/blob/5225c0e7f070cc4496407c1ea565319be9274e29/s
 """
 import sys
 from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
+from utils.youtube import get_real_download_url, is_video_link, is_channel_url
 
 
 class AudioPlayer(QtWidgets.QWidget):
@@ -88,6 +89,8 @@ class AudioPlayer(QtWidgets.QWidget):
         self.player.setPosition(position)
 
     def setUrl(self, url):
+        if is_video_link(url):
+            url, duration = get_real_download_url(url, True)
         print(url)
         #print url
         self.player.setMedia(QtMultimedia.QMediaContent(QtCore.QUrl(url)))

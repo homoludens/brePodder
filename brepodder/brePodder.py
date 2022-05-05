@@ -9,6 +9,8 @@ import requests
 import os
 import sqlite3
 from ui.Ui_mainwindow import MainUi
+from utils.youtube import is_video_link, is_channel_url, get_youtube_rss, get_channel_url
+
 import logging
 
 
@@ -244,7 +246,6 @@ class BrePodder(MainUi):
         os.chdir(os.path.expanduser('~') + '/.brePodder')
 
     def AddChannel(self, new_url=None):
-
         os.chdir(os.path.expanduser('~') + '/.brePodder')
 
         print(new_url)
@@ -253,6 +254,9 @@ class BrePodder(MainUi):
             feed_link = self.QLineEdit1.text()
         else:
             feed_link = new_url
+
+        if is_video_link(feed_link):
+            feed_link = get_youtube_rss(feed_link)
 
         print(feed_link)
         try:

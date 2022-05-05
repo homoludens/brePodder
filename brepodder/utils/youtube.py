@@ -344,7 +344,8 @@ def get_total_time(episode):
 
 def get_real_download_url(url, allow_partial, preferred_fmt_ids=None):
     if not preferred_fmt_ids:
-        preferred_fmt_ids, _, _ = formats_dict[22]  # MP4 720p
+        preferred_fmt_ids = [140]  # m4a
+        # preferred_fmt_ids, _, _ = formats_dict[22]  # MP4 720p
 
     duration = None
 
@@ -447,7 +448,7 @@ def get_real_download_url(url, allow_partial, preferred_fmt_ids=None):
     return url, duration
 
 
-# @lru_cache(1)
+@lru_cache(1)
 def get_youtube_id(url):
     r = re.compile(r'http[s]?://(?:[a-z]+\.)?youtube\.com/watch\?v=([^&]*)', re.IGNORECASE).match(url)
     if r is not None:
@@ -470,6 +471,30 @@ def is_video_link(url):
 
 def is_youtube_guid(guid):
     return guid.startswith('tag:youtube.com,2008:video:')
+
+def is_channel_url(url):
+    """
+    Try to find the username for all possible YouTube feed/webpage URLs
+    Will call func(url, channel) for each match, and if func() returns
+    a result other than None, returns this. If no match is found or
+    func() returns None, return fallback_result.
+    """
+    CHANNEL_MATCH_PATTERNS = [
+        r'http[s]?://(?:[a-z]+\.)?youtube\.com/user/([a-z0-9]+)',
+        r'http[s]?://(?:[a-z]+\.)?youtube\.com/profile?user=([a-z0-9]+)',
+        r'http[s]?://(?:[a-z]+\.)?youtube\.com/rss/user/([a-z0-9]+)/videos\.rss',
+        r'http[s]?://(?:[a-z]+\.)?youtube\.com/channel/([-_a-z0-9]+)',
+        r'http[s]?://(?:[a-z]+\.)?youtube\.com/feeds/videos.xml\?user=([a-z0-9]+)',
+        r'http[s]?://(?:[a-z]+\.)?youtube\.com/feeds/videos.xml\?channel_id=([-_a-z0-9]+)',
+        r'http[s]?://gdata.youtube.com/feeds/users/([^/]+)/uploads',
+        r'http[s]?://gdata.youtube.com/feeds/base/users/([^/]+)/uploads',
+    ]
+
+    for pattern in CHANNEL_MATCH_PATTERNS:
+        m = re.match(pattern, url, re.IGNORECASE)
+        if m is not None:
+            return True
+    return False
 
 
 def for_each_feed_pattern(func, url, fallback_result):
@@ -712,3 +737,27 @@ def parse_youtube_url(url):
 
     logger.debug("Not a valid Youtube URL: {}".format(url))
     return url
+
+
+def get_youtube_rss(url):
+    if is_video_link(url):
+        if not is_channel_url(url):
+            channel_url = get_channel_id_url(get_real_channel_url(url))
+            channel_id = get_youtube_id(channel_url)
+        else:
+            channel_id = get_youtube_id(url)
+    return f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
+
+
+def get_channel_url(url):
+    return get_channel_id_url(get_real_channel_url(url))
+
+
+if __name__ == "__main__":
+    url = "https://www.youtube.com/watch?v=54GCzOq48EE"
+    # res, duration = get_real_download_url(url, True)
+    print(get_youtube_id(url))
+    # print(get_channel_id_url(get_real_channel_url(url)))
+    # print(get_youtube_id(get_channel_id_url(get_real_channel_url(url))))
+    print(get_youtube_rss(url))
+    # print(res, duration)
