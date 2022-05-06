@@ -71,32 +71,10 @@ class DBOperation():
 
         return cc
 
-    def getEpisodeByTitle(self,  episodeTitle):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
-        con.isolation_level = "IMMEDIATE"
-        con.row_factory = sqlite3.Row
-        cur = con.cursor()
-        cur.execute('select * from sql_episode where title = ?',(episodeTitle,))
-        episode = cur.fetchone()
-        episodeDict = dict(episode)
-        cur.close()
-
-        return episodeDict
-
-#    def GETCHANNEL(self,  channel):
-#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = True)
-#        con.isolation_level = "IMMEDIATE"
-#        cur = con.cursor()
-#        cur.execute('select * from sql_channel where title = ?',(channel,))
-#        cc = cur.fetchone()
-#        cur.close()
-#
-#        return cc
-
-#    def getChannel(self,  channel):
-#        self.cur.execute('select * from sql_channel where title = ?',(channel, ))
-#        ch = self.cur.fetchone()
-#        return ch
+    def getEpisodeByTitle(self,  episode_title):
+        episode = self.cur.execute('select * from sql_episode where title = ?', (episode_title,)).fetchone()
+        # self.db.commit()
+        return episode
 
     def getAllChannels(self):
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
