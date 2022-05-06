@@ -258,8 +258,8 @@ class AddChannelThread(QtCore.QThread):
 
         # download Channel logo
         logo_fileBig = ''
+        imageURL = ''
         if 'image' in feed_content.feed:
-            imageURL = ''
             if feed_content.feed.image.href is not None:
                 if feed_content.feed.image.href[0] == '/':
                     imageURL = feed_content.feed.link + feed_content.feed.image.href
@@ -272,21 +272,18 @@ class AddChannelThread(QtCore.QThread):
             # TODO: should we put original or 128px version of logo
             logo_fileBig = ChannelDir + "/" + fileName
 
-            if is_video_link(new_url):
-                imageURL = get_cover(new_url)
-                print(imageURL)
-                logo_fileBig = ChannelDir + "/" + "logo.jpg"
+        if is_video_link(new_url):
+            imageURL = get_cover(new_url)
+            logo_fileBig = ChannelDir + "/" + "logo.jpg"
 
+        if imageURL:
             download_image(imageURL, self.main_directory + logo_fileBig)
             self.ui.resize_image(self.main_directory + logo_fileBig, self.main_directory + logo_fileBig)
-        # download_image(imageURL,  logo_fileBig)
 
         #  download favicon
         if "link" in feed_content.feed:
             print(feed_content.feed.link)
-            # favicon_url = get_icon_url(w.feed.link)
             favicon_url = get_icon_url("https://" + QtCore.QUrl(feed_content.feed.link).host())
-            # favicon_url = get_icon_url(QtCore.QUrl(w.feed.link).host())
         else:
             favicon_url = get_icon_url(feed_link)
 
@@ -294,11 +291,10 @@ class AddChannelThread(QtCore.QThread):
             url = favicon_url
         else:
             url = ''
-            # url = "https://" + QtCore.QUrl(feed_content.feed.link).host() + "/favicon.ico"
 
         url_favicon = QtCore.QUrl(url)
-        faviconInfo = QtCore.QFileInfo(url_favicon.path())
-        favicon = faviconInfo.fileName()
+        favicon_info = QtCore.QFileInfo(url_favicon.path())
+        favicon = favicon_info.fileName()
         logo_file = ChannelDir + '/' + favicon
 
         download_image(url, self.main_directory + logo_file)
@@ -387,7 +383,6 @@ class AddChannelThread(QtCore.QThread):
             except AttributeError:
                 pass
 
-        # print(tuple(new_episode.values()))
         self.ui.db.insertEpisode(tuple(new_episode.values()))
 
 
@@ -406,7 +401,6 @@ class BrePodder(MainUi):
         self.update_channel_list()
         self.update_lastest_episodes_list()
         self.update_newest_episodes_list()
-
 
     def memory_usage(self):
         """Memory usage of the current process in kilobytes."""
@@ -458,10 +452,7 @@ class BrePodder(MainUi):
                                             <p>PLAY:<audio  controls='controls' src='" + enc + "'/></p>")
 
                 self.AudioPlayer.setUrl(enc)
-                # ~ if (local_file != 'None') & (AudioPlayer):
-                # ~ self.AudioPlayer.setUrl(local_file)
-                # ~ else:
-                # ~ self.AudioPlayer.setUrl(enc)
+
             except:
                 e = sys.exc_info()
                 print(e)
@@ -480,8 +471,6 @@ class BrePodder(MainUi):
         e = self.db.getEpisodeByTitle(episodeTitle)
         channel = self.db.getChannelById(e.get("channel_id"))
         ChannelDir = self.regex_white_space.sub("", channel.get("title"))
-        # print "ChannelDir: "
-        # print ChannelDir
 
         os.chdir(os.path.expanduser('~') + '/.brePodder/' + ChannelDir)
         item = QtWidgets.QTreeWidgetItem(self.treeWidget)
@@ -538,10 +527,6 @@ class BrePodder(MainUi):
         self.QLineEdit1.show()
         self.QPushButton1.show()
 
-        # self.lightsWorker.stop()
-        # self.lightsThread.quit()
-        # self.lightsThread.wait()
-
         self.update_channel_list()
         self.sendMessage("Updating Done")
 
@@ -596,6 +581,7 @@ class BrePodder(MainUi):
 
         # download Channel logo
         logo_fileBig = ''
+        imageURL = ''
         if 'image' in feed_content.feed:
             if feed_content.feed.image.href is not None:
                 if feed_content.feed.image.href[0] == '/':
@@ -636,8 +622,8 @@ class BrePodder(MainUi):
             # url = "https://" + QtCore.QUrl(feed_content.feed.link).host() + "/favicon.ico"
 
         url_favicon = QtCore.QUrl(url)
-        faviconInfo = QtCore.QFileInfo(url_favicon.path())
-        favicon = faviconInfo.fileName()
+        favicon_info = QtCore.QFileInfo(url_favicon.path())
+        favicon = favicon_info.fileName()
         logo_file = ChannelDir + '/' + favicon
 
         get_icon(url, logo_file)
@@ -852,10 +838,6 @@ class BrePodder(MainUi):
         return sizeReadable
 
     def update_episode_list(self, channel_Title):
-        print("update_episode_list")
-
-        print(self.db.is_folder(channel_Title))
-
         if self.db.is_folder(channel_Title):
             tt = self.db.getFolderEpisodes(channel_Title)
         else:
@@ -924,10 +906,6 @@ class BrePodder(MainUi):
             #            item.setToolTip(0,"<p><img src="+"'"+channel.logobig+"'"+"></p><p style='font-size:20pt'><b>"+channel.title+"</b></p><a href="+channel.link+">"+channel.link+"</a>")
             item.setFlags(enabled | draggable | selectable)
 
-    # dodati bold za channel koji ima novu epizodu. mislim da je to najefikasnije preko novog polja u bazi.
-
-    #        self.cur.close()
-
     def updateProgressBarFromThread(self):
         self.updateProgressBar.setValue(self.updateProgressBar.value() + 1)
         if self.updateProgressBar.value() == self.numberOfChannels - 1:
@@ -935,16 +913,7 @@ class BrePodder(MainUi):
 
     def create_new_foder(self):
         text, ok = QtWidgets.QInputDialog.getText(self.MW, 'Input Dialog', 'Enter name for new folder:')
-
-        #        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        #        con.isolation_level = None
-        #        cur = con.cursor()
-
         if ok:
-            #            con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-            #            con.isolation_level = None
-            #            cur2 = con.cursor()
-            #            cur2.execute('insert into sql_taxonomy(title) values (?)', (text.toUtf8().data(),))
             self.db.insertFolder(text)
         self.update_channel_list()
 
@@ -955,21 +924,9 @@ class BrePodder(MainUi):
         self.updateProgressBar.show()
         self.numberOfChannels = 1
 
-        #        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        #        con.isolation_level = None
-        #        cur = con.cursor()
-        #        cur.execute('select * from sql_channel where title = ?',(self.CurrentChannel,))
-        #        ch = cur.fetchone()
-
-        #        ch=Channel.query.filter_by(title=self.CurrentChannel).one()
-
         ch = self.db.getChannelByTitle(self.CurrentChannel)
-        #        print "updateChannelThread"
-        #        print ch
 
         self.ChannelForUpdate = ch
-        #        print ch.title
-        #        ui.Sem.acquire()
 
         updtChTr = UpdateChannelThread(ch, self, 0)
         updtChTr.updatesignal.connect(self.update_channel_list, QtCore.Qt.QueuedConnection)
@@ -985,13 +942,6 @@ class BrePodder(MainUi):
         self.updateProgressBar.show()
 
         updtChTr = []
-        #        allChannels=Channel.query.all()
-
-        #        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        #        con.isolation_level = None
-        #        cur = con.cursor()
-        #        cur.execute('select * from sql_channel')
-        #        allChannels = cur.fetchall()
 
         allChannels = self.db.getAllChannels()
 
@@ -1003,7 +953,6 @@ class BrePodder(MainUi):
         for i in allChannels:
             updtChTr.append(UpdateChannelThread(i, self, j))
             self.update_channel_threads.append(updtChTr[j])
-            # QtCore.QObject.connect(updtChTr[j],QtCore.SIGNAL("updateProgressSignal"),self.updateProgressBarFromThread,QtCore.Qt.BlockingQueuedConnection)
             updtChTr[j].updateProgressSignal.connect(self.updateProgressBarFromThread,
                                                      QtCore.Qt.BlockingQueuedConnection)
             updtChTr[j].start()
@@ -1027,10 +976,6 @@ class BrePodder(MainUi):
         self.updateProgressBar.hide()
         self.QLineEdit1.show()
         self.QPushButton1.show()
-
-        # self.lightsWorker.stop()
-        # self.lightsThread.quit()
-        # self.lightsThread.wait()
 
         self.update_channel_list()
         self.sendMessage("Updating Done")
