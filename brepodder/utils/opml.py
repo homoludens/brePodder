@@ -3,7 +3,7 @@ import xml.sax.saxutils
 import os.path
 import datetime
 import requests
-
+import sys
 
 class Exporter(object):
     """
@@ -73,6 +73,9 @@ class Exporter(object):
             fp.write(doc.toprettyxml(encoding='utf-8'))
             fp.close()
         except:
+            print("exception: opml.py 76")
+            e = sys.exc_info()[0]
+            print(e)
             #log( 'Could not open file for writing: %s', self.filename, sender = self)
             return False
 
@@ -92,8 +95,22 @@ class Importer(object):
     VALID_TYPES = ('rss', 'link')
 
     def read_url(self, url):
-        response = requests.get(url)
-        return response.content
+        headers = {
+            'User-Agent': 'brePodder/0.02'
+        }
+        try:
+            response = requests.get(url, headers=headers)
+        except requests.exceptions.ConnectionError as e:
+            print('404', e)
+            return ''
+        except requests.exceptions.HTTPError as e:
+            print('404', e)
+            return ''
+        except requests.exceptions.MissingSchema as e:
+            print('MissingSchema', e)
+            return ''
+        else:
+            return response.content
 
     def __init__(self, url):
         """
@@ -126,14 +143,14 @@ class Importer(object):
             if not len(self.items):
                 print('OPML import finished, but no items found: ' + url)
 #                log( 'OPML import finished, but no items found: %s', url, sender = self)
-        except:
+        except IndexError:
             print('Cannot import OPML from URL: ' + url)
 #            log( 'Cannot import OPML from URL: %s', url, sender = self)
 
     def format_channel(self, channel):
         return channel
         # return '<b>%s</b>\n<span size="small">%s</span>' % (xml.sax.saxutils.escape(
-        #     urllib.unquote_plus(channel['title'])),
+        #     urllib.unquote_plus(channel['title']))
         #     xml.sax.saxutils.escape(channel['description']), )
 
     def get_model(self):

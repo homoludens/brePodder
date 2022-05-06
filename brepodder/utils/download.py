@@ -1,10 +1,12 @@
 from ui.Ui_mainwindow import *
+import os
+from PyQt5 import QtCore, QtNetwork
 
 
 class Download(QtCore.QObject):
     fp = None
 
-    def __init__(self, link, item, downloadId, parent = None):
+    def __init__(self, link, item, downloadId, parent=None):
 
         QtCore.QObject.__init__(self)
 
@@ -15,7 +17,7 @@ class Download(QtCore.QObject):
         self._status = "downloading"
         self.downloadId = downloadId
         self.CurDir = os.getcwd()
-        self.saveFileName = self.CurDir + '/' +  self.fileName
+        self.saveFileName = self.CurDir + '/' + self.fileName
         self.itemZaPrenos = item
 
         self.Parent = parent
@@ -23,23 +25,22 @@ class Download(QtCore.QObject):
         self.link = QtCore.QUrl(link)
 
         self.CurrentChannel = None
-        self.header=None
-        self.totalBytes=0
-        self.bytesRead=0
-        self.tempBytes=0
-        self.resumed=False
-        self.paused=False
-        self.urlRedirect=None
+        self.header = None
+        self.totalBytes = 0
+        self.bytesRead = 0
+        self.tempBytes = 0
+        self.resumed = False
+        self.paused = False
+        self.urlRedirect = None
         self.locationRedirect = None
         self.httpRequestAborted = False
-        self.faviconFound=False
+        self.faviconFound = False
         self.i = 0
         self.downloadFile()
 
     def downloadFile(self):
-
-        self.header =  QtNetwork.QNetworkRequest(self.link)
-        if (self._status == "paused"):
+        self.header = QtNetwork.QNetworkRequest(self.link)
+        if self._status == "paused":
             print("resuming")
             resume_bytes = "bytes=" + str(self.bytesRead) + "-"
             print(resume_bytes)
@@ -48,19 +49,14 @@ class Download(QtCore.QObject):
         self.reply = self.manager.get(self.header)
         self.reply.setParent(self)
 
-        self.manager.finished.connect( lambda reply: self.replyFinished( reply, self.fileName ))
-        self.reply.error.connect( self.on_reply_error )
+        self.manager.finished.connect(lambda reply: self.replyFinished( reply, self.fileName))
+        self.reply.error.connect(self.on_reply_error)
         self.reply.downloadProgress.connect(self.updateDataReadProgress)
         self.reply.readyRead.connect(self.on_reply_readyRead)
-        #self.connect(self.reply, QtCore.SIGNAL("readyRead()"), self.on_reply_readyRead)
 
-        #QtCore.QObject.connect( self.Parent.actionCancel, QtCore.SIGNAL("activated()"), self.cancelDownload )
-        self.Parent.actionCancel.triggered.connect(self.cancelDownload )
-        #QtCore.QObject.connect( self.Parent.actionPause,  QtCore.SIGNAL("activated()"), self.pauseDownload )
+        self.Parent.actionCancel.triggered.connect(self.cancelDownload)
         self.Parent.actionPause.triggered.connect(self.pauseDownload)
-        #QtCore.QObject.connect( self.Parent.actionResume, QtCore.SIGNAL("activated()"), self.resumeDownload )
-        self.Parent.actionResume.triggered.connect(self.resumeDownload )
-
+        self.Parent.actionResume.triggered.connect(self.resumeDownload)
 
     def updateDataReadProgress(self, bytesRead, totalBytes):
 
@@ -81,8 +77,9 @@ class Download(QtCore.QObject):
         self.bytesRead = self.tempBytes + bytesRead
         #print "bytesRead: " + str(bytesRead)  + "	self.totalBytes: " + str(self.totalBytes)
         try:
-            downloaded = str(round(( float(self.bytesRead) / float(self.totalBytes) ) * 100))
+            downloaded = str(round((float(self.bytesRead) / float(self.totalBytes)) * 100))
         except:
+            print("catch all excetions download.py")
             downloaded = '0'
 
         self.itemZaPrenos.setText(3, downloaded)

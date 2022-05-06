@@ -41,8 +41,8 @@ def getIcoUrl(url):
         favicon_parser = FaviconFinder()
         favicon_parser.feed(contents)
     except:
-        e = sys.exc_info()[0]
         print("favicon except 1: ")
+        e = sys.exc_info()[0]
         print(e)
         pass
 
@@ -75,8 +75,8 @@ def getIcoUrl(url):
             if response.status == 200:
                 return 'http://%s/favicon.ico' % ('www.' + root_directory)
     except:
-        e = sys.exc_info()[0]
         print("favicon except 2: ")
+        e = sys.exc_info()[0]
         print(e)
         pass
     return None

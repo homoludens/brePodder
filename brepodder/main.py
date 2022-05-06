@@ -22,10 +22,10 @@ if __name__ == "__main__":
     ui = BrePodder()
     ui.setupUi(MainWindow)
 
-    print("create_DB 0000")
-    if not os.path.isfile('podcasts.sqlite'):
-        print("create_DB 1111")
-        ui.db.create_DB()
+    # print("create_DB 0000")
+    # if not os.path.isfile('podcasts.sqlite'):
+    #     print("create_DB 1111")
+    #     ui.db.create_db()
 
     MainWindow.show()
     ui.update_channel_list()

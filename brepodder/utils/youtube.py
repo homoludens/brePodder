@@ -339,6 +339,7 @@ def get_total_time(episode):
         player_response = json.loads(ipr.group(1))
         return int(player_response['videoDetails']['lengthSeconds'])  # 0 if live
     except:
+        print("cachall exceptions youtube 341")
         return 0
 
 

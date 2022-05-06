@@ -7,10 +7,11 @@ class DBOperation():
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite",  check_same_thread=False)
         con.isolation_level = "IMMEDIATE"
         self.cur = con.cursor()
+        self.create_db()
 
     #TODO: ovo ne radi
     def insertChannel(self, channel):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False, timeout=20)
         con.isolation_level = None
         cur = con.cursor()
         cur.execute('insert into sql_channel(title, link, homepage, description, logo, logobig) values (?,?,?,?,?,?) ', channel)
@@ -40,11 +41,31 @@ class DBOperation():
 
         return dict(channel)
 
-    def getChannelByTitle(self,  channel):
+    def getChannelByTitle(self,  channel_title):
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
         con.isolation_level = "IMMEDIATE"
         cur = con.cursor()
-        cur.execute('select * from sql_channel where title = ?',(channel,))
+        cur.execute('select * from sql_channel where title = ?', (channel_title,))
+        cc = cur.fetchone()
+        cur.close()
+
+        return cc
+
+    def getChannelByLink(self,  channel_link):
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
+        con.isolation_level = "IMMEDIATE"
+        cur = con.cursor()
+        cur.execute('select * from sql_channel where link = ?', (channel_link,))
+        cc = cur.fetchone()
+        cur.close()
+
+        return cc
+
+    def getChannelByFeed(self,  channel):
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
+        con.isolation_level = "IMMEDIATE"
+        cur = con.cursor()
+        cur.execute('select * from sql_channel where title = ?', (channel,))
         cc = cur.fetchone()
         cur.close()
 
@@ -150,7 +171,7 @@ class DBOperation():
         return episodes
 
     def insertEpisode(self, ep):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
+        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False, timeout=20)
         con.isolation_level = None
         cur = con.cursor()
         cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', ep)
@@ -179,6 +200,7 @@ class DBOperation():
         try:
             cur.execute('delete from  sql_episode where channel_id = ?', (channel_id[0],))
         except:
+            print("exception sql.py 183")
             pass
         cur.close()
 
@@ -219,12 +241,12 @@ class DBOperation():
         con.commit()
         cur.close()
 
-    def create_DB(self):
-        print("createDB")
+    def create_db(self):
+        print("create_db")
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
         con.isolation_level = None
         cur = con.cursor()
-
+        # cur = self.cur
         try:
             cur.execute('''CREATE TABLE IF NOT EXISTS sql_channel (
                                 id INTEGER NOT NULL,

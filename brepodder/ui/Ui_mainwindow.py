@@ -23,10 +23,10 @@ class MainUi(object):
 #        self.BufferSize = 5
 #        self.Mutex = QtCore.QMutex()
         self.itemsDownloading = []
-        self.p = re.compile("\\W")
+        self.regex_white_space = re.compile("\\W")
 
         self.db = DBOperation()
-        self.Sem = QtCore.QSemaphore(5)
+        self.Sem = QtCore.QSemaphore(3)
 
 
     def setupUi(self, MainWindow):
@@ -246,40 +246,24 @@ class MainUi(object):
 
         self.retranslateUi(MainWindow)
         self.tabWidget.setCurrentIndex(0)
-        #QtCore.QObject.connect(self.listWidget,QtCore.SIGNAL("itemSelectionChanged()"),self.channel_activated)
         self.listWidget.itemSelectionChanged.connect(self.channel_activated)
-        #QtCore.QObject.connect(self.QPushButton1,QtCore.SIGNAL("clicked()"),self.AddChannel)
-        self.QPushButton1.clicked.connect(self.AddChannel)
-        #QtCore.QObject.connect(self.QPushButton1,QtCore.SIGNAL("clicked()"),self.QLineEdit1.clear)
+        # self.QPushButton1.clicked.connect(self.AddChannel)
+        self.QPushButton1.clicked.connect(self.add_channel)
         self.QPushButton1.clicked.connect(self.QLineEdit1.clear)
-        #QtCore.QObject.connect(self.treeWidget_2,QtCore.SIGNAL("itemSelectionChanged()"),self.episode_activated)
         self.treeWidget_2.itemSelectionChanged.connect(self.episode_activated)
-        #QtCore.QObject.connect(self.treeWidget_2,QtCore.SIGNAL("itemDoubleClicked(QTreeWidgetItem*,int)"),self.EpisodeDoubleClicked)
         self.treeWidget_2.itemDoubleClicked.connect(self.EpisodeDoubleClicked)
-        #QtCore.QObject.connect(self.treeWidget_4,QtCore.SIGNAL("itemDoubleClicked(QTreeWidgetItem*,int)"),self.LastestEpisodeDoubleClicked)
         self.treeWidget_4.itemDoubleClicked.connect(self.LastestEpisodeDoubleClicked)
-        #QtCore.QObject.connect(self.treeWidget_5,QtCore.SIGNAL("itemDoubleClicked(QTreeWidgetItem*,int)"),self.NewestEpisodeDoubleClicked)
         self.treeWidget_5.itemDoubleClicked.connect(self.NewestEpisodeDoubleClicked)
         self.treeWidget_5.itemClicked.connect(self.NewestEpisodeClicked)
-        #QtCore.QObject.connect(self.treeWidget,QtCore.SIGNAL("itemClicked(QTreeWidgetItem*,int)"),self.DownloadActivated)
         self.treeWidget.itemClicked.connect(self.DownloadActivated)
-        #QtCore.QObject.connect(self.trayIcon,QtCore.SIGNAL("activated(QSystemTrayIcon::ActivationReason)"),self.trayIconActivated)
         self.trayIcon.activated.connect(self.trayIconActivated)
-        #QtCore.QObject.connect(self.actionUpdateFeeds,QtCore.SIGNAL("activated()"),self.update_channel)
         self.actionUpdateFeeds.triggered.connect(self.update_channel)
-        #QtCore.QObject.connect(self.actionNewFolder,QtCore.SIGNAL("activated()"),self.create_new_foder)
         self.actionNewFolder.triggered.connect(self.create_new_foder)
-        #QtCore.QObject.connect(self.actionQuit,QtCore.SIGNAL("activated()"),self.app_quit)
         self.actionQuit.triggered.connect(self.app_quit)
-        #QtCore.QObject.connect(self.actionCancel,QtCore.SIGNAL("activated()"),self.delete_channel)
         self.actionCancel.triggered.connect(self.delete_channel)
-        #QtCore.QObject.connect(self.actionUpdateAllChannels,QtCore.SIGNAL("activated()"),self.update_all_channels)
         self.actionUpdateAllChannels.triggered.connect(self.update_all_channels)
-        #QtCore.QObject.connect(self.actionNew,QtCore.SIGNAL("activated()"),self.dialog_add)
         self.actionNew.triggered.connect(self.dialog_add)
-        #QtCore.QObject.connect(self.actionExport,QtCore.SIGNAL("activated()"),self.export_opml)
         self.actionExport.triggered.connect(self.export_opml)
-        #QtCore.QObject.connect(self.actionImport,QtCore.SIGNAL("activated()"),self.import_opml)
         self.actionImport.triggered.connect(self.import_opml)
 
 #        QtCore.QObject.connect(self.actionImport,QtCore.SIGNAL("activated()"),self.update_channel_list)
@@ -410,7 +394,8 @@ class MainUi(object):
         for channel in i.items:
             if (channel['url'], ) not in channels:
                 #print ch['url']
-                self.AddChannel(channel['url'])
+                # self.AddChannel(channel['url'])
+                self.add_channel(channel['url'])
 
     def activeMenuChannels(self, pos):
         self.actionCancel.setText(QtWidgets.QApplication.translate("MainWindow", "Delete feed", None))
