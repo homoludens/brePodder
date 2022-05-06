@@ -56,10 +56,10 @@ class DBOperation():
         # self.db.commit()
         return channel
 
-    def getEpisodeByTitle(self,  episodeTitle):
-        episode = self.cur.execute('select * from sql_episode where title = ?', (episodeTitle,)).fetchone()
+    def getEpisodeByTitle(self,  episode_title):
+        episode = self.cur.execute('select * from sql_episode where title = ?', (episode_title,)).fetchone()
         # self.db.commit()
-        return dict(episode)
+        return episode
 
     def getAllChannels(self):
         channels = self.cur.execute('select * from sql_channel').fetchall()

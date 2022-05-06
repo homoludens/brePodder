@@ -96,7 +96,6 @@ class MainUi(QtWidgets.QWidget):
         self.QTextBrowser1 = QtWidgets.QTextBrowser(self.splitter)  # Qt4.3
 #        self.QTextBrowser1.setOpenExternalLinks(1)
 #        self.QTextBrowser1.setOpenLinks(1)
-        self.AudioPlayer = AudioPlayer("", self.splitter)
 
         self.gridlayout1.addWidget(self.splitter_2, 0, 0, 1, 1)
 
@@ -151,7 +150,20 @@ class MainUi(QtWidgets.QWidget):
         self.splitter_4.setOrientation(QtCore.Qt.Horizontal)
         self.gridlayout4.addWidget(self.splitter_4)
 
-        # self.AudioPlayer_newestEpisodes = AudioPlayer("", self.splitter_4)
+        # tab with playlist
+        self.tab_playlist = QtWidgets.QWidget()
+        self.tab_playlist.setObjectName("tab_playlist")
+        self.treewidget_playlist = QtWidgets.QTreeWidget(self.tab_playlist)
+        self.gridlayout_playlist = QtWidgets.QGridLayout(self.tab_playlist)
+        self.gridlayout_playlist.setObjectName("gridlayout5")
+        self.gridlayout_playlist.addWidget(self.treewidget_playlist, 0, 0, 1, 1)
+        self.tabWidget.addTab(self.tab_playlist, "")
+        self.gridlayout.addWidget(self.tabWidget, 0, 0, 1, 1)
+        self.splitter_playlist = QtWidgets.QSplitter(self.tab_playlist)
+        self.splitter_playlist.setOrientation(QtCore.Qt.Horizontal)
+        self.gridlayout_playlist.addWidget(self.splitter_playlist)
+
+        self.AudioPlayer = AudioPlayer("", self.splitter_playlist)
 
         MainWindow.setCentralWidget(self.centralwidget)
 
@@ -261,6 +273,7 @@ class MainUi(QtWidgets.QWidget):
         self.treeWidget_2.itemDoubleClicked.connect(self.EpisodeDoubleClicked)
         self.treeWidget_4.itemDoubleClicked.connect(self.LastestEpisodeDoubleClicked)
         self.treeWidget_5.itemDoubleClicked.connect(self.NewestEpisodeDoubleClicked)
+        self.treewidget_playlist.itemDoubleClicked.connect(self.PlaylistEpisodeDoubleClicked)
         self.treeWidget_5.itemClicked.connect(self.NewestEpisodeClicked)
         self.treeWidget.itemClicked.connect(self.DownloadActivated)
         self.trayIcon.activated.connect(self.trayIconActivated)
@@ -350,6 +363,19 @@ class MainUi(QtWidgets.QWidget):
         self.treeWidget_5.header().resizeSection(0, 200)
         self.treeWidget_5.header().resizeSection(1, 200)
         self.treeWidget_5.clear()
+
+
+        self.treewidget_playlist.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channel", None))
+        self.treewidget_playlist.headerItem().setText(1,QtWidgets.QApplication.translate("MainWindow", "Episode", None))
+        self.treewidget_playlist.headerItem().setText(2,QtWidgets.QApplication.translate("MainWindow", "Size", None))
+        self.treewidget_playlist.headerItem().setText(3,QtWidgets.QApplication.translate("MainWindow", "Date", None))
+        self.treewidget_playlist.headerItem().setText(4,QtWidgets.QApplication.translate("MainWindow", "Enclosure", None))
+        self.treewidget_playlist.header().resizeSection(0, 200)
+        self.treewidget_playlist.header().resizeSection(1, 200)
+        self.treewidget_playlist.clear()
+
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_playlist),
+                                  QtWidgets.QApplication.translate("MainWindow", "Playlist", None))
 
         item6 = QtWidgets.QTreeWidgetItem(self.treeWidget_4)
         item6.setText(0, QtWidgets.QApplication.translate("MainWindow", "ch", None))

@@ -399,6 +399,7 @@ class BrePodder(MainUi):
         self.update_channel_list()
         self.update_lastest_episodes_list()
         self.update_newest_episodes_list()
+        self.playlist = []
 
     def memory_usage(self):
         """Memory usage of the current process in kilobytes."""
@@ -467,6 +468,8 @@ class BrePodder(MainUi):
         episode_row.setFont(0, self.fontBold)
         episodeTitle = episode_row.text(0)
         e = self.db.getEpisodeByTitle(episodeTitle)
+        self.playlist.append(e)
+
         channel = self.db.getChannelById(e.get("channel_id"))
         ChannelDir = self.regex_white_space.sub("", channel.get("title"))
 
@@ -611,11 +614,42 @@ class BrePodder(MainUi):
             if e[2] and e[2] is not None:
                 item.setText(4, e[2])
 
-    # TODO: Send file to some media player
-    def LastestEpisodeDoubleClicked(self, a):
+    def update_play_list(self, episodes):
+        # episodes = self.db.getLatestEpisodes()
+        self.treewidget_playlist.clear()
+
+        for e in episodes:
+            item = QtWidgets.QTreeWidgetItem(self.treewidget_playlist)
+            item.setText(0, str(e['channel_id']))
+            # item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~') + '/.brePodder/' + e[15])))
+            item.setText(1, e['title'])
+            if e[4]:
+                item.setText(2, self.getReadableSize(e['size']))
+            else:
+                item.setText(2, '???')
+            try:
+                b = gmtime(float(e['date']))
+                epDate = strftime("%x", b)
+            except:
+                print("catch all excetions brePodder.py 776")
+                b = gmtime()
+                epDate = strftime("%x", b)
+
+            item.setText(3, epDate)
+
+            if e['enclosure'] and e['enclosure'] is not None:
+                item.setText(4, e['enclosure'])
+
+    def PlaylistEpisodeDoubleClicked(self, a):
+        self.AudioPlayer.setUrl(a.text(4))
+
+    def LastestEpisodeDoubleClicked(self, episode_row):
+        episodeTitle = episode_row.text(0)
+        episode = self.db.getEpisodeByTitle(episodeTitle)
+        self.playlist.append(episode)
+        self.update_play_list(self.playlist)
         # os.system( "mocp -a " + a.text(3).toUtf8().data().decode('UTF8') )
-        self.AudioPlayer.setUrl(a.text(3))
-        # self.AudioPlayer.playClicked()
+        # self.AudioPlayer.setUrl(a.text(3))
 
     def LastestEpisodeActivated(self, a):
         # os.system( "mocp -a " + a.text(3).toUtf8().data().decode('UTF8') )
@@ -626,13 +660,16 @@ class BrePodder(MainUi):
         episode = item.text(4)
         # self.AudioPlayer_newestEpisodes.setUrl(episode)
 
-    def NewestEpisodeDoubleClicked(self, a):
+    def NewestEpisodeDoubleClicked(self, episode_row):
         # print  a.text(4).toUtf8().data().decode('UTF8')
-        episode = a.text(4)
+        episode = episode_row.text(4)
+        episode_title = episode_row.text(1)
+        episode = self.db.getEpisodeByTitle(episode_title)
+        self.playlist.append(episode)
+        self.update_play_list(self.playlist)
         # print episode.get("enclosure")
-        print(episode + " added to queue")
-        self.AudioPlayer.setUrl(episode)
-        # self.AudioPlayer.playClicked()
+        # print(episode + " added to queue")
+        # self.AudioPlayer.setUrl(episode)
 
     def getReadableSize(self, size):
         if size:
