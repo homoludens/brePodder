@@ -1,125 +1,57 @@
 import sqlite3
 import os
-
+import sys
 
 class DBOperation():
     def __init__(self):
         con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite",  check_same_thread=False)
         con.isolation_level = "IMMEDIATE"
         self.cur = con.cursor()
+        self.cur.row_factory = sqlite3.Row
         self.create_db()
 
-    #TODO: ovo ne radi
     def insertChannel(self, channel):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False, timeout=20)
-        con.isolation_level = None
-        cur = con.cursor()
-        cur.execute('insert into sql_channel(title, link, homepage, description, logo, logobig) values (?,?,?,?,?,?) ', channel)
-        cur.close()
-        #print "insertChannel: "
-        #print channel
-
-#    def insertEpisode(self, episode):
-#        self.cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', episode)
+        self.cur.execute('insert into sql_channel(title, link, homepage, description, logo, logobig) values (?,?,?,?,?,?) ', channel)
+        return True
 
     def close(self):
         self.cur.close()
 
     def getFolderChannels(self,  folder):
         self.cur.execute('select * from sql_channel where folder_id = ?', (folder,))
-        childChannels = self.cur.fetchall()
-        return childChannels
+        child_channels = self.cur.fetchall()
+        return child_channels
 
     def getChannelById(self,  channel_id):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
-        con.isolation_level = "IMMEDIATE"
-        con.row_factory = sqlite3.Row
-        cur = con.cursor()
-        cur.execute('select * from sql_channel where id = ?', (channel_id,))
-        channel = cur.fetchone()
-        cur.close()
-
+        channel = self.cur.execute('select * from sql_channel where id = ?', (channel_id,)).fetchone()
         return dict(channel)
 
     def getChannelByTitle(self,  channel_title):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
-        con.isolation_level = "IMMEDIATE"
-        cur = con.cursor()
-        cur.execute('select * from sql_channel where title = ?', (channel_title,))
-        cc = cur.fetchone()
-        cur.close()
-
-        return cc
+        channel = self.cur.execute('select * from sql_channel where title = ?', (channel_title,)).fetchone()
+        return channel
 
     def getChannelByLink(self,  channel_link):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
-        con.isolation_level = "IMMEDIATE"
-        cur = con.cursor()
-        cur.execute('select * from sql_channel where link = ?', (channel_link,))
-        cc = cur.fetchone()
-        cur.close()
-
-        return cc
+        channel = self.cur.execute('select * from sql_channel where link = ?', (channel_link,)).fetchone()
+        return channel
 
     def getChannelByFeed(self,  channel):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
-        con.isolation_level = "IMMEDIATE"
-        cur = con.cursor()
-        cur.execute('select * from sql_channel where title = ?', (channel,))
-        cc = cur.fetchone()
-        cur.close()
-
-        return cc
+        channel = self.cur.execute('select * from sql_channel where title = ?', (channel,))
+        return channel
 
     def getEpisodeByTitle(self,  episodeTitle):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
-        con.isolation_level = "IMMEDIATE"
-        con.row_factory = sqlite3.Row
-        cur = con.cursor()
-        cur.execute('select * from sql_episode where title = ?',(episodeTitle,))
-        episode = cur.fetchone()
-        episodeDict = dict(episode)
-        cur.close()
-
-        return episodeDict
-
-#    def GETCHANNEL(self,  channel):
-#        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = True)
-#        con.isolation_level = "IMMEDIATE"
-#        cur = con.cursor()
-#        cur.execute('select * from sql_channel where title = ?',(channel,))
-#        cc = cur.fetchone()
-#        cur.close()
-#
-#        return cc
-
-#    def getChannel(self,  channel):
-#        self.cur.execute('select * from sql_channel where title = ?',(channel, ))
-#        ch = self.cur.fetchone()
-#        return ch
+        episode = self.cur.execute('select * from sql_episode where title = ?', (episodeTitle,)).fetchone()
+        return dict(episode)
 
     def getAllChannels(self):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
-        con.isolation_level = None
-        cur = con.cursor()
-        cur.execute('select * from sql_channel')
-        channels = cur.fetchall()
-
+        channels = self.cur.execute('select * from sql_channel').fetchall()
         return channels
 
     def getAllChannelsLinks(self):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
-        con.isolation_level = None
-        cur = con.cursor()
-        cur.execute('select link from sql_channel')
-        channels = cur.fetchall()
-
+        channels = self.cur.execute('select link from sql_channel').fetchall()
         return channels
 
     def getAllChannelsWOFolder(self):
-        self.cur.execute('select * from sql_channel where folder_id IS NULL ORDER BY title')
-        channels = self.cur.fetchall()
-
+        channels = self.cur.execute('select * from sql_channel where folder_id IS NULL ORDER BY title').fetchall()
         return channels
 
     def is_folder(self, title):
@@ -137,51 +69,30 @@ class DBOperation():
         WHERE FLD.title = ('{channel_title}') ORDER BY date DESC LIMIT 150
         """
         episodes = self.cur.execute(query).fetchall()
-        print("getFolderEpisodes", channel_title, episodes)
         return episodes
 
-
     def getAllFolders(self):
-        self.cur.execute('select * from sql_taxonomy ORDER BY title')
-        folders = self.cur.fetchall()
-
+        folders = self.cur.execute('select * from sql_taxonomy ORDER BY title').fetchall()
         return folders
 
-    def getCurrentChannel(self, ch):
-#        cc = self.cur.execute('select id,title,link from sql_channel where title =?', (ch,))
-#        a = cc.fetchone()
-        a = self.getChannelByTitle(ch)
-        tt_1 = self.cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0], ))
-        tt = tt_1.fetchall()
-#        print 'tt'
-#        print tt
-        return a, tt
+    def getCurrentChannel(self, channel_title):
+        channel = self.getChannelByTitle(channel_title)
+        channel_result = self.cur.execute('select id,title,status from sql_episode where channel_id = ?', (channel[0],))
+        result = channel_result.fetchall()
+        return channel, result
 
     def insertFolder(self,  FolderName):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread = False)
-        con.isolation_level = None
-        cur = con.cursor()
-        cur.execute('insert into sql_taxonomy(title) values (?)', (FolderName,))
-        cur.close()
-#        self.cur.execute('insert into sql_taxonomy(title) values (?)', (FolderName,))
-#        self.cur.close()
-
-#    def getChannel(self, ch):
-#        cc = self.cur.execute('select id,title,link from sql_channel where title =?', (ch,))
-#        a = cc.fetchone()
-#        tt = self.cur.execute('select id,title,status from sql_episode where channel_id = ?', (a[0],))
-#        return a, tt
+        self.cur.execute('insert into sql_taxonomy(title) values (?)', (FolderName,))
+        return True
 
     def getLatestDownloads(self):
         self.cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id AND EP.status="downloaded" ORDER BY date DESC LIMIT 50')
         episodes = self.cur.fetchall()
-
         return episodes
 
     def getLatestEpisodes(self):
         self.cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id  ORDER BY date DESC LIMIT 50')
         episodes = self.cur.fetchall()
-
         return episodes
 
     def getChannelEpisodes(self,  channelTitle):
@@ -190,75 +101,45 @@ class DBOperation():
         return episodes
 
     def insertEpisode(self, ep):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False, timeout=20)
-        con.isolation_level = None
-        cur = con.cursor()
-        cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', ep)
-        cur.close()
+        self.cur.execute('insert into sql_episode(title, enclosure, size, date, description, status, channel_id) values (?,?,?,?,?,?,?) ', ep)
 
     def updateEpisode(self,  episode):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
-        con.isolation_level = None
-        cur = con.cursor()
-        cur.execute('update sql_episode set localfile = ?, status = ?  where id = ?', episode)
-        cur.close()
-#        self.cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(epId,) )
+        self.cur.execute('update sql_episode set localfile = ?, status = ?  where id = ?', episode)
 
     def updateEpisodeStatus(self, episodeId):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
-        con.isolation_level = "IMMEDIATE"
-        cur = con.cursor()
-        cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?', (episodeId,))
-        cur.close()
+        self.cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?', (episodeId,))
 
     def deleteAllEpisodes(self, channelTitle):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
-        con.isolation_level = None
-        cur = con.cursor()
         channel_id = self.getChannelByTitle(channelTitle)
         try:
-            cur.execute('delete from  sql_episode where channel_id = ?', (channel_id[0],))
+            self.cur.execute('delete from  sql_episode where channel_id = ?', (channel_id[0],))
         except:
+            e = sys.exc_info()
+            print(e)
             print("exception sql.py 183")
             pass
-        cur.close()
 
     def deleteChannel(self, channelTitle):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
-        con.isolation_level = None
-        cur = con.cursor()
         channel_id = self.getChannelByTitle(channelTitle)
-        cur.execute('delete from  sql_channel where id = ?', (channel_id[0], ))
-        cur.close()
+        self.cur.execute('delete from  sql_channel where id = ?', (channel_id[0], ))
 
     def deleteTaxonomy(self, folderTitle):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
-        con.isolation_level = None
-        cur = con.cursor()
-        cur.execute('delete from  sql_taxonomy where title = ?', (folderTitle,))
-        cur.close()
+        self.cur.execute('delete from  sql_taxonomy where title = ?', (folderTitle,))
 
-    def addChannelToFolder(self, channelTitle, folderTitle):
-        con = sqlite3.connect(os.path.expanduser('~')+"/.brePodder/podcasts.sqlite", check_same_thread=False)
-        con.isolation_level = None
-        cur = con.cursor()
-        cur.execute('select id from sql_channel where title = ?', [channelTitle, ])
-        ch_id = cur.fetchone()[0]
-
-        if not folderTitle:
-            cur.execute('update sql_channel set folder_id = NULL  where id = :ch_id', {"ch_id": ch_id})
+    def addChannelToFolder(self, channel_title, folder_title):
+        self.cur.execute('select id from sql_channel where title = ?', [channel_title, ])
+        channel_id = self.cur.fetchone()[0]
+        if not folder_title:
+            self.cur.execute('update sql_channel set folder_id = NULL  where id = :ch_id', {"ch_id": channel_id})
         else:
-            cur.execute('select * from sql_channel where title = ?', (folderTitle,))
-            cc = cur.fetchone()
+            self.cur.execute('select * from sql_channel where title = ?', (folder_title,))
+            cc = self.cur.fetchone()
             if not cc:
-                cur.execute('select id from sql_taxonomy where title = ?', (folderTitle,))
-                tx_id = cur.fetchone()[0]
+                self.cur.execute('select id from sql_taxonomy where title = ?', (folder_title,))
+                tx_id = self.cur.fetchone()[0]
             else:
                 tx_id = cc[7]
-
-            cur.execute('update sql_channel set folder_id = :tx_id  where id = :ch_id', {"tx_id": tx_id, "ch_id": ch_id})
-        con.commit()
-        cur.close()
+            self.cur.execute('update sql_channel set folder_id = :tx_id  where id = :ch_id', {"tx_id": tx_id, "ch_id": channel_id})
 
     def create_db(self):
         print("create_db")

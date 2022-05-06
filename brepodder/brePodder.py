@@ -7,6 +7,7 @@ from utils.get_favicon import get_icon_url, get_icon, download_image
 import feedparser
 import requests
 import os
+import sys
 import sqlite3
 from ui.Ui_mainwindow import MainUi
 from utils.youtube import is_video_link, is_channel_url, get_youtube_rss, get_channel_url
@@ -474,7 +475,8 @@ class BrePodder(MainUi):
                 # ~ self.AudioPlayer.setUrl(local_file)
                 # ~ else:
                 # ~ self.AudioPlayer.setUrl(enc)
-            except e:
+            except:
+                e = sys.exc_info()
                 print(e)
                 print("EpisodeActivated exception")
 
