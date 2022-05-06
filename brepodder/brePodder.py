@@ -743,6 +743,9 @@ class BrePodder(MainUi):
     def channel_activated(self):
         # selection = self.listWidget.selectedItems()
         selection = self.listWidget.currentItem().text(0)
+        print("channel_activated")
+        print(selection)
+
         if selection:
             self.CurrentChannel = selection
 
@@ -860,14 +863,20 @@ class BrePodder(MainUi):
         return sizeReadable
 
     def update_episode_list(self, channel_Title):
-        cc = self.db.getChannelByTitle(channel_Title)
-        if cc:
-            self.QTextBrowser1.setHtml("<p>" + cc[4] + "</p>     <p> <b>Feed link:</b> <a href=" + cc[2] + ">" + cc[
-                2] + "</a></p> <p><b>Homepage: </b><a href=" + cc[3] + ">" + cc[3] + "</a></p>")
-        else:
-            return
+        print("update_episode_list")
 
-        tt = self.db.getChannelEpisodes(channel_Title)
+        print(self.db.is_folder(channel_Title))
+
+        if self.db.is_folder(channel_Title):
+            tt = self.db.getFolderEpisodes(channel_Title)
+        else:
+            tt = self.db.getChannelEpisodes(channel_Title)
+            cc = self.db.getChannelByTitle(channel_Title)
+            if cc:
+                self.QTextBrowser1.setHtml("<p>" + cc[4] + "</p>     <p> <b>Feed link:</b> <a href=" + cc[2] + ">" + cc[
+                    2] + "</a></p> <p><b>Homepage: </b><a href=" + cc[3] + ">" + cc[3] + "</a></p>")
+            else:
+                return
         self.treeWidget_2.clear()
         for t in tt:
             item2 = QtWidgets.QTreeWidgetItem(self.treeWidget_2)

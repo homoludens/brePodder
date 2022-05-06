@@ -122,6 +122,25 @@ class DBOperation():
 
         return channels
 
+    def is_folder(self, title):
+        test = self.cur.execute(f"select * from sql_taxonomy WHERE title='{title}'").fetchall()
+        if test:
+            return True
+        return False
+
+    def getFolderEpisodes(self, channel_title):
+        query = f"""
+        SELECT EP.id, (CH.title || " - " || EP.title), EP.enclosure, EP.localfile, EP.size, EP.date, EP.description, EP.channel_id 
+        FROM sql_episode EP 
+        JOIN sql_channel CH  ON EP.channel_id = CH.id
+        JOIN sql_taxonomy FLD ON CH.folder_id = FLD.id
+        WHERE FLD.title = ('{channel_title}') ORDER BY date DESC LIMIT 150
+        """
+        episodes = self.cur.execute(query).fetchall()
+        print("getFolderEpisodes", channel_title, episodes)
+        return episodes
+
+
     def getAllFolders(self):
         self.cur.execute('select * from sql_taxonomy ORDER BY title')
         folders = self.cur.fetchall()
@@ -166,7 +185,7 @@ class DBOperation():
         return episodes
 
     def getChannelEpisodes(self,  channelTitle):
-        self.cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id AND CH.title = (?) ORDER BY date DESC LIMIT 50',  (channelTitle,) )
+        self.cur.execute('SELECT * FROM sql_episode EP, sql_channel CH WHERE EP.channel_id = CH.id AND CH.title = (?) ORDER BY date DESC LIMIT 50',  (channelTitle,))
         episodes = self.cur.fetchall()
         return episodes
 

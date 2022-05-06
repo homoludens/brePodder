@@ -17,14 +17,15 @@ class TreeViewWidget(QtWidgets.QTreeWidget):
         self.Parent = parent
 
     def dropEvent(self, event):
-        if (self.itemAt(event.pos()) is not None) and (self.itemAt(event.pos()).flags() & QtCore.Qt.ItemIsDropEnabled):
-            channel_title = self.selectedItems()[0].text(0)
-            folder_title = self.itemAt(event.pos()).text(0)
-        else:
-            channel_title = self.selectedItems()[0].text(0)
-            folder_title = None
+        for selectedItem in self.selectedItems():
+            if (self.itemAt(event.pos()) is not None) and (self.itemAt(event.pos()).flags() & QtCore.Qt.ItemIsDropEnabled):
+                channel_title = selectedItem.text(0)
+                folder_title = self.itemAt(event.pos()).text(0)
+            else:
+                channel_title = selectedItem.text(0)
+                folder_title = None
 
-        self.updateChannelList_db.emit(channel_title,  folder_title)
+            self.updateChannelList_db.emit(channel_title,  folder_title)
         self.updateChannelList.emit()
 
     def dropMimeData(self, parent, row, data, action):
@@ -33,6 +34,6 @@ class TreeViewWidget(QtWidgets.QTreeWidget):
         return False
 
     def dragEnterEvent(self, event):
-            event.accept()
-            print('drag')
+        event.accept()
+        # print('drag')
 
