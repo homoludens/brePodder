@@ -10,7 +10,7 @@ import os
 import sys
 import sqlite3
 from ui.Ui_mainwindow import MainUi
-from utils.youtube import is_video_link, is_channel_url, get_youtube_rss, get_channel_url
+from utils.youtube import is_video_link, is_channel_url, get_youtube_rss, get_channel_url, get_cover
 
 import logging
 
@@ -206,19 +206,11 @@ class AddChannelThread(QtCore.QThread):
 
     def add_channel(self, new_url=None, cursor=None):
         os.chdir(self.main_directory)
-        #
-        # print(new_url)
-        # print(self.QLineEdit1.text())
-        # if not new_url:
-        #     feed_link = self.QLineEdit1.text()
-        # else:
-        #     feed_link = new_url
 
         feed_link = new_url
         if is_video_link(feed_link):
             feed_link = get_youtube_rss(feed_link)
 
-        print(feed_link)
         headers = {
             'User-Agent': 'brePodder/0.02'
         }
@@ -239,7 +231,6 @@ class AddChannelThread(QtCore.QThread):
 
         feed_content = feedparser.parse(content)
 
-        # item = QtWidgets.QTreeWidgetItem(self.treeWidget)
         item = QtWidgets.QTreeWidgetItem(self.ui.treeWidget)
 
         if 'title' in feed_content.feed:
@@ -258,16 +249,9 @@ class AddChannelThread(QtCore.QThread):
             return
 
         ChannelDir = self.ui.regex_white_space.sub("", ChannelTitle)
-        print("ChannelDir: ")
-        print(ChannelDir)
-        print(os.getcwd())
-        print(self.main_directory + ChannelDir)
+
         if not os.path.exists(self.main_directory + ChannelDir):
             os.makedirs(self.main_directory + ChannelDir)
-        # try:
-        #     os.mkdir(ChannelDir)
-        # except:
-        #     print("directory exists")
 
         os.chdir(self.main_directory + ChannelDir)
         item.setText(0, ChannelTitle)
@@ -282,22 +266,16 @@ class AddChannelThread(QtCore.QThread):
                 else:
                     imageURL = feed_content.feed.image.href
 
-                # item.setText(1, imageURL)
-                # item.setText(5, imageURL)
-
-            # if len(self.ui.downloadList) > 0:
-            #     downloadId = self.ui.downloadList[-1][0] + 1
-            # else:
-            #     downloadId = 0
-            #
-            # self.ui.itemsDownloading.append((downloadId, imageURL))
-            # self.ui.downloadList.append((downloadId, Download(imageURL, item, downloadId, self.ui)))
-
             url_done = QtCore.QUrl(imageURL)
             fileInfo = QtCore.QFileInfo(url_done.path())
             fileName = fileInfo.fileName()
             # TODO: should we put original or 128px version of logo
             logo_fileBig = ChannelDir + "/" + fileName
+
+            if is_video_link(new_url):
+                imageURL = get_cover(new_url)
+                print(imageURL)
+                logo_fileBig = ChannelDir + "/" + "logo.jpg"
 
             download_image(imageURL, self.main_directory + logo_fileBig)
             self.ui.resize_image(self.main_directory + logo_fileBig, self.main_directory + logo_fileBig)
@@ -415,11 +393,20 @@ class AddChannelThread(QtCore.QThread):
 
 class BrePodder(MainUi):
 
-    def __init__(self):
-        MainUi.__init__(self)
+    def __init__(self, app):
+        MainUi.__init__(self, app)
         self.headers = {
             'User-Agent': 'brePodder/0.02'
         }
+        self.app = app
+        mainwindow = QtWidgets.QMainWindow()
+        self.setupUi(mainwindow)
+        mainwindow.show()
+        # self.show()
+        self.update_channel_list()
+        self.update_lastest_episodes_list()
+        self.update_newest_episodes_list()
+
 
     def memory_usage(self):
         """Memory usage of the current process in kilobytes."""
