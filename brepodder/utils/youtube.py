@@ -756,9 +756,12 @@ def get_channel_url(url):
 
 if __name__ == "__main__":
     url = "https://www.youtube.com/watch?v=54GCzOq48EE"
+    url = 'https://www.youtube.com/channel/UCFHaLSX-Kqy5pGTszklkE8w'
     # res, duration = get_real_download_url(url, True)
-    print(get_youtube_id(url))
+    a = get_cover(url)
+    print(get_cover(url))
+    # print(get_youtube_id(url))
     # print(get_channel_id_url(get_real_channel_url(url)))
     # print(get_youtube_id(get_channel_id_url(get_real_channel_url(url))))
-    print(get_youtube_rss(url))
+    # print(get_youtube_rss(url))
     # print(res, duration)
