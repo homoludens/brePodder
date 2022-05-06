@@ -6,9 +6,11 @@ from ui.treeviewwidget import TreeViewWidget
 import resources
 from utils.audioplayer import AudioPlayer
 
-class MainUi(object):
+
+class MainUi(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
+        QtWidgets.QWidget.__init__(self)
         self.http = []
         self.httpGetId = []
         self.outFile = []
@@ -27,7 +29,12 @@ class MainUi(object):
 
         self.db = DBOperation()
         self.Sem = QtCore.QSemaphore(3)
+        self.app = parent
 
+    def closeEvent(self, test):
+        print('closeevent', test)
+        print("closing brePodder")
+        self.app.quit()
 
     def setupUi(self, MainWindow):
         self.MW = MainWindow
@@ -259,7 +266,8 @@ class MainUi(object):
         self.trayIcon.activated.connect(self.trayIconActivated)
         self.actionUpdateFeeds.triggered.connect(self.update_channel)
         self.actionNewFolder.triggered.connect(self.create_new_foder)
-        self.actionQuit.triggered.connect(self.app_quit)
+        # self.actionQuit.triggered.connect(self.app_quit)
+        self.actionQuit.triggered.connect(self.close)
         self.actionCancel.triggered.connect(self.delete_channel)
         self.actionUpdateAllChannels.triggered.connect(self.update_all_channels)
         self.actionNew.triggered.connect(self.dialog_add)
@@ -411,6 +419,10 @@ class MainUi(object):
         t = self.treeWidget.indexAt(pos)
         self.menuDownloads.popup(globalPos)
 
-    def app_quit(self):
-        app.exit()
+    # def app_quit(self):
+    #     self.db.db.commit()
+    #     self.close()
+    #     # self.parent.exit()
+    #     # self,c
+    #     # app.exit()
 
