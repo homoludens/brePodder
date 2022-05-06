@@ -131,7 +131,7 @@ class MainUi(QtWidgets.QWidget):
         self.splitter_3.setOrientation(QtCore.Qt.Horizontal)
         self.gridlayout3.addWidget(self.splitter_3)
 
-        self.AudioPlayer_latestDownloads = AudioPlayer("", self.splitter_3)
+        # self.AudioPlayer_latestDownloads = AudioPlayer("", self.splitter_3)
 
         MainWindow.setCentralWidget(self.centralwidget)
 
@@ -151,7 +151,7 @@ class MainUi(QtWidgets.QWidget):
         self.splitter_4.setOrientation(QtCore.Qt.Horizontal)
         self.gridlayout4.addWidget(self.splitter_4)
 
-        self.AudioPlayer_newestEpisodes = AudioPlayer("", self.splitter_4)
+        # self.AudioPlayer_newestEpisodes = AudioPlayer("", self.splitter_4)
 
         MainWindow.setCentralWidget(self.centralwidget)
 
