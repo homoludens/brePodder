@@ -35,6 +35,10 @@ class UpdateChannelThread(QtCore.QThread):
         self.newEpisodeExists = 0
         self.main_directory = os.path.expanduser('~') + '/.brePodder/'
 
+        self.headers = {
+            'User-Agent': 'brePodder/0.02'
+        }
+
     def run(self):
         # ui.Mutex.lock()
         self.ui.Sem.acquire(1)
@@ -470,19 +474,19 @@ class BrePodder(MainUi):
         e = self.db.getEpisodeByTitle(episodeTitle)
         self.playlist.append(e)
 
-        channel = self.db.getChannelById(e.get("channel_id"))
-        ChannelDir = self.regex_white_space.sub("", channel.get("title"))
+        channel = self.db.getChannelById(e["channel_id"])
+        ChannelDir = self.regex_white_space.sub("", channel["title"])
 
         os.chdir(os.path.expanduser('~') + '/.brePodder/' + ChannelDir)
         item = QtWidgets.QTreeWidgetItem(self.treeWidget)
         item.setText(0, channel.get("title"))
-        item.setText(1, e.get("title"))
-        item.setText(2, self.getReadableSize(e.get("size")))
+        item.setText(1, e["title"])
+        item.setText(2, self.getReadableSize(e["size"]))
         item.setText(3, '0')
         item.setText(4, '0')
 
         try:
-            item.setText(5, e.get("enclosure"))
+            item.setText(5, e["enclosure"])
         except TypeError:
             print(TypeError)
             item.setText(5, "No link")
@@ -492,8 +496,8 @@ class BrePodder(MainUi):
         else:
             downloadId = 0
 
-        self.itemsDownloading.append((downloadId, e.get("enclosure").replace(" ", "%20")))
-        self.downloadList.append((downloadId, Download(e.get("enclosure").replace(" ", "%20"), item, downloadId, self)))
+        self.itemsDownloading.append((downloadId, e["enclosure"].replace(" ", "%20")))
+        self.downloadList.append((downloadId, Download(e["enclosure"].replace(" ", "%20"), item, downloadId, self)))
 
         os.chdir(os.path.expanduser('~') + '/.brePodder')
 
@@ -782,7 +786,7 @@ class BrePodder(MainUi):
         updtChTr.updatesignal.connect(self.update_channel_list, QtCore.Qt.QueuedConnection)
         updtChTr.updatesignal_episodelist.connect(self.update_episode_list, QtCore.Qt.QueuedConnection)
         updtChTr.updateDoneSignal.connect(self.update_done, QtCore.Qt.BlockingQueuedConnection)
-        self.update_channel_threads = updtChTr
+        self.update_channel_threads.append(updtChTr)
         updtChTr.start()
 
     def update_all_channels(self):

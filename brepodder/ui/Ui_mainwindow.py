@@ -28,7 +28,7 @@ class MainUi(QtWidgets.QWidget):
         self.regex_white_space = re.compile("\\W")
 
         self.db = DBOperation()
-        self.Sem = QtCore.QSemaphore(3)
+        self.Sem = QtCore.QSemaphore(1)
         self.app = parent
 
     def closeEvent(self, test):
@@ -109,7 +109,7 @@ class MainUi(QtWidgets.QWidget):
 
         self.treeWidget = QtWidgets.QTreeWidget(self.tab_2)
         self.treeWidget.setAlternatingRowColors(True)
-        #self.treeWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.treeWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.treeWidget.setObjectName("treeWidget")
         self.gridlayout2.addWidget(self.treeWidget, 0, 0, 1, 1)
         self.tabWidget.addTab(self.tab_2, "")
@@ -287,18 +287,14 @@ class MainUi(QtWidgets.QWidget):
         self.actionExport.triggered.connect(self.export_opml)
         self.actionImport.triggered.connect(self.import_opml)
 
-#        QtCore.QObject.connect(self.actionImport,QtCore.SIGNAL("activated()"),self.update_channel_list)
-
-        #QtCore.QObject.connect(self.listWidget,QtCore.SIGNAL("customContextMenuRequested (QPoint)"),self.activeMenuChannels)
         self.listWidget.customContextMenuRequested.connect(self.activeMenuChannels)
-        #QtCore.QObject.connect(self.treeWidget,QtCore.SIGNAL("customContextMenuRequested (QPoint)"),self.activeMenuDownloads)
         self.treeWidget.customContextMenuRequested.connect(self.activeMenuDownloads)
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-        MainWindow.setTabOrder(self.QLineEdit1,self.QPushButton1)
-        MainWindow.setTabOrder(self.QPushButton1,self.QTextBrowser1)
-        MainWindow.setTabOrder(self.QTextBrowser1,self.tabWidget)
+        MainWindow.setTabOrder(self.QLineEdit1, self.QPushButton1)
+        MainWindow.setTabOrder(self.QPushButton1, self.QTextBrowser1)
+        MainWindow.setTabOrder(self.QTextBrowser1, self.tabWidget)
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "brePodder", None))
@@ -364,12 +360,11 @@ class MainUi(QtWidgets.QWidget):
         self.treeWidget_5.header().resizeSection(1, 200)
         self.treeWidget_5.clear()
 
-
-        self.treewidget_playlist.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channel", None))
-        self.treewidget_playlist.headerItem().setText(1,QtWidgets.QApplication.translate("MainWindow", "Episode", None))
-        self.treewidget_playlist.headerItem().setText(2,QtWidgets.QApplication.translate("MainWindow", "Size", None))
-        self.treewidget_playlist.headerItem().setText(3,QtWidgets.QApplication.translate("MainWindow", "Date", None))
-        self.treewidget_playlist.headerItem().setText(4,QtWidgets.QApplication.translate("MainWindow", "Enclosure", None))
+        self.treewidget_playlist.headerItem().setText(0, QtWidgets.QApplication.translate("MainWindow", "Channel", None))
+        self.treewidget_playlist.headerItem().setText(1, QtWidgets.QApplication.translate("MainWindow", "Episode", None))
+        self.treewidget_playlist.headerItem().setText(2, QtWidgets.QApplication.translate("MainWindow", "Size", None))
+        self.treewidget_playlist.headerItem().setText(3, QtWidgets.QApplication.translate("MainWindow", "Date", None))
+        self.treewidget_playlist.headerItem().setText(4, QtWidgets.QApplication.translate("MainWindow", "Enclosure", None))
         self.treewidget_playlist.header().resizeSection(0, 200)
         self.treewidget_playlist.header().resizeSection(1, 200)
         self.treewidget_playlist.clear()
@@ -409,7 +404,7 @@ class MainUi(QtWidgets.QWidget):
 #        file=open(filename)
 #        cd = OpenFile()
 #        cd.showDialog()
-        print("dialog_add")
+#         print("dialog_add")
         print(filename)
 
     def export_opml(self):
