@@ -3,15 +3,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 class MyLineEdit(QtWidgets.QLineEdit):
 
-    searchChannelList = QtCore.pyqtSignal(str)
-
     def __init__(self, parent=None):
         self.Parent = parent
         super(MyLineEdit, self).__init__(parent)
 
     def focusInEvent(self, event):
-        print('focus in event')
-        # do custom stuff
         super(MyLineEdit, self).clear()
         super(MyLineEdit, self).focusInEvent(event)
 

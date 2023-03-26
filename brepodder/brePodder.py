@@ -454,7 +454,7 @@ class BrePodder(MainUi):
                                             <p><b>LOCALFILE: </b><a href=" + local_file + ">" + local_file + "</a></p>\
                                             <p>PLAY:<audio  controls='controls' src='" + enc + "'/></p>")
 
-                self.AudioPlayer.setUrl(enc)
+                # self.AudioPlayer.setUrl(enc)
 
             except:
                 e = sys.exc_info()
@@ -469,9 +469,13 @@ class BrePodder(MainUi):
 
     def EpisodeDoubleClicked(self, episode_row):
         # TODO: change backgroundColor or something else with QBrush
-        episode_row.setFont(0, self.fontBold)
-        episodeTitle = episode_row.text(0)
-        e = self.db.getEpisodeByTitle(episodeTitle)
+        if episode_row:
+            episode_row.setFont(0, self.fontBold)
+            episodeTitle = episode_row.text(0)
+            e = self.db.getEpisodeByTitle(episodeTitle)
+        else:
+            e = self.episode_row
+
         self.playlist.append(e)
 
         channel = self.db.getChannelById(e["channel_id"])

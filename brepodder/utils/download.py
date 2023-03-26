@@ -106,6 +106,7 @@ class Download(QtCore.QObject):
             self.downloadFile()
 
         else:
+
             print("Network Error")
             print(status)
 

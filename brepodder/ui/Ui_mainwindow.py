@@ -65,14 +65,11 @@ class MainUi(QtWidgets.QWidget):
         self.QLineEdit_search_podcasts.setText("Search")
         self.QLineEdit_search_podcasts.setMinimumSize(QtCore.QSize(200, 20))
         self.QLineEdit_search_podcasts.setMaximumSize(QtCore.QSize(500, 25))
-        # self.QLineEdit_search_podcasts.connect(self.update_channel_list)
-        # self.QLineEdit_search_podcasts.keyPressEvent(self.update_channel_list('F1'))
         self.QLineEdit_search_podcasts.textChanged.connect(lambda x: self.update_channel_list(x))
 
         self.listWidget = TreeViewWidget(self.splitter_22)
         self.listWidget.updateChannelList.connect(self.update_channel_list)
         self.listWidget.updateChannelList_db.connect(self.db.addChannelToFolder)
-        # self.listWidget.searchChannelList.connect(self.searchChannelList)
 
         self.listWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.listWidget.setAlternatingRowColors(True)
@@ -196,6 +193,10 @@ class MainUi(QtWidgets.QWidget):
         self.menuDownloads = QtWidgets.QMenu(self.menubar)
         self.menuDownloads.setObjectName("menuDownloads")
 
+        self.menuEpisodeList = QtWidgets.QMenu(self.menubar)
+        self.menuEpisodeList.setObjectName("menuEpisodeList")
+        self.menuEpisodeList.addSeparator()
+
         self.actionNew = QtWidgets.QAction(MainWindow)
         self.actionNew.setIcon(QtGui.QIcon(":/icons/edit_add.png"))
         self.actionNew.setObjectName("actionNew")
@@ -259,6 +260,14 @@ class MainUi(QtWidgets.QWidget):
         self.actionResume.setIcon(QtGui.QIcon(":/icons/resume.png"))
         self.actionResume.setObjectName("actionResume")
 
+
+        self.actionAddToPlaylist = QtWidgets.QAction(MainWindow)
+        self.actionAddToPlaylist.setIcon(QtGui.QIcon(":/icons/play.png"))
+        self.actionAddToPlaylist.setObjectName("actionAddToPlaylist")
+
+        self.actionDownloadEpisode = QtWidgets.QAction(MainWindow)
+        self.actionDownloadEpisode.setObjectName("actionDownloadEpisode")
+
         self.menubar.addAction(self.menuPodcasts.menuAction())
         self.toolBar.addAction(self.actionUpdateFeeds)
         self.toolBar.addAction(self.actionCancel)
@@ -275,6 +284,9 @@ class MainUi(QtWidgets.QWidget):
         self.menuDownloads.addAction(self.actionUpdateFeeds)
         self.menuDownloads.addAction(self.actionCancel)
 
+        self.menuEpisodeList.addAction(self.actionAddToPlaylist)
+        self.menuEpisodeList.addAction(self.actionDownloadEpisode)
+
         self.trayIcon = QtWidgets.QSystemTrayIcon(QtGui.QIcon(":/icons/musicstore.png"), MainWindow)
         self.trayIcon.setContextMenu(self.menuPodcasts)
         self.trayIcon.show()
@@ -285,8 +297,11 @@ class MainUi(QtWidgets.QWidget):
         # self.QPushButton1.clicked.connect(self.AddChannel)
         self.QPushButton1.clicked.connect(self.add_channel)
         self.QPushButton1.clicked.connect(self.QLineEdit1.clear)
+
         self.treeWidget_2.itemSelectionChanged.connect(self.episode_activated)
         self.treeWidget_2.itemDoubleClicked.connect(self.EpisodeDoubleClicked)
+        self.treeWidget_2.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+
         self.treeWidget_4.itemDoubleClicked.connect(self.LastestEpisodeDoubleClicked)
         self.treeWidget_5.itemDoubleClicked.connect(self.NewestEpisodeDoubleClicked)
         self.treewidget_playlist.itemDoubleClicked.connect(self.PlaylistEpisodeDoubleClicked)
@@ -305,6 +320,10 @@ class MainUi(QtWidgets.QWidget):
 
         self.listWidget.customContextMenuRequested.connect(self.activeMenuChannels)
         self.treeWidget.customContextMenuRequested.connect(self.activeMenuDownloads)
+
+        self.actionAddToPlaylist.triggered.connect(self.addItemToPlaylist)
+        self.actionDownloadEpisode.triggered.connect(self.EpisodeDoubleClicked)
+        self.treeWidget_2.customContextMenuRequested.connect(self.addToPlaylist)
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -328,11 +347,13 @@ class MainUi(QtWidgets.QWidget):
         self.QLineEdit1.selectAll()
         self.QLineEdit1.hasFocus()
         self.QPushButton1.setText(QtWidgets.QApplication.translate("MainWindow", "Add", None))
+
         self.treeWidget_2.setStatusTip(QtWidgets.QApplication.translate("MainWindow", "epizode", None))
-        self.treeWidget_2.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "episode", None))
-        self.treeWidget_2.headerItem().setText(1,QtWidgets.QApplication.translate("MainWindow", "size", None))
-        self.treeWidget_2.headerItem().setText(2,QtWidgets.QApplication.translate("MainWindow", "date", None))
+        self.treeWidget_2.headerItem().setText(0, QtWidgets.QApplication.translate("MainWindow", "episode", None))
+        self.treeWidget_2.headerItem().setText(1, QtWidgets.QApplication.translate("MainWindow", "size", None))
+        self.treeWidget_2.headerItem().setText(2, QtWidgets.QApplication.translate("MainWindow", "date", None))
         self.treeWidget_2.header().resizeSection(0, 300)
+
         self.treeWidget_2.clear()
 
         self.QTextBrowser1.setHtml(QtWidgets.QApplication.translate("MainWindow", " ", None))
@@ -405,6 +426,8 @@ class MainUi(QtWidgets.QWidget):
         self.actionQuit.setText(QtWidgets.QApplication.translate("MainWindow", "Quit", None))
         self.actionUpdateFeeds.setText(QtWidgets.QApplication.translate("MainWindow", "Fetch Feed", None))
         self.actionNewFolder.setText(QtWidgets.QApplication.translate("MainWindow", "New Folder", None))
+        self.actionAddToPlaylist.setText(QtWidgets.QApplication.translate("MainWindow", "Add to playlist", None))
+        self.actionDownloadEpisode.setText(QtWidgets.QApplication.translate("MainWindow", "Download episode", None))
 
     def trayIconActivated(self, reason):
         if reason == 3 or reason == 2:
@@ -441,7 +464,8 @@ class MainUi(QtWidgets.QWidget):
                 self.add_channel(channel['url'])
 
     def activeMenuChannels(self, pos):
-        self.actionCancel.setText(QtWidgets.QApplication.translate("MainWindow", "Delete feed", None))
+        print("activeMenuChannels")
+        # self.actionCancel.setText(QtWidgets.QApplication.translate("MainWindow", "Delete feed", None))
         globalPos = self.listWidget.mapToGlobal(pos)
         globalPos.setY(globalPos.y() + 25)
         t = self.listWidget.indexAt(pos)
@@ -453,6 +477,37 @@ class MainUi(QtWidgets.QWidget):
         globalPos.setY(globalPos.y() + 25)
         t = self.treeWidget.indexAt(pos)
         self.menuDownloads.popup(globalPos)
+
+    def downloadEpisode(self, pos):
+        self.actionCancel.setText(QtWidgets.QApplication.translate("MainWindow", "Download", None))
+        globalPos = self.treeWidget_2.mapToGlobal(pos)
+        globalPos.setY(globalPos.y() + 25)
+        t = self.treeWidget_2.indexAt(pos)
+        self.menuDownloads.popup(globalPos)
+
+    def addToPlaylist(self, pos):
+        # self.actionAddToPlaylist.setText(QtWidgets.QApplication.translate("MainWindow", "Add to playlist", None))
+        if pos:
+            globalPos = self.treeWidget_2.mapToGlobal(pos)
+            globalPos.setY(globalPos.y() + 25)
+            t = self.treeWidget_2.indexAt(pos)
+            self.menuEpisodeList.popup(globalPos)
+            self.episodeTitle = t.siblingAtColumn(0).data()
+            self.episode_row = self.db.getEpisodeByTitle(self.episodeTitle)
+
+
+    def addItemToPlaylist(self, episode_row):
+        print(f"addItemToPlaylist {episode_row}")
+        self.playlist.append(self.episode_row)
+        self.update_play_list(self.playlist)
+
+
+    # def activeListEpisode(self, pos):
+    #     self.actionCancel.setText(QtWidgets.QApplication.translate("MainWindow", "Cancel downlaod", None))
+    #     globalPos = self.treeWidget.mapToGlobal(pos)
+    #     globalPos.setY(globalPos.y() + 25)
+    #     t = self.treeWidget.indexAt(pos)
+    #     self.menuDownloads.popup(globalPos)
 
     # def app_quit(self):
     #     self.db.db.commit()
