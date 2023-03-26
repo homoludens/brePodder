@@ -29,7 +29,7 @@ class MainUi(QtWidgets.QWidget):
         self.regex_white_space = re.compile("\\W")
 
         self.db = DBOperation()
-        self.Sem = QtCore.QSemaphore(1)
+        self.Sem = QtCore.QSemaphore(20)
         self.app = parent
 
     def closeEvent(self, test):
@@ -195,7 +195,7 @@ class MainUi(QtWidgets.QWidget):
 
         self.menuEpisodeList = QtWidgets.QMenu(self.menubar)
         self.menuEpisodeList.setObjectName("menuEpisodeList")
-        self.menuEpisodeList.addSeparator()
+
 
         self.actionNew = QtWidgets.QAction(MainWindow)
         self.actionNew.setIcon(QtGui.QIcon(":/icons/edit_add.png"))
@@ -285,6 +285,7 @@ class MainUi(QtWidgets.QWidget):
         self.menuDownloads.addAction(self.actionCancel)
 
         self.menuEpisodeList.addAction(self.actionAddToPlaylist)
+        self.menuEpisodeList.addSeparator()
         self.menuEpisodeList.addAction(self.actionDownloadEpisode)
 
         self.trayIcon = QtWidgets.QSystemTrayIcon(QtGui.QIcon(":/icons/musicstore.png"), MainWindow)
@@ -323,7 +324,7 @@ class MainUi(QtWidgets.QWidget):
 
         self.actionAddToPlaylist.triggered.connect(self.addItemToPlaylist)
         self.actionDownloadEpisode.triggered.connect(self.EpisodeDoubleClicked)
-        self.treeWidget_2.customContextMenuRequested.connect(self.addToPlaylist)
+        self.treeWidget_2.customContextMenuRequested.connect(self.activeMenuEpisode)
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -485,7 +486,8 @@ class MainUi(QtWidgets.QWidget):
         t = self.treeWidget_2.indexAt(pos)
         self.menuDownloads.popup(globalPos)
 
-    def addToPlaylist(self, pos):
+    def activeMenuEpisode(self, pos):
+        # addToPlaylist
         # self.actionAddToPlaylist.setText(QtWidgets.QApplication.translate("MainWindow", "Add to playlist", None))
         if pos:
             globalPos = self.treeWidget_2.mapToGlobal(pos)

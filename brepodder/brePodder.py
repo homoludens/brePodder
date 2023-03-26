@@ -21,7 +21,84 @@ selectable = QtCore.Qt.ItemIsSelectable
 noflags = QtCore.Qt.NoItemFlags
 
 
-class UpdateChannelThread(QtCore.QThread):
+class UpdateChannelThread_network(QtCore.QThread):
+    updatesignal = QtCore.pyqtSignal()
+    updateProgressSignal = QtCore.pyqtSignal()
+    updateDoneSignal = QtCore.pyqtSignal()
+    updatesignal_episodelist = QtCore.pyqtSignal()
+    updateAllChannelsDoneSignal = QtCore.pyqtSignal()
+
+    def __init__(self, channel, ui, update_progress=0):
+        QtCore.QThread.__init__(self)
+        self.channel = channel
+        self.ui = ui
+        self.updateProgress = update_progress
+        self.newEpisodeExists = 0
+        self.main_directory = os.path.expanduser('~') + '/.brePodder/'
+        # self.updated_channes_list = []
+
+        self.headers = {
+            'User-Agent': 'brePodder/0.02'
+        }
+
+    def run(self):
+        # ui.Mutex.lock()
+        self.ui.Sem.acquire(1)
+
+        self.ui.updated_channes_list.append(self.update_channel(self.channel))
+
+        if len(self.ui.updated_channes_list) == self.ui.numberOfChannels:
+            self.updateAllChannelsDoneSignal.emit()
+
+        self.updateProgressSignal.emit()
+
+        if self.updateProgress == 0:
+            self.updateDoneSignal.emit()
+        # ui.Mutex.unlock()
+        self.ui.Sem.release(1)
+
+    def update_channel(self, channel_row=None):
+        """
+        ['id', 'title', 'link', 'homepage', 'description', 'logo', 'logobig', 'folder_id', 'folder']
+
+        :param channel_row:
+        :return:
+        """
+        feed_link = channel_row['link']
+
+        # Do request using requests library and timeout
+        content = ''
+        try:
+            resp = requests.get(feed_link, timeout=10.0, headers=self.headers)
+        except requests.ReadTimeout as e:
+            # logger.warn("Timeout when reading RSS %s", rss_feed)
+            print('timeout', e)
+            return
+        except requests.exceptions.ConnectionError as e:
+            print('404', e)
+            return ''
+        except requests.exceptions.HTTPError as e:
+            print('404', e)
+            return ''
+        except requests.exceptions.MissingSchema as e:
+            print('MissingSchema', e)
+        else:
+            content = BytesIO(resp.content)
+
+        feed = feedparser.parse(content)
+
+        updated_channel_dict = {'channel_row': channel_row, 'channel_feedlink': feed_link, 'feed': feed}
+        # self.updated_channes_list.append(updated_channel_dict)
+        # print(channel_row['title'])
+
+        return updated_channel_dict
+
+
+class UpdateChannelThread_OLD(QtCore.QThread):
+    """
+    Replaced with UpdateChannelThread_network.
+    Should be removed after testing.
+    """
     updatesignal = QtCore.pyqtSignal()
     updateProgressSignal = QtCore.pyqtSignal()
     updateDoneSignal = QtCore.pyqtSignal()
@@ -404,6 +481,8 @@ class BrePodder(MainUi):
         self.update_lastest_episodes_list()
         self.update_newest_episodes_list()
         self.playlist = []
+        self.updated_channes_list = []
+        self.main_directory = os.path.expanduser('~') + '/.brePodder/'
 
     def memory_usage(self):
         """Memory usage of the current process in kilobytes."""
@@ -815,12 +894,111 @@ class BrePodder(MainUi):
         self.updateProgressBar.setFormat("%v" + " of " + "%m")
         j = 0
         for i in allChannels:
-            updtChTr.append(UpdateChannelThread(i, self, j))
+            # updtChTr.append(UpdateChannelThread(i, self, j))
+            updtChTr.append(UpdateChannelThread_network(i, self, j))
             self.update_channel_threads.append(updtChTr[j])
             updtChTr[j].updateProgressSignal.connect(self.updateProgressBarFromThread,
                                                      QtCore.Qt.BlockingQueuedConnection)
+            updtChTr[j].updateAllChannelsDoneSignal.connect(self.update_db_with_all_channels,
+                                                            QtCore.Qt.QueuedConnection)
             updtChTr[j].start()
             j = j + 1
+
+    def update_db_with_all_channels(self):
+        """
+        updated_channel_dict = {'channel_row': channel_row, 'channel_feedlink': feed_link, 'feed': feed}
+
+        :return:
+        """
+        con = sqlite3.connect(self.main_directory + "podcasts.sqlite", check_same_thread=False)
+        con.isolation_level = None
+        cur = con.cursor()
+
+        for channel in self.updated_channes_list:
+            try:
+                print(channel['channel_feedlink'])
+            except TypeError:
+                print("ERROR")
+                continue
+
+            ch = channel['channel_row']
+            feed = channel['feed']
+
+            new_episode = {}
+            cur = cur
+            old_episodes = []
+
+            cc = cur.execute('select id, title, link from sql_channel where title =?', (ch[1],))
+            a = cc.fetchone()
+            tt = cur.execute('select id, title, status from sql_episode where channel_id = ?', (a[0],))
+
+            new_episode['channel_id'] = a[0]
+            epcount = 0
+            for j in tt:
+                old_episodes.append(j[1])
+                epcount = epcount + 1
+
+            for i in feed.entries:
+                try:
+                    aa = old_episodes.index(i.title)
+                except ValueError:
+                    aa = None
+
+                if 'title' in i and aa is None:
+                    # print 'epizoda NE postoji'
+                    self.newEpisodeExists = 1
+                    if i.title:
+                        new_episode['title'] = i.title
+                    else:
+                        new_episode['title'] = u'No Title'
+                    if 'enclosures' in i:
+                        try:
+                            new_episode['enclosure'] = i.enclosures[0].href
+                        except:
+                            print("catch all excetions brePodder.py 125")
+                            new_episode['enclosure'] = "None"
+
+                        try:
+                            new_episode['size'] = int(i.enclosures[0].length)
+                        except:
+                            print("catch all excetions brePodder.py 131")
+                            new_episode['size'] = '1'
+                        new_episode['status'] = u"new"
+                    else:
+                        new_episode['enclosure'] = u'no file'
+                        new_episode['size'] = '0'
+                        new_episode['status'] = u"none"
+                    if 'summary_detail' in i:
+                        new_episode['description'] = i.summary_detail.value
+                    else:
+                        new_episode['description'] = u'No description'
+
+                    episode_date = mktime(gmtime())
+                    if 'updated' in i:
+                        if i.updated_parsed:
+                            episode_date = mktime(i.updated_parsed)
+                    elif 'published' in i:
+                        episode_date = mktime(i.published_parsed)
+
+                    new_episode['date'] = episode_date
+                    new_episode_tupple = (new_episode['title'], new_episode['enclosure'], new_episode['size'],
+                                          new_episode['date'], new_episode['description'], new_episode['status'],
+                                          new_episode['channel_id'])
+                    self.db.insertEpisode(new_episode_tupple)
+
+                elif 'title' not in i:
+                    print("No title")
+                else:
+                    if j[2] != u"old":
+                        try:
+                            # print "old"
+                            self.db.updateEpisodeStatus(j[0])
+
+                        except Exception as ex:
+                            print(ex)
+                            print(j)
+                    # cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(j[0],) )
+        print("update_db_with_all_channels DONE.")
 
     def sendMessage(self, message):
         try:
