@@ -3,6 +3,7 @@ import re
 from utils import opml
 from utils.sql import *
 from ui.treeviewwidget import TreeViewWidget
+from ui.mylineeditwidget import MyLineEdit
 import resources
 from utils.audioplayer import AudioPlayer
 
@@ -58,9 +59,20 @@ class MainUi(QtWidgets.QWidget):
         self.splitter_22 = QtWidgets.QSplitter(self.splitter_2)
         self.splitter_22.setOrientation(QtCore.Qt.Vertical)
 
+        self.splitter_223 = QtWidgets.QSplitter(self.splitter_22)
+        self.splitter_223.setOrientation(QtCore.Qt.Horizontal)
+        self.QLineEdit_search_podcasts = MyLineEdit(self.splitter_223)
+        self.QLineEdit_search_podcasts.setText("Search")
+        self.QLineEdit_search_podcasts.setMinimumSize(QtCore.QSize(200, 20))
+        self.QLineEdit_search_podcasts.setMaximumSize(QtCore.QSize(500, 25))
+        # self.QLineEdit_search_podcasts.connect(self.update_channel_list)
+        # self.QLineEdit_search_podcasts.keyPressEvent(self.update_channel_list('F1'))
+        self.QLineEdit_search_podcasts.textChanged.connect(lambda x: self.update_channel_list(x))
+
         self.listWidget = TreeViewWidget(self.splitter_22)
         self.listWidget.updateChannelList.connect(self.update_channel_list)
         self.listWidget.updateChannelList_db.connect(self.db.addChannelToFolder)
+        # self.listWidget.searchChannelList.connect(self.searchChannelList)
 
         self.listWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.listWidget.setAlternatingRowColors(True)
@@ -71,7 +83,9 @@ class MainUi(QtWidgets.QWidget):
         self.splitter_222 = QtWidgets.QSplitter(self.splitter_22)
         self.splitter_222.setOrientation(QtCore.Qt.Horizontal)
 
-        self.QLineEdit1 = QtWidgets.QLineEdit(self.splitter_222)
+        # self.QLineEdit1 = QtWidgets.QLineEdit(self.splitter_222)
+        self.QLineEdit1 = MyLineEdit(self.splitter_222)
+
 
         self.updateProgressBar = QtWidgets.QProgressBar(self.splitter_222)
         self.updateProgressBar.setMaximumHeight(25)
@@ -82,6 +96,8 @@ class MainUi(QtWidgets.QWidget):
 
         self.QPushButton1.setMinimumSize(QtCore.QSize(20, 20))
         self.QPushButton1.setMaximumSize(QtCore.QSize(50, 25))
+
+
 
         self.splitter_2.setSizes((100, 50))
 
@@ -304,12 +320,13 @@ class MainUi(QtWidgets.QWidget):
         item = QtWidgets.QTreeWidgetItem(self.listWidget)
         item.setText(0, QtWidgets.QApplication.translate("MainWindow", "naziv podkasta", None))
         item.setIcon(0, QtGui.QIcon(":/icons/musicstore.png"))
-        self.listWidget.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channels", None))
+        self.listWidget.headerItem().setText(0, QtWidgets.QApplication.translate("MainWindow", "Channels", None))
         item1 = QtWidgets.QTreeWidgetItem(self.listWidget)
         item1.setText(0, QtWidgets.QApplication.translate("MainWindow", "New Item", None))
 
         self.QLineEdit1.setText(QtWidgets.QApplication.translate("MainWindow", "Copy RSS or Youtube link", None))
         self.QLineEdit1.selectAll()
+        self.QLineEdit1.hasFocus()
         self.QPushButton1.setText(QtWidgets.QApplication.translate("MainWindow", "Add", None))
         self.treeWidget_2.setStatusTip(QtWidgets.QApplication.translate("MainWindow", "epizode", None))
         self.treeWidget_2.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "episode", None))
@@ -318,10 +335,7 @@ class MainUi(QtWidgets.QWidget):
         self.treeWidget_2.header().resizeSection(0, 300)
         self.treeWidget_2.clear()
 
-        self.QTextBrowser1.setHtml(QtWidgets.QApplication.translate("MainWindow", "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-        "p, li { white-space: pre-wrap; }\n"
-        "</style></head><body style=\" font-family:\'Sans Serif\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
-        "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">tekst u tekst browseru</p></body></html>", None))
+        self.QTextBrowser1.setHtml(QtWidgets.QApplication.translate("MainWindow", " ", None))
 
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QtWidgets.QApplication.translate("MainWindow", "Channels", None))
         self.treeWidget.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channel", None))

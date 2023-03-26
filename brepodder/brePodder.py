@@ -437,16 +437,16 @@ class BrePodder(MainUi):
             try:
                 e = self.db.getEpisodeByTitle(selection.text(0))
 
-                if e.get("enclosure"):
-                    enc = e.get("enclosure")
+                if e["enclosure"]:
+                    enc = e["enclosure"]
                 else:
                     enc = 'None'
-                if e.get("description"):
-                    desc = e.get("description")
+                if e["description"]:
+                    desc = e["description"]
                 else:
                     desc = 'None'
-                if e.get("localfile"):
-                    local_file = e.get("localfile")
+                if e["localfile"]:
+                    local_file = e["localfile"]
                 else:
                     local_file = 'None'
 
@@ -725,11 +725,12 @@ class BrePodder(MainUi):
             if t[7] == 'new':
                 item2.setFont(0, self.fontBold)
 
-    def update_channel_list(self):
+    def update_channel_list(self, search_term: str = ''):
+        print(search_term)
         channels = self.db.getAllChannelsWOFolder()
         folders = self.db.getAllFolders()
-
         self.listWidget.clear()
+        search_term = search_term.lower()
 
         for folder in folders:
             itemF = QtWidgets.QTreeWidgetItem(self.listWidget)
@@ -742,23 +743,28 @@ class BrePodder(MainUi):
             childChannels = self.db.getFolderChannels(folder[0])
 
             for childChannel in childChannels:
-                itemChildChannel = QtWidgets.QTreeWidgetItem(itemF)
-                itemChildChannel.setText(0, childChannel[1])
-                # print "Ch. icon: "
-                # print os.path.expanduser('~') + '/.brePodder/' + childChannel[5]
-                itemChildChannel.setIcon(0, QtGui.QIcon(
-                    QtGui.QPixmap(os.path.expanduser('~') + '/.brePodder/' + childChannel[6])))
-                itemF.addChild(itemChildChannel)
+                title_description = childChannel['title'] + childChannel['description']
+                if (search_term != '' and search_term in title_description.lower()) or (search_term == ''):
+                    itemChildChannel = QtWidgets.QTreeWidgetItem(itemF)
+                    itemChildChannel.setText(0, childChannel[1])
+                    # print "Ch. icon: "
+                    # print os.path.expanduser('~') + '/.brePodder/' + childChannel[5]
+                    itemChildChannel.setIcon(0, QtGui.QIcon(
+                        QtGui.QPixmap(os.path.expanduser('~') + '/.brePodder/' + childChannel[6])))
+                    itemF.addChild(itemChildChannel)
 
         for channel in channels:
-            item = QtWidgets.QTreeWidgetItem(self.listWidget)
-            #            if channel.episode[-1].status == u'new':
-            #                item.setFont(0, self.fontBold)
-            item.setText(0, channel[1])
-            # ~ print(channel[6])
-            item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~') + '/.brePodder/' + channel[6])))
-            #            item.setToolTip(0,"<p><img src="+"'"+channel.logobig+"'"+"></p><p style='font-size:20pt'><b>"+channel.title+"</b></p><a href="+channel.link+">"+channel.link+"</a>")
-            item.setFlags(enabled | draggable | selectable)
+            title_description = channel['title'] + channel['description']
+            if (search_term != '' and search_term in title_description.lower()) or (search_term == ''):
+                item = QtWidgets.QTreeWidgetItem(self.listWidget)
+                #            if channel.episode[-1].status == u'new':
+                #                item.setFont(0, self.fontBold)
+                item.setText(0, channel[1])
+                # ~ print(channel[6])
+                item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~') + '/.brePodder/' + channel[6])))
+                #            item.setToolTip(0,"<p><img src="+"'"+channel.logobig+"'"+"></p><p style='font-size:20pt'><b>"+channel.title+"</b></p><a href="+channel.link+">"+channel.link+"</a>")
+                item.setFlags(enabled | draggable | selectable)
+
 
     def updateProgressBarFromThread(self):
         self.updateProgressBar.setValue(self.updateProgressBar.value() + 1)
