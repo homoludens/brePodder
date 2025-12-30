@@ -25,6 +25,7 @@ DATABASE_TIMEOUT: int = 20
 # UI settings
 EPISODES_PER_PAGE: int = 50
 FOLDER_EPISODES_LIMIT: int = 150
+DEFAULT_FONT_SIZE: int = 10  # Default application font size in points
 
 # Image settings
 THUMBNAIL_MAX_SIZE: int = 300  # pixels (width and height)

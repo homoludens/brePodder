@@ -73,7 +73,7 @@ class MainUi(QtWidgets.QWidget):
 
         self.splitter_223 = QtWidgets.QSplitter(self.splitter_22)
         self.splitter_223.setOrientation(QtCore.Qt.Horizontal)
-        self.QLineEdit_search_podcasts = MyLineEdit(self.splitter_223)
+        self.QLineEdit_search_podcasts = ClearOnFocusLineEdit(self.splitter_223)
         self.QLineEdit_search_podcasts.setText("Search")
         self.QLineEdit_search_podcasts.setMinimumSize(QtCore.QSize(200, 20))
         self.QLineEdit_search_podcasts.setMaximumSize(QtCore.QSize(500, 25))
@@ -304,7 +304,7 @@ class MainUi(QtWidgets.QWidget):
 
         self.retranslate_ui(main_window)
         self.tab_widget.setCurrentIndex(0)
-        self.list_widget_channels.itemSelectionChanged.connect(self.channel_activated)
+        self.listWidget.itemSelectionChanged.connect(self.channel_activated)
         self.button_add.clicked.connect(self.add_channel)
         self.button_add.clicked.connect(self.line_edit_feed_url.clear)
 
@@ -329,12 +329,12 @@ class MainUi(QtWidgets.QWidget):
         self.actionImport.triggered.connect(self.import_opml)
         self.actionSettings.triggered.connect(self.open_settings)
 
-        self.list_widget_channels.customContextMenuRequested.connect(self.activate_menu_channels)
-        self.tree_widget_downloads.customContextMenuRequested.connect(self.activate_menu_downloads)
+        self.listWidget.customContextMenuRequested.connect(self.activeMenuChannels)
+        self.tree_widget_downloads.customContextMenuRequested.connect(self.activeMenuDownloads)
 
-        self.actionAddToPlaylist.triggered.connect(self.add_item_to_playlist)
+        self.actionAddToPlaylist.triggered.connect(self.addItemToPlaylist)
         self.actionDownloadEpisode.triggered.connect(self.episode_double_clicked)
-        self.tree_widget_episodes.customContextMenuRequested.connect(self.activate_menu_episode)
+        self.tree_widget_episodes.customContextMenuRequested.connect(self.activeMenuEpisode)
 
         QtCore.QMetaObject.connectSlotsByName(main_window)
 
@@ -345,14 +345,14 @@ class MainUi(QtWidgets.QWidget):
     def retranslate_ui(self, main_window):
         """Set up UI text and translations."""
         main_window.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "brePodder", None))
-        self.list_widget_channels.setStatusTip(QtWidgets.QApplication.translate("MainWindow", "kanali", None))
-        self.list_widget_channels.clear()
+        self.listWidget.setStatusTip(QtWidgets.QApplication.translate("MainWindow", "kanali", None))
+        self.listWidget.clear()
 
-        item = QtWidgets.QTreeWidgetItem(self.list_widget_channels)
+        item = QtWidgets.QTreeWidgetItem(self.listWidget)
         item.setText(0, QtWidgets.QApplication.translate("MainWindow", "naziv podkasta", None))
         item.setIcon(0, QtGui.QIcon(":/icons/musicstore.png"))
-        self.list_widget_channels.headerItem().setText(0, QtWidgets.QApplication.translate("MainWindow", "Channels", None))
-        item1 = QtWidgets.QTreeWidgetItem(self.list_widget_channels)
+        self.listWidget.headerItem().setText(0, QtWidgets.QApplication.translate("MainWindow", "Channels", None))
+        item1 = QtWidgets.QTreeWidgetItem(self.listWidget)
         item1.setText(0, QtWidgets.QApplication.translate("MainWindow", "New Item", None))
 
         self.line_edit_feed_url.setText(QtWidgets.QApplication.translate("MainWindow", "Copy RSS or Youtube link", None))
@@ -370,53 +370,53 @@ class MainUi(QtWidgets.QWidget):
 
         self.text_browser_details.setHtml(QtWidgets.QApplication.translate("MainWindow", " ", None))
 
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QtWidgets.QApplication.translate("MainWindow", "Channels", None))
-        self.treeWidget.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channel", None))
-        self.treeWidget.headerItem().setText(1,QtWidgets.QApplication.translate("MainWindow", "Episode", None))
-        self.treeWidget.headerItem().setText(2,QtWidgets.QApplication.translate("MainWindow", "Size", None))
-        self.treeWidget.headerItem().setText(3,QtWidgets.QApplication.translate("MainWindow", "%", None))
-        self.treeWidget.headerItem().setText(4,QtWidgets.QApplication.translate("MainWindow", "Speed", None))
-        self.treeWidget.headerItem().setText(5,QtWidgets.QApplication.translate("MainWindow", "Link", None))
-        self.treeWidget.header().resizeSection(0, 200)
-        self.treeWidget.header().resizeSection(1, 200)
-        self.treeWidget.clear()
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab), QtWidgets.QApplication.translate("MainWindow", "Channels", None))
+        self.tree_widget_downloads.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channel", None))
+        self.tree_widget_downloads.headerItem().setText(1,QtWidgets.QApplication.translate("MainWindow", "Episode", None))
+        self.tree_widget_downloads.headerItem().setText(2,QtWidgets.QApplication.translate("MainWindow", "Size", None))
+        self.tree_widget_downloads.headerItem().setText(3,QtWidgets.QApplication.translate("MainWindow", "%", None))
+        self.tree_widget_downloads.headerItem().setText(4,QtWidgets.QApplication.translate("MainWindow", "Speed", None))
+        self.tree_widget_downloads.headerItem().setText(5,QtWidgets.QApplication.translate("MainWindow", "Link", None))
+        self.tree_widget_downloads.header().resizeSection(0, 200)
+        self.tree_widget_downloads.header().resizeSection(1, 200)
+        self.tree_widget_downloads.clear()
 
 
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QtWidgets.QApplication.translate("MainWindow", "Downloads", None))
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_2), QtWidgets.QApplication.translate("MainWindow", "Downloads", None))
 
 
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QtWidgets.QApplication.translate("MainWindow", "Downloads", None))
-        self.treeWidget_4.setToolTip(QtWidgets.QApplication.translate("MainWindow", "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_2), QtWidgets.QApplication.translate("MainWindow", "Downloads", None))
+        self.tree_widget_latest_downloads.setToolTip(QtWidgets.QApplication.translate("MainWindow", "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
         "p, li { white-space: pre-wrap; }\n"
         "</style></head><body style=\" font-family:\'Sans Serif\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
         "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">jn</p></body></html>", None))
-        self.treeWidget_4.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channel", None))
-        self.treeWidget_4.headerItem().setText(1,QtWidgets.QApplication.translate("MainWindow", "Episode", None))
-        self.treeWidget_4.headerItem().setText(2,QtWidgets.QApplication.translate("MainWindow", "Size", None))
-        self.treeWidget_4.headerItem().setText(3,QtWidgets.QApplication.translate("MainWindow", "Local Link", None))
-        self.treeWidget_4.header().resizeSection(0, 200)
-        self.treeWidget_4.header().resizeSection(1, 200)
-        self.treeWidget_4.clear()
+        self.tree_widget_latest_downloads.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channel", None))
+        self.tree_widget_latest_downloads.headerItem().setText(1,QtWidgets.QApplication.translate("MainWindow", "Episode", None))
+        self.tree_widget_latest_downloads.headerItem().setText(2,QtWidgets.QApplication.translate("MainWindow", "Size", None))
+        self.tree_widget_latest_downloads.headerItem().setText(3,QtWidgets.QApplication.translate("MainWindow", "Local Link", None))
+        self.tree_widget_latest_downloads.header().resizeSection(0, 200)
+        self.tree_widget_latest_downloads.header().resizeSection(1, 200)
+        self.tree_widget_latest_downloads.clear()
 
-        self.treeWidget_5.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channel", None))
-        self.treeWidget_5.headerItem().setText(1,QtWidgets.QApplication.translate("MainWindow", "Episode", None))
-        self.treeWidget_5.headerItem().setText(2,QtWidgets.QApplication.translate("MainWindow", "Size", None))
-        self.treeWidget_5.headerItem().setText(3,QtWidgets.QApplication.translate("MainWindow", "Date", None))
-        self.treeWidget_5.headerItem().setText(4,QtWidgets.QApplication.translate("MainWindow", "Enclosure", None))
-        self.treeWidget_5.header().resizeSection(0, 200)
-        self.treeWidget_5.header().resizeSection(1, 200)
-        self.treeWidget_5.clear()
+        self.tree_widget_newest_episodes.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channel", None))
+        self.tree_widget_newest_episodes.headerItem().setText(1,QtWidgets.QApplication.translate("MainWindow", "Episode", None))
+        self.tree_widget_newest_episodes.headerItem().setText(2,QtWidgets.QApplication.translate("MainWindow", "Size", None))
+        self.tree_widget_newest_episodes.headerItem().setText(3,QtWidgets.QApplication.translate("MainWindow", "Date", None))
+        self.tree_widget_newest_episodes.headerItem().setText(4,QtWidgets.QApplication.translate("MainWindow", "Enclosure", None))
+        self.tree_widget_newest_episodes.header().resizeSection(0, 200)
+        self.tree_widget_newest_episodes.header().resizeSection(1, 200)
+        self.tree_widget_newest_episodes.clear()
 
-        self.treewidget_playlist.headerItem().setText(0, QtWidgets.QApplication.translate("MainWindow", "Channel", None))
-        self.treewidget_playlist.headerItem().setText(1, QtWidgets.QApplication.translate("MainWindow", "Episode", None))
-        self.treewidget_playlist.headerItem().setText(2, QtWidgets.QApplication.translate("MainWindow", "Size", None))
-        self.treewidget_playlist.headerItem().setText(3, QtWidgets.QApplication.translate("MainWindow", "Date", None))
-        self.treewidget_playlist.headerItem().setText(4, QtWidgets.QApplication.translate("MainWindow", "Enclosure", None))
-        self.treewidget_playlist.header().resizeSection(0, 200)
-        self.treewidget_playlist.header().resizeSection(1, 200)
-        self.treewidget_playlist.clear()
+        self.tree_widget_playlist.headerItem().setText(0, QtWidgets.QApplication.translate("MainWindow", "Channel", None))
+        self.tree_widget_playlist.headerItem().setText(1, QtWidgets.QApplication.translate("MainWindow", "Episode", None))
+        self.tree_widget_playlist.headerItem().setText(2, QtWidgets.QApplication.translate("MainWindow", "Size", None))
+        self.tree_widget_playlist.headerItem().setText(3, QtWidgets.QApplication.translate("MainWindow", "Date", None))
+        self.tree_widget_playlist.headerItem().setText(4, QtWidgets.QApplication.translate("MainWindow", "Enclosure", None))
+        self.tree_widget_playlist.header().resizeSection(0, 200)
+        self.tree_widget_playlist.header().resizeSection(1, 200)
+        self.tree_widget_playlist.clear()
 
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_playlist),
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_playlist),
                                   QtWidgets.QApplication.translate("MainWindow", "Playlist", None))
 
         item6 = QtWidgets.QTreeWidgetItem(self.tree_widget_latest_downloads)
@@ -481,16 +481,16 @@ class MainUi(QtWidgets.QWidget):
 
     def activeMenuDownloads(self, pos):
         self.actionCancel.setText(QtWidgets.QApplication.translate("MainWindow", "Cancel downlaod", None))
-        globalPos = self.treeWidget.mapToGlobal(pos)
+        globalPos = self.tree_widget_downloads.mapToGlobal(pos)
         globalPos.setY(globalPos.y() + 25)
-        t = self.treeWidget.indexAt(pos)
+        t = self.tree_widget_downloads.indexAt(pos)
         self.menuDownloads.popup(globalPos)
 
     def activeMenuEpisode(self, pos):
         if pos:
-            globalPos = self.treeWidget_2.mapToGlobal(pos)
+            globalPos = self.tree_widget_episodes.mapToGlobal(pos)
             globalPos.setY(globalPos.y() + 25)
-            t = self.treeWidget_2.indexAt(pos)
+            t = self.tree_widget_episodes.indexAt(pos)
             self.menuEpisodeList.popup(globalPos)
             self.episodeTitle = t.siblingAtColumn(0).data()
             self.episode_row = self.db.getEpisodeByTitle(self.episodeTitle)

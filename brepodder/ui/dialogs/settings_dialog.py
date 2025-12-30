@@ -5,6 +5,7 @@ Allows configuration of audio player and other preferences.
 """
 from PyQt5 import QtCore, QtWidgets
 
+from config import DEFAULT_FONT_SIZE
 from config_players import (
     PLAYERS,
     get_available_players,
@@ -76,6 +77,25 @@ class SettingsDialog(QtWidgets.QDialog):
         player_layout.addRow("", help_label)
 
         layout.addWidget(player_group)
+
+        # GUI Settings Group
+        gui_group = QtWidgets.QGroupBox("GUI Settings")
+        gui_layout = QtWidgets.QFormLayout(gui_group)
+
+        # Font size spinner
+        self.fontSizeSpinner = QtWidgets.QSpinBox()
+        self.fontSizeSpinner.setMinimum(8)
+        self.fontSizeSpinner.setMaximum(24)
+        self.fontSizeSpinner.setValue(DEFAULT_FONT_SIZE)
+        self.fontSizeSpinner.setSuffix(" pt")
+        gui_layout.addRow("Font size:", self.fontSizeSpinner)
+
+        # Font size description
+        font_help = QtWidgets.QLabel("Adjust the application font size (requires restart)")
+        font_help.setStyleSheet("color: gray; font-size: 10px;")
+        gui_layout.addRow("", font_help)
+
+        layout.addWidget(gui_group)
 
         # Spacer
         layout.addStretch()
@@ -160,6 +180,13 @@ class SettingsDialog(QtWidgets.QDialog):
         
         # Update UI state
         self.onPlayerChanged(self.playerCombo.currentIndex())
+        
+        # Load GUI settings
+        font_size = self.db.getSetting('gui_font_size')
+        if font_size:
+            self.fontSizeSpinner.setValue(int(font_size))
+        else:
+            self.fontSizeSpinner.setValue(DEFAULT_FONT_SIZE)
 
     def saveSettings(self):
         """Save settings to database."""
@@ -170,7 +197,11 @@ class SettingsDialog(QtWidgets.QDialog):
         self.db.setSetting('custom_play_command', self.customPlayCommand.text())
         self.db.setSetting('custom_enqueue_command', self.customEnqueueCommand.text())
         
-        logger.info("Settings saved: player=%s, custom=%s", player_key, self.customPlayerCheck.isChecked())
+        # Save GUI settings
+        self.db.setSetting('gui_font_size', str(self.fontSizeSpinner.value()))
+        
+        logger.info("Settings saved: player=%s, custom=%s, font_size=%d", 
+                    player_key, self.customPlayerCheck.isChecked(), self.fontSizeSpinner.value())
 
     def applySettings(self):
         """Apply settings without closing dialog."""

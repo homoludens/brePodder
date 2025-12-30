@@ -185,7 +185,7 @@ class BrePodder(MainUi):
 
     def channel_activated(self) -> None:
         """Handle channel selection."""
-        selection = self.list_widget_channels.currentItem().text(0)
+        selection = self.listWidget.currentItem().text(0)
 
         if selection:
             self.current_channel = selection
@@ -554,11 +554,11 @@ class BrePodder(MainUi):
         logger.debug("Updating channel list with search term: %s", search_term)
         channels = self.db.get_all_channels_without_folder()
         folders = self.db.get_all_folders()
-        self.list_widget_channels.clear()
+        self.listWidget.clear()
         search_term = search_term.lower()
 
         for folder in folders:
-            item_folder = QtWidgets.QTreeWidgetItem(self.list_widget_channels)
+            item_folder = QtWidgets.QTreeWidgetItem(self.listWidget)
             item_folder.setText(0, folder[1])
             item_folder.setIcon(0, QtGui.QIcon(':/icons/folder-blue.png'))
             item_folder.setFlags(ENABLED | DROPPABLE)
@@ -578,7 +578,7 @@ class BrePodder(MainUi):
         for channel in channels:
             title_description = channel['title'] + channel['description']
             if (search_term != '' and search_term in title_description.lower()) or (search_term == ''):
-                item = QtWidgets.QTreeWidgetItem(self.list_widget_channels)
+                item = QtWidgets.QTreeWidgetItem(self.listWidget)
                 item.setText(0, channel[1])
                 item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(str(DATA_DIR / channel[6]))))
                 item.setFlags(ENABLED | DRAGGABLE | SELECTABLE)
