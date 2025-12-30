@@ -79,14 +79,11 @@ class MainUi(QtWidgets.QWidget):
         self.splitter_222 = QtWidgets.QSplitter(self.splitter_22)
         self.splitter_222.setOrientation(QtCore.Qt.Horizontal)
 
-        # self.QLineEdit1 = QtWidgets.QLineEdit(self.splitter_222)
         self.QLineEdit1 = MyLineEdit(self.splitter_222)
-
 
         self.updateProgressBar = QtWidgets.QProgressBar(self.splitter_222)
         self.updateProgressBar.setMaximumHeight(25)
         self.updateProgressBar.hide()
-        #self.splitter_222.addWidget( self.updateProgressBar )
 
         self.QPushButton1 = QtWidgets.QPushButton(self.splitter_222)
 
@@ -103,11 +100,7 @@ class MainUi(QtWidgets.QWidget):
         self.treeWidget_2 = QtWidgets.QTreeWidget(self.splitter)
         self.treeWidget_2.setAlternatingRowColors(True)
 
-        #TODO: make settings fot choosing WebKit insted of QTextBrowser
-        #self.QTextBrowser1 = QtWebKit.QWebView(self.splitter) #Qt4.4
-        self.QTextBrowser1 = QtWidgets.QTextBrowser(self.splitter)  # Qt4.3
-#        self.QTextBrowser1.setOpenExternalLinks(1)
-#        self.QTextBrowser1.setOpenLinks(1)
+        self.QTextBrowser1 = QtWidgets.QTextBrowser(self.splitter)
 
         self.gridlayout1.addWidget(self.splitter_2, 0, 0, 1, 1)
 
@@ -141,8 +134,6 @@ class MainUi(QtWidgets.QWidget):
         self.splitter_3 = QtWidgets.QSplitter(self.tab_3)
         self.splitter_3.setOrientation(QtCore.Qt.Horizontal)
         self.gridlayout3.addWidget(self.splitter_3)
-
-        # self.AudioPlayer_latestDownloads = AudioPlayer("", self.splitter_3)
 
         MainWindow.setCentralWidget(self.centralwidget)
 
@@ -202,7 +193,6 @@ class MainUi(QtWidgets.QWidget):
 
         self.actionUpdateAllChannels = QtWidgets.QAction(MainWindow)
         self.actionUpdateAllChannels.setIcon(QtGui.QIcon(":/icons/reload.png"))
-        #self.actionUpdateAllChannels.setIcon(QtGui.QIcon.fromTheme("call-start"))
         self.actionUpdateAllChannels.setObjectName("actionUpdate")
 
         self.actionImport = QtWidgets.QAction(MainWindow)
@@ -240,7 +230,6 @@ class MainUi(QtWidgets.QWidget):
 
         self.actionUpdateFeeds = QtWidgets.QAction(MainWindow)
         self.actionUpdateFeeds.setIcon(QtGui.QIcon(":/icons/reload.png"))
-        #self.actionUpdateFeeds.setIcon(QtGui.QIcon.fromTheme("call-start"))
         self.actionUpdateFeeds.setObjectName("actionUpdateFeeds")
 
         self.actionNewFolder = QtWidgets.QAction(MainWindow)
@@ -294,7 +283,6 @@ class MainUi(QtWidgets.QWidget):
         self.retranslateUi(MainWindow)
         self.tabWidget.setCurrentIndex(0)
         self.listWidget.itemSelectionChanged.connect(self.channel_activated)
-        # self.QPushButton1.clicked.connect(self.AddChannel)
         self.QPushButton1.clicked.connect(self.add_channel)
         self.QPushButton1.clicked.connect(self.QLineEdit1.clear)
 
@@ -305,12 +293,11 @@ class MainUi(QtWidgets.QWidget):
         self.treeWidget_4.itemDoubleClicked.connect(self.LastestEpisodeDoubleClicked)
         self.treeWidget_5.itemDoubleClicked.connect(self.NewestEpisodeDoubleClicked)
         self.treewidget_playlist.itemDoubleClicked.connect(self.PlaylistEpisodeDoubleClicked)
-        self.treeWidget_5.itemClicked.connect(self.NewestEpisodeClicked)
+
         self.treeWidget.itemClicked.connect(self.DownloadActivated)
         self.trayIcon.activated.connect(self.trayIconActivated)
         self.actionUpdateFeeds.triggered.connect(self.update_channel)
         self.actionNewFolder.triggered.connect(self.create_new_foder)
-        # self.actionQuit.triggered.connect(self.app_quit)
         self.actionQuit.triggered.connect(self.close)
         self.actionCancel.triggered.connect(self.delete_channel)
         self.actionUpdateAllChannels.triggered.connect(self.update_all_channels)
@@ -450,21 +437,16 @@ class MainUi(QtWidgets.QWidget):
 
     def import_opml(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(self.MW, 'Open OPML file for import', '/home',  "(*.opml)")
-#        i = opml.Importer('brePodderImport.opml')
         i = opml.Importer(filename[0])
         i.get_model()
         channels = self.db.getAllChannelsLinks()
-        #print channels
 
         for channel in i.items:
             if (channel['url'], ) not in channels:
-                #print ch['url']
-                # self.AddChannel(channel['url'])
                 self.add_channel(channel['url'])
 
     def activeMenuChannels(self, pos):
         logger.debug("activeMenuChannels")
-        # self.actionCancel.setText(QtWidgets.QApplication.translate("MainWindow", "Delete feed", None))
         globalPos = self.listWidget.mapToGlobal(pos)
         globalPos.setY(globalPos.y() + 25)
         t = self.listWidget.indexAt(pos)
@@ -477,16 +459,7 @@ class MainUi(QtWidgets.QWidget):
         t = self.treeWidget.indexAt(pos)
         self.menuDownloads.popup(globalPos)
 
-    def downloadEpisode(self, pos):
-        self.actionCancel.setText(QtWidgets.QApplication.translate("MainWindow", "Download", None))
-        globalPos = self.treeWidget_2.mapToGlobal(pos)
-        globalPos.setY(globalPos.y() + 25)
-        t = self.treeWidget_2.indexAt(pos)
-        self.menuDownloads.popup(globalPos)
-
     def activeMenuEpisode(self, pos):
-        # addToPlaylist
-        # self.actionAddToPlaylist.setText(QtWidgets.QApplication.translate("MainWindow", "Add to playlist", None))
         if pos:
             globalPos = self.treeWidget_2.mapToGlobal(pos)
             globalPos.setY(globalPos.y() + 25)
@@ -500,19 +473,4 @@ class MainUi(QtWidgets.QWidget):
         logger.debug("addItemToPlaylist: %s", episode_row)
         self.playlist.append(self.episode_row)
         self.update_play_list(self.playlist)
-
-
-    # def activeListEpisode(self, pos):
-    #     self.actionCancel.setText(QtWidgets.QApplication.translate("MainWindow", "Cancel downlaod", None))
-    #     globalPos = self.treeWidget.mapToGlobal(pos)
-    #     globalPos.setY(globalPos.y() + 25)
-    #     t = self.treeWidget.indexAt(pos)
-    #     self.menuDownloads.popup(globalPos)
-
-    # def app_quit(self):
-    #     self.db.db.commit()
-    #     self.close()
-    #     # self.parent.exit()
-    #     # self,c
-    #     # app.exit()
 

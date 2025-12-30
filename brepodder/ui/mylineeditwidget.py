@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 
 
 class MyLineEdit(QtWidgets.QLineEdit):
@@ -10,14 +10,6 @@ class MyLineEdit(QtWidgets.QLineEdit):
     def focusInEvent(self, event):
         super(MyLineEdit, self).clear()
         super(MyLineEdit, self).focusInEvent(event)
-
-    # def focusOutEvent(self, event) -> None:
-    #     super(MyLineEdit, self).setText(QtWidgets.QApplication.translate("MainWindow", "Copy RSS or Youtube link", None))
-    #     super(MyLineEdit, self).focusOutEvent(event)
-
-    # def keyReleaseEvent(self, event: QtGui.QKeyEvent) -> None:
-    #     self.searchChannelList.emit(self.text())
-    #     super(MyLineEdit, self).keyReleaseEvent(event)
 
 
 

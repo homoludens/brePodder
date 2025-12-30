@@ -5,7 +5,7 @@ This module contains the BrePodder class which is the main application
 window and handles user interactions.
 """
 from PyQt5 import QtCore, QtWidgets, QtGui
-from time import gmtime, strftime, mktime
+from time import gmtime, strftime
 import os
 import sqlite3
 
@@ -13,22 +13,16 @@ from ui.Ui_mainwindow import MainUi
 from utils.download import Download
 from utils.threads import UpdateChannelThread, UpdateChannelThread_network, AddChannelThread
 from utils.feed_parser import parse_episode_for_update, episode_dict_to_tuple
-from config import (
-    DATA_DIR, DATABASE_FILE, USER_AGENT,
-    THUMBNAIL_MAX_SIZE
-)
+from config import DATA_DIR, DATABASE_FILE, USER_AGENT, THUMBNAIL_MAX_SIZE
 from logger import get_logger
 
 logger = get_logger(__name__)
 
-
 # Qt item flags for tree widget items
 draggable = QtCore.Qt.ItemIsDragEnabled
 droppable = QtCore.Qt.ItemIsDropEnabled
-editable = QtCore.Qt.ItemIsEditable
 enabled = QtCore.Qt.ItemIsEnabled
 selectable = QtCore.Qt.ItemIsSelectable
-noflags = QtCore.Qt.NoItemFlags
 
 
 class BrePodder(MainUi):
@@ -54,24 +48,6 @@ class BrePodder(MainUi):
         self.playlist = []
         self.updated_channes_list = []
         self.main_directory = str(DATA_DIR) + '/'
-
-    def memory_usage(self):
-        """Memory usage of the current process in kilobytes."""
-        status = None
-        result = {'peak': 0, 'rss': 0}
-        try:
-            # This will only work on systems with a /proc file system
-            # (like Linux).
-            status = open('/proc/self/status')
-            for line in status:
-                parts = line.split()
-                key = parts[0][2:-1].lower()
-                if key in result:
-                    result[key] = int(parts[1])
-        finally:
-            if status is not None:
-                status.close()
-        return result
 
     def resize_image(self, source_image, destination_image):
         """Resize an image to thumbnail size if it's too large."""
@@ -291,14 +267,6 @@ class BrePodder(MainUi):
         episode = self.db.getEpisodeByTitle(episodeTitle)
         self.playlist.append(episode)
         self.update_play_list(self.playlist)
-
-    def LastestEpisodeActivated(self, a):
-        """Handle activation of latest episode."""
-        pass
-
-    def NewestEpisodeClicked(self, item):
-        """Handle click on newest episode."""
-        episode = item.text(4)
 
     def NewestEpisodeDoubleClicked(self, episode_row):
         """Handle double-click on newest episode."""

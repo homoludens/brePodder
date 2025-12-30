@@ -144,13 +144,6 @@ class Importer(object):
                 logger.warning("OPML import finished, but no items found: %s", url)
         except IndexError:
             logger.error("Cannot import OPML from URL: %s", url)
-#            log( 'Cannot import OPML from URL: %s', url, sender = self)
-
-    def format_channel(self, channel):
-        return channel
-        # return '<b>%s</b>\n<span size="small">%s</span>' % (xml.sax.saxutils.escape(
-        #     urllib.unquote_plus(channel['title']))
-        #     xml.sax.saxutils.escape(channel['description']), )
 
     def get_model(self):
         model = []

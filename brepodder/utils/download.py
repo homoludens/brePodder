@@ -75,7 +75,6 @@ class Download(QtCore.QObject):
             self._status = "downloading"
             logger.debug("Downloading")
             self.tempBytes = self.bytesRead
-            #self.bytesRead = self.bytesRead + bytesRead
 
         self.bytesRead = self.tempBytes + bytesRead
         try:
@@ -99,12 +98,9 @@ class Download(QtCore.QObject):
                 self.fp.close()
 
             self._status = "downloaded"
-            #self.trigger.emit(QtCore.SIGNAL("statusChanged()"))
-            #self.trigger.emit(QtCore.SIGNAL("finished()"))
 
         elif (status == 302):
             self.link = self.reply.attribute(QtNetwork.QNetworkRequest.RedirectionTargetAttribute)
-            #print self.link
             self.downloadFile()
 
         else:
@@ -122,9 +118,7 @@ class Download(QtCore.QObject):
 
     def pauseDownload(self):
         self.reply.abort()
-
         self._status = "paused"
-        #self.trigger.emit(QtCore.SIGNAL("statusChanged()"))
 
 
     def resumeDownload(self):
