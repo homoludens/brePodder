@@ -261,7 +261,7 @@ class BrePodder(MainUi):
             item = QtWidgets.QTreeWidgetItem(self.treewidget_playlist)
             item.setText(0, str(e['channel_id']))
             item.setText(1, e['title'])
-            if e[4]:
+            if e['size']:
                 item.setText(2, self.getReadableSize(e['size']))
             else:
                 item.setText(2, '???')
@@ -275,26 +275,91 @@ class BrePodder(MainUi):
 
             item.setText(3, epDate)
 
-            if e['enclosure'] and e['enclosure'] is not None:
-                item.setText(4, e['enclosure'])
+            # Prefer local file if available, otherwise use remote enclosure
+            try:
+                localfile = e['localfile']
+                if localfile:
+                    item.setText(4, localfile)  # Local file path
+                    item.setIcon(1, QtGui.QIcon(":/icons/mp3.png"))  # Downloaded icon
+                else:
+                    item.setText(4, e['enclosure'] if e['enclosure'] else '')  # Remote URL
+                    item.setIcon(1, QtGui.QIcon(":/icons/build.png"))  # Not downloaded icon
+            except (KeyError, IndexError):
+                # If localfile doesn't exist, use enclosure
+                item.setText(4, e['enclosure'] if e['enclosure'] else '')  # Remote URL
+                item.setIcon(1, QtGui.QIcon(":/icons/build.png"))  # Not downloaded icon
+
+    def play_episode(self, path: str) -> None:
+        """
+        Play an episode from either local file or remote URL.
+        
+        Args:
+            path: Either a local file path or remote URL
+        """
+        if path.startswith('http://') or path.startswith('https://'):
+            # Remote URL - for now just log that streaming isn't supported
+            logger.warning("Streaming from HTTPS not supported. Please download the episode first.")
+            QtWidgets.QMessageBox.warning(
+                self.MW,
+                "Streaming Not Supported",
+                "Your system's GStreamer doesn't support HTTPS streaming.\n\n"
+                "Please download the episode first to play it locally."
+            )
+        elif os.path.exists(path):
+            # Local file
+            logger.debug("Playing local file: %s", path)
+            self.AudioPlayer.setUrl_local(path)
+        else:
+            logger.error("File not found: %s", path)
+            QtWidgets.QMessageBox.warning(
+                self.MW,
+                "File Not Found",
+                f"Cannot find the episode file:\n{path}"
+            )
 
     def PlaylistEpisodeDoubleClicked(self, a: QtWidgets.QTreeWidgetItem) -> None:
         """Handle double-click on playlist item - play episode."""
-        self.AudioPlayer.setUrl(a.text(4))
+        path = a.text(4)
+        if path:
+            self.play_episode(path)
 
     def LastestEpisodeDoubleClicked(self, episode_row: QtWidgets.QTreeWidgetItem) -> None:
-        """Handle double-click on latest episode."""
-        episodeTitle = episode_row.text(0)
+        """Handle double-click on latest episode - add to playlist and play."""
+        episodeTitle = episode_row.text(1)  # Column 1 is episode title
         episode = self.db.getEpisodeByTitle(episodeTitle)
-        self.playlist.append(episode)
-        self.update_play_list(self.playlist)
+        if episode:
+            self.playlist.append(episode)
+            self.update_play_list(self.playlist)
+            # Play the episode - prefer local file over remote URL
+            try:
+                if episode['localfile']:
+                    self.play_episode(episode['localfile'])
+                elif episode['enclosure']:
+                    self.play_episode(episode['enclosure'])
+            except (KeyError, IndexError):
+                if episode['enclosure']:
+                    self.play_episode(episode['enclosure'])
+        else:
+            logger.warning("Could not find episode '%s' in database", episodeTitle)
 
     def NewestEpisodeDoubleClicked(self, episode_row: QtWidgets.QTreeWidgetItem) -> None:
-        """Handle double-click on newest episode."""
+        """Handle double-click on newest episode - add to playlist and play."""
         episode_title = episode_row.text(1)
         episode = self.db.getEpisodeByTitle(episode_title)
-        self.playlist.append(episode)
-        self.update_play_list(self.playlist)
+        if episode:
+            self.playlist.append(episode)
+            self.update_play_list(self.playlist)
+            # Play the episode - prefer local file over remote URL
+            try:
+                if episode['localfile']:
+                    self.play_episode(episode['localfile'])
+                elif episode['enclosure']:
+                    self.play_episode(episode['enclosure'])
+            except (KeyError, IndexError):
+                if episode['enclosure']:
+                    self.play_episode(episode['enclosure'])
+        else:
+            logger.warning("Could not find episode '%s' in database", episode_title)
 
     def getReadableSize(self, size: Optional[Union[int, str]]) -> str:
         """Convert byte size to human-readable format."""
