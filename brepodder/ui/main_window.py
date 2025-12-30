@@ -178,6 +178,10 @@ class MainUi(QtWidgets.QWidget):
         self.splitter_playlist.setOrientation(QtCore.Qt.Horizontal)
         self.gridlayout_playlist.addWidget(self.splitter_playlist)
 
+        # Clear Playlist button
+        self.clearPlaylistBtn = QtWidgets.QPushButton("Clear Playlist", self.splitter_playlist)
+        self.clearPlaylistBtn.setMaximumWidth(120)
+
         self.AudioPlayer = AudioPlayer("", self.splitter_playlist)
 
         MainWindow.setCentralWidget(self.centralwidget)
@@ -310,6 +314,7 @@ class MainUi(QtWidgets.QWidget):
         self.treeWidget_4.itemDoubleClicked.connect(self.LastestEpisodeDoubleClicked)
         self.treeWidget_5.itemDoubleClicked.connect(self.NewestEpisodeDoubleClicked)
         self.treewidget_playlist.itemDoubleClicked.connect(self.PlaylistEpisodeDoubleClicked)
+        self.clearPlaylistBtn.clicked.connect(self.clear_playlist)
 
         self.treeWidget.itemClicked.connect(self.DownloadActivated)
         self.trayIcon.activated.connect(self.trayIconActivated)

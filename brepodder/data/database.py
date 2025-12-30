@@ -26,6 +26,7 @@ class DBOperation:
         self._get_connection()
         # Ensure all tables exist (for upgrades)
         self._ensure_settings_table()
+        self._ensure_playlist_table()
     
     def _get_connection(self) -> sqlite3.Connection:
         """Get or create a thread-local database connection."""
@@ -41,6 +42,16 @@ class DBOperation:
         self.cur.execute('''CREATE TABLE IF NOT EXISTS sql_settings (
             key VARCHAR(60) PRIMARY KEY,
             value TEXT
+        )''')
+        self.db.commit()
+
+    def _ensure_playlist_table(self) -> None:
+        """Ensure the playlist table exists (for database upgrades)."""
+        self.cur.execute('''CREATE TABLE IF NOT EXISTS sql_playlist (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            episode_id INTEGER NOT NULL,
+            position INTEGER NOT NULL DEFAULT 0,
+            FOREIGN KEY(episode_id) REFERENCES sql_episode(id)
         )''')
         self.db.commit()
     
@@ -328,3 +339,75 @@ class DBOperation:
             (key, value)
         )
         self.db.commit()
+
+    # Playback position methods
+    def getPlaybackPosition(self, episode_id: int) -> int:
+        """Get saved playback position for an episode (in seconds)."""
+        result = self.cur.execute(
+            'SELECT value FROM sql_settings WHERE key = ?',
+            (f'playback_pos_{episode_id}',)
+        ).fetchone()
+        return int(result[0]) if result else 0
+
+    def setPlaybackPosition(self, episode_id: int, position: int) -> None:
+        """Save playback position for an episode (in seconds)."""
+        self.cur.execute(
+            'INSERT OR REPLACE INTO sql_settings (key, value) VALUES (?, ?)',
+            (f'playback_pos_{episode_id}', str(position))
+        )
+        self.db.commit()
+
+    # Playlist methods
+    def getPlaylist(self) -> list[sqlite3.Row]:
+        """Get all episodes in the playlist with their details."""
+        return self.cur.execute(
+            '''SELECT EP.*, CH.title as channel_title, CH.logo as channel_logo, PL.position as playlist_position
+               FROM sql_playlist PL
+               JOIN sql_episode EP ON PL.episode_id = EP.id
+               JOIN sql_channel CH ON EP.channel_id = CH.id
+               ORDER BY PL.id
+               LIMIT 50'''
+        ).fetchall()
+
+    def addToPlaylist(self, episode_id: int) -> bool:
+        """Add an episode to the playlist. Returns False if already in playlist or limit reached."""
+        # Check if already in playlist
+        exists = self.cur.execute(
+            'SELECT id FROM sql_playlist WHERE episode_id = ?',
+            (episode_id,)
+        ).fetchone()
+        if exists:
+            return False
+        
+        # Check playlist count
+        count = self.cur.execute('SELECT COUNT(*) FROM sql_playlist').fetchone()[0]
+        if count >= 50:
+            return False
+        
+        self.cur.execute(
+            'INSERT INTO sql_playlist (episode_id, position) VALUES (?, 0)',
+            (episode_id,)
+        )
+        self.db.commit()
+        return True
+
+    def removeFromPlaylist(self, episode_id: int) -> None:
+        """Remove an episode from the playlist."""
+        self.cur.execute(
+            'DELETE FROM sql_playlist WHERE episode_id = ?',
+            (episode_id,)
+        )
+        self.db.commit()
+
+    def clearPlaylist(self) -> None:
+        """Remove all episodes from the playlist."""
+        self.cur.execute('DELETE FROM sql_playlist')
+        self.db.commit()
+
+    def isInPlaylist(self, episode_id: int) -> bool:
+        """Check if an episode is in the playlist."""
+        result = self.cur.execute(
+            'SELECT id FROM sql_playlist WHERE episode_id = ?',
+            (episode_id,)
+        ).fetchone()
+        return result is not None

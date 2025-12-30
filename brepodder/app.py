@@ -45,12 +45,19 @@ class BrePodder(MainUi):
         mainwindow = QtWidgets.QMainWindow()
         self.setupUi(mainwindow)
         mainwindow.show()
+        
+        # Give AudioPlayer access to database for position saving
+        self.AudioPlayer._db = self.db
+        
         self.update_channel_list()
         self.update_lastest_episodes_list()
         self.update_newest_episodes_list()
         self.playlist: list[Any] = []
         self.updated_channes_list: list[Any] = []
         self.main_directory: str = str(DATA_DIR) + '/'
+        
+        # Load saved playlist from database
+        self._load_playlist_from_db()
 
     def resize_image(self, source_image: str, destination_image: str) -> None:
         """Resize an image to thumbnail size if it's too large."""
@@ -260,6 +267,8 @@ class BrePodder(MainUi):
 
         for e in episodes:
             item = QtWidgets.QTreeWidgetItem(self.treewidget_playlist)
+            # Store episode_id as hidden data for later use
+            item.setData(0, QtCore.Qt.UserRole, e['id'])
             item.setText(0, str(e['channel_id']))
             item.setText(1, e['title'])
             if e['size']:
@@ -289,6 +298,50 @@ class BrePodder(MainUi):
                 # If localfile doesn't exist, use enclosure
                 item.setText(4, e['enclosure'] if e['enclosure'] else '')  # Remote URL
                 item.setIcon(1, QtGui.QIcon(":/icons/build.png"))  # Not downloaded icon
+
+    def _load_playlist_from_db(self) -> None:
+        """Load the playlist from database on startup."""
+        playlist_rows = self.db.getPlaylist()
+        self.playlist = []
+        for row in playlist_rows:
+            # Convert Row to dict-like access
+            self.playlist.append(row)
+        self.update_play_list(self.playlist)
+        logger.debug("Loaded %d episodes from saved playlist", len(self.playlist))
+
+    def add_episode_to_playlist(self, episode) -> bool:
+        """
+        Add an episode to the playlist.
+        
+        Returns True if added, False if already in playlist or limit reached.
+        """
+        if len(self.playlist) >= 50:
+            QtWidgets.QMessageBox.warning(
+                self.MW,
+                "Playlist Full",
+                "Playlist is limited to 50 episodes.\n\n"
+                "Please remove some episodes before adding more."
+            )
+            return False
+        
+        episode_id = episode['id']
+        
+        # Add to database
+        if not self.db.addToPlaylist(episode_id):
+            logger.debug("Episode already in playlist or limit reached")
+            return False
+        
+        # Add to local list
+        self.playlist.append(episode)
+        self.update_play_list(self.playlist)
+        return True
+
+    def clear_playlist(self) -> None:
+        """Clear all episodes from the playlist."""
+        self.db.clearPlaylist()
+        self.playlist = []
+        self.update_play_list(self.playlist)
+        logger.info("Playlist cleared")
 
     def play_episode(self, path: str) -> None:
         """
@@ -331,6 +384,22 @@ class BrePodder(MainUi):
                 )
                 return
             self._play_with_external(play_command, path)
+
+    def _play_with_builtin_and_id(self, path: str, episode_id: int) -> None:
+        """Play using built-in player with episode ID for position tracking."""
+        # Stop any external player first
+        self.AudioPlayer.stopClicked()
+        
+        if os.path.exists(path):
+            logger.debug("Playing local file with position tracking: %s", path)
+            self.AudioPlayer.setUrl_local(path, episode_id)
+        else:
+            logger.error("File not found: %s", path)
+            QtWidgets.QMessageBox.warning(
+                self.MW,
+                "File Not Found",
+                f"Cannot find the episode file:\n{path}"
+            )
 
     def _play_with_builtin(self, path: str) -> None:
         """Play using the built-in GStreamer player."""
@@ -382,25 +451,22 @@ class BrePodder(MainUi):
     def PlaylistEpisodeDoubleClicked(self, a: QtWidgets.QTreeWidgetItem) -> None:
         """Handle double-click on playlist item - play episode."""
         path = a.text(4)
+        episode_id = a.data(0, QtCore.Qt.UserRole)
         if path:
-            self.play_episode(path)
+            if episode_id and os.path.exists(path):
+                # Local file with episode_id - use built-in player with position tracking
+                self._play_with_builtin_and_id(path, episode_id)
+            else:
+                self.play_episode(path)
 
     def LastestEpisodeDoubleClicked(self, episode_row: QtWidgets.QTreeWidgetItem) -> None:
         """Handle double-click on latest episode - add to playlist and play."""
         episodeTitle = episode_row.text(1)  # Column 1 is episode title
         episode = self.db.getEpisodeByTitle(episodeTitle)
         if episode:
-            self.playlist.append(episode)
-            self.update_play_list(self.playlist)
+            self.add_episode_to_playlist(episode)
             # Play the episode - prefer local file over remote URL
-            try:
-                if episode['localfile']:
-                    self.play_episode(episode['localfile'])
-                elif episode['enclosure']:
-                    self.play_episode(episode['enclosure'])
-            except (KeyError, IndexError):
-                if episode['enclosure']:
-                    self.play_episode(episode['enclosure'])
+            self._play_episode_with_id(episode)
         else:
             logger.warning("Could not find episode '%s' in database", episodeTitle)
 
@@ -409,19 +475,23 @@ class BrePodder(MainUi):
         episode_title = episode_row.text(1)
         episode = self.db.getEpisodeByTitle(episode_title)
         if episode:
-            self.playlist.append(episode)
-            self.update_play_list(self.playlist)
+            self.add_episode_to_playlist(episode)
             # Play the episode - prefer local file over remote URL
-            try:
-                if episode['localfile']:
-                    self.play_episode(episode['localfile'])
-                elif episode['enclosure']:
-                    self.play_episode(episode['enclosure'])
-            except (KeyError, IndexError):
-                if episode['enclosure']:
-                    self.play_episode(episode['enclosure'])
+            self._play_episode_with_id(episode)
         else:
             logger.warning("Could not find episode '%s' in database", episode_title)
+
+    def _play_episode_with_id(self, episode) -> None:
+        """Play an episode, passing episode_id for position tracking."""
+        episode_id = episode['id']
+        try:
+            if episode['localfile']:
+                self._play_with_builtin_and_id(episode['localfile'], episode_id)
+            elif episode['enclosure']:
+                self.play_episode(episode['enclosure'])
+        except (KeyError, IndexError):
+            if episode['enclosure']:
+                self.play_episode(episode['enclosure'])
 
     def getReadableSize(self, size: Optional[Union[int, str]]) -> str:
         """Convert byte size to human-readable format."""

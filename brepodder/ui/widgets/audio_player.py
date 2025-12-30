@@ -31,6 +31,9 @@ class AudioPlayer(QtWidgets.QWidget):
         self._external_process: Optional[subprocess.Popen] = None
         self._using_external: bool = False
         self._current_file: str = ""
+        self._current_episode_id: Optional[int] = None
+        self._db = None  # Will be set by parent app
+        self._last_saved_position: int = 0
 
         self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.slider.setRange(0, 1000)
@@ -92,6 +95,25 @@ class AudioPlayer(QtWidgets.QWidget):
             self.slider.setValue(progress)
 
         self.updateDurationInfo(progress)
+        
+        # Save position every 10 seconds
+        if self._db and self._current_episode_id and progress - self._last_saved_position >= 10:
+            self._last_saved_position = progress
+            self._db.setPlaybackPosition(self._current_episode_id, progress)
+
+    def _onMediaStatusChanged(self, status):
+        """Handle media status changes, particularly for seeking to saved position."""
+        if status == QtMultimedia.QMediaPlayer.BufferedMedia or status == QtMultimedia.QMediaPlayer.LoadedMedia:
+            if hasattr(self, '_pending_seek') and self._pending_seek:
+                logger.debug("Seeking to saved position: %s seconds", self._pending_seek)
+                self.player.setPosition(self._pending_seek * 1000)
+                self._last_saved_position = self._pending_seek
+                self._pending_seek = None
+                # Disconnect to avoid repeated calls
+                try:
+                    self.player.mediaStatusChanged.disconnect(self._onMediaStatusChanged)
+                except TypeError:
+                    pass
 
     def updateDurationInfo(self, currentInfo):
         duration = self.duration
@@ -119,12 +141,25 @@ class AudioPlayer(QtWidgets.QWidget):
         self.player.play()
         self.status.setText("Built-in")
 
-    def setUrl_local(self, url):
+    def setUrl_local(self, url, episode_id: Optional[int] = None):
         """Play a local file using built-in player."""
         self._using_external = False
         self._current_file = url
+        self._current_episode_id = episode_id
+        self._last_saved_position = 0
         uri = QtCore.QUrl.fromLocalFile(url)
         self.player.setMedia(QtMultimedia.QMediaContent(uri))
+        
+        # Seek to saved position if available
+        if self._db and episode_id:
+            saved_pos = self._db.getPlaybackPosition(episode_id)
+            if saved_pos > 0:
+                # Need to wait for media to load before seeking
+                self._pending_seek = saved_pos
+                self.player.mediaStatusChanged.connect(self._onMediaStatusChanged)
+            else:
+                self._pending_seek = None
+        
         self.player.play()
         self.status.setText("Built-in")
 
@@ -202,6 +237,14 @@ class AudioPlayer(QtWidgets.QWidget):
 
     def stopClicked(self):
         """Stop all playback (both built-in and external)."""
+        # Save current position before stopping
+        if self._db and self._current_episode_id and not self._using_external:
+            current_pos = self.player.position() // 1000
+            if current_pos > 0:
+                self._db.setPlaybackPosition(self._current_episode_id, current_pos)
+                logger.debug("Saved playback position: %s seconds for episode %s", 
+                           current_pos, self._current_episode_id)
+        
         # Stop built-in player
         self.player.stop()
         
