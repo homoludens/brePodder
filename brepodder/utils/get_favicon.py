@@ -1,6 +1,10 @@
 import requests
 import favicon
 import os
+from logger import get_logger
+
+logger = get_logger(__name__)
+
 
 def get_icon_url(url):
     try:
@@ -8,33 +12,31 @@ def get_icon_url(url):
         icon = icons[0]
         return icon.url
     except requests.exceptions.ConnectionError as e:
-        print('404', e)
+        logger.debug("Connection error for %s: %s", url, e)
     except IndexError as e:
-        print('no icon', e)
+        logger.debug("No icon found for %s: %s", url, e)
     except requests.exceptions.HTTPError as e:
-        print('404', e)
+        logger.debug("HTTP error for %s: %s", url, e)
     except requests.exceptions.MissingSchema as e:
-        print('MissingSchema', e)
+        logger.debug("Missing schema for %s: %s", url, e)
     except requests.exceptions.InvalidURL as e:
-        print('InvalidURL', e)
+        logger.debug("Invalid URL %s: %s", url, e)
 
 
 def get_icon(url, local_file_name):
-    print("get_icon")
+    logger.debug("get_icon called for: %s", url)
     try:
         icons = favicon.get(url)
         icon = icons[0]
         download_image(url, f'{local_file_name}.{format(icon.format)}')
     except requests.exceptions.HTTPError as e:
-        print('404')
-        print(e)
+        logger.debug("HTTP error for %s: %s", url, e)
     except requests.exceptions.ConnectionError as e:
-        print('404')
-        print(e)
+        logger.debug("Connection error for %s: %s", url, e)
     except requests.exceptions.MissingSchema as e:
-        print('MissingSchema', e)
+        logger.debug("Missing schema for %s: %s", url, e)
     except requests.exceptions.InvalidURL as e:
-        print('InvalidURL', e)
+        logger.debug("Invalid URL %s: %s", url, e)
 
 
 def download_image(url, local_file_path):
@@ -45,14 +47,17 @@ def download_image(url, local_file_path):
     try:
         response = requests.get(url, stream=True, headers=headers)
     except requests.exceptions.ConnectionError as e:
-        print('404', e)
+        logger.debug("Connection error downloading %s: %s", url, e)
+        return
     except requests.exceptions.HTTPError as e:
-        print('404')
-        print(e)
+        logger.debug("HTTP error downloading %s: %s", url, e)
+        return
     except requests.exceptions.MissingSchema as e:
-        print('MissingSchema', e)
+        logger.debug("Missing schema for %s: %s", url, e)
+        return
     except requests.exceptions.InvalidURL as e:
-        print('InvalidURL', e)
+        logger.debug("Invalid URL %s: %s", url, e)
+        return
     else:
         if response.status_code == 200:
             with open(local_file_path, 'wb') as image:

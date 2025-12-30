@@ -22,7 +22,6 @@
 
 import io
 import json
-import logging
 import re
 import urllib
 import xml.etree.ElementTree
@@ -34,10 +33,10 @@ import requests.exceptions
 from requests.packages.urllib3.util.retry import Retry
 from html.entities import entitydefs, name2codepoint
 from html.parser import HTMLParser
-# import gpodder
-# from gpodder import registry, util
 
-logger = logging.getLogger(__name__)
+from logger import get_logger
+
+logger = get_logger(__name__)
 
 
 # _ = gpodder.gettext

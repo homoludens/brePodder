@@ -2,6 +2,9 @@ import sqlite3
 import threading
 
 from config import DATABASE_FILE, DATABASE_TIMEOUT
+from logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class DBOperation:
@@ -190,7 +193,7 @@ class DBOperation:
                 (channel_id[0],)
             )
         except (sqlite3.Error, TypeError, IndexError) as e:
-            print(f"Failed to delete episodes for channel '{channelTitle}': {e}")
+            logger.error("Failed to delete episodes for channel '%s': %s", channelTitle, e)
         self.db.commit()
 
     def deleteChannel(self, channelTitle):
@@ -255,7 +258,7 @@ class DBOperation:
                 PRIMARY KEY (id)
             )''')
         except sqlite3.OperationalError:
-            print("table sql_channel already exists")
+            logger.debug("Table sql_channel already exists")
 
         try:
             self.cur.execute('''CREATE TABLE IF NOT EXISTS sql_episode (
@@ -273,7 +276,7 @@ class DBOperation:
                     FOREIGN KEY(channel_id) REFERENCES sql_channel (id)
             )''')
         except sqlite3.OperationalError:
-            print("table sql_episode already exists")
+            logger.debug("Table sql_episode already exists")
 
         try:
             self.cur.execute('''CREATE TABLE IF NOT EXISTS sql_taxonomy (
@@ -282,6 +285,6 @@ class DBOperation:
                 PRIMARY KEY (id)
             )''')
         except sqlite3.OperationalError:
-            print("table sql_taxonomy already exists")
+            logger.debug("Table sql_taxonomy already exists")
         
         self.db.commit()

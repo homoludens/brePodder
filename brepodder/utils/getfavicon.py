@@ -5,6 +5,9 @@ import urllib
 import urllib.request
 import http.client
 import sys
+from logger import get_logger
+
+logger = get_logger(__name__)
 
 def getIcoUrl(url):
     """
@@ -13,8 +16,7 @@ def getIcoUrl(url):
     - Then try just /favicon.ico.
     - If neither found, return None
     """
-    print("getIcoUrl(url): ")
-    print(url)
+    logger.debug("getIcoUrl called with: %s", url)
     class FaviconFinder(HTMLParser):
         """
         A Parser class for finding the favicon used (if specified).
@@ -42,7 +44,7 @@ def getIcoUrl(url):
         favicon_parser.feed(contents)
     except (urllib.error.URLError, urllib.error.HTTPError, UnicodeDecodeError, 
             http.client.HTTPException, OSError) as e:
-        print(f"Failed to fetch favicon from {url}: {e}")
+        logger.debug("Failed to fetch favicon from %s: %s", url, e)
 
     # Another try block in case the parser throws an exception
     # AFTER finding the appropriate url.
@@ -73,6 +75,6 @@ def getIcoUrl(url):
             if response.status == 200:
                 return 'http://%s/favicon.ico' % ('www.' + root_directory)
     except (http.client.HTTPException, OSError, AttributeError) as e:
-        print(f"Failed to find favicon.ico: {e}")
+        logger.debug("Failed to find favicon.ico: %s", e)
     return None
 

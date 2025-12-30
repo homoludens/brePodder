@@ -5,13 +5,15 @@ https://github.com/pyqt/examples/blob/5225c0e7f070cc4496407c1ea565319be9274e29/s
 import sys
 from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
 from utils.youtube import get_real_download_url, is_video_link, is_channel_url
+from logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class AudioPlayer(QtWidgets.QWidget):
     def __init__(self, url, parent=None):
         super(AudioPlayer, self).__init__(parent)
-        print("AudioPlayer")
-        print(url)
+        logger.debug("AudioPlayer initialized with URL: %s", url)
         # url = 'https://traffic.libsyn.com/secure/517c6bec-81cc-498a-86df-3a668eba6a93/CC0001_TheCatLadyAndThePetitioner.mp3'
         # self.url = QtCore.QUrl(url)
 
@@ -91,7 +93,7 @@ class AudioPlayer(QtWidgets.QWidget):
     def setUrl(self, url):
         if is_video_link(url):
             url, duration = get_real_download_url(url, True)
-        print(url)
+        logger.debug("Setting media URL: %s", url)
         #print url
         self.player.setMedia(QtMultimedia.QMediaContent(QtCore.QUrl(url)))
         self.player.play()
@@ -117,7 +119,7 @@ class AudioPlayer(QtWidgets.QWidget):
             self.play_pause.setText("Play")
 
     def fetch(self):
-        print('Should download %s' % self.url)
+        logger.debug("Download requested for: %s", self.url)
 
 
 def main():

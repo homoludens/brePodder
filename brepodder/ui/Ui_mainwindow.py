@@ -7,6 +7,9 @@ from ui.mylineeditwidget import MyLineEdit
 import resources
 from utils.audioplayer import AudioPlayer
 from config import MAX_CONCURRENT_DOWNLOADS
+from logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class MainUi(QtWidgets.QWidget):
@@ -30,8 +33,7 @@ class MainUi(QtWidgets.QWidget):
         self.app = parent
 
     def closeEvent(self, test):
-        print('closeevent', test)
-        print("closing brePodder")
+        logger.info("Closing brePodder")
         self.app.quit()
 
     def setupUi(self, MainWindow):
@@ -439,8 +441,7 @@ class MainUi(QtWidgets.QWidget):
 #        file=open(filename)
 #        cd = OpenFile()
 #        cd.showDialog()
-#         print("dialog_add")
-        print(filename)
+        logger.debug("Opening file: %s", filename)
 
     def export_opml(self):
         channels = self.db.getAllChannels()
@@ -462,7 +463,7 @@ class MainUi(QtWidgets.QWidget):
                 self.add_channel(channel['url'])
 
     def activeMenuChannels(self, pos):
-        print("activeMenuChannels")
+        logger.debug("activeMenuChannels")
         # self.actionCancel.setText(QtWidgets.QApplication.translate("MainWindow", "Delete feed", None))
         globalPos = self.listWidget.mapToGlobal(pos)
         globalPos.setY(globalPos.y() + 25)
@@ -496,7 +497,7 @@ class MainUi(QtWidgets.QWidget):
 
 
     def addItemToPlaylist(self, episode_row):
-        print(f"addItemToPlaylist {episode_row}")
+        logger.debug("addItemToPlaylist: %s", episode_row)
         self.playlist.append(self.episode_row)
         self.update_play_list(self.playlist)
 

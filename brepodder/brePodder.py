@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 from time import gmtime, strftime, mktime
-from utils.download import *
+from utils.download import Download
 from utils.get_favicon import get_icon_url, get_icon, download_image
 import feedparser
 import requests
@@ -14,7 +14,9 @@ from config import (
     DATA_DIR, DATABASE_FILE, USER_AGENT, REQUEST_TIMEOUT,
     MAX_CONCURRENT_DOWNLOADS, THUMBNAIL_MAX_SIZE
 )
-import logging
+from logger import get_logger
+
+logger = get_logger(__name__)
 
 
 draggable = QtCore.Qt.ItemIsDragEnabled
@@ -74,17 +76,16 @@ class UpdateChannelThread_network(QtCore.QThread):
         try:
             resp = requests.get(feed_link, timeout=REQUEST_TIMEOUT, headers=self.headers)
         except requests.ReadTimeout as e:
-            # logger.warn("Timeout when reading RSS %s", rss_feed)
-            print('timeout', e)
+            logger.warning("Timeout when reading RSS %s: %s", feed_link, e)
             return
         except requests.exceptions.ConnectionError as e:
-            print('404', e)
+            logger.error("Connection error for %s: %s", feed_link, e)
             return ''
         except requests.exceptions.HTTPError as e:
-            print('404', e)
+            logger.error("HTTP error for %s: %s", feed_link, e)
             return ''
         except requests.exceptions.MissingSchema as e:
-            print('MissingSchema', e)
+            logger.error("Missing schema for %s: %s", feed_link, e)
         else:
             content = BytesIO(resp.content)
 
@@ -172,17 +173,16 @@ class UpdateChannelThread(QtCore.QThread):
         try:
             resp = requests.get(feed_link, timeout=REQUEST_TIMEOUT, headers=self.headers)
         except requests.ReadTimeout as e:
-            # logger.warn("Timeout when reading RSS %s", rss_feed)
-            print('timeout', e)
+            logger.warning("Timeout when reading RSS %s: %s", feed_link, e)
             return
         except requests.exceptions.ConnectionError as e:
-            print('404', e)
+            logger.error("Connection error for %s: %s", feed_link, e)
             return ''
         except requests.exceptions.HTTPError as e:
-            print('404', e)
+            logger.error("HTTP error for %s: %s", feed_link, e)
             return ''
         except requests.exceptions.MissingSchema as e:
-            print('MissingSchema', e)
+            logger.error("Missing schema for %s: %s", feed_link, e)
         else:
             content = BytesIO(resp.content)
 
@@ -205,13 +205,13 @@ class UpdateChannelThread(QtCore.QThread):
                     try:
                         new_episode['enclosure'] = i.enclosures[0].href
                     except (IndexError, AttributeError) as e:
-                        print(f"Failed to parse enclosure href: {e}")
+                        logger.warning("Failed to parse enclosure href: %s", e)
                         new_episode['enclosure'] = "None"
 
                     try:
                         new_episode['size'] = int(i.enclosures[0].length)
                     except (IndexError, AttributeError, ValueError, TypeError) as e:
-                        print(f"Failed to parse enclosure size: {e}")
+                        logger.warning("Failed to parse enclosure size: %s", e)
                         new_episode['size'] = '1'
                     new_episode['status'] = u"new"
                 else:
@@ -237,15 +237,13 @@ class UpdateChannelThread(QtCore.QThread):
                 self.ui.db.insertEpisode(new_episode_tupple)
 
             elif 'title' not in i:
-                print("No title")
+                logger.debug("Episode entry has no title")
             else:
                 if j[2] != u"old":
                     try:
-                        # print "old"
                         self.ui.db.updateEpisodeStatus(j[0])
                     except Exception as ex:
-                        print(ex)
-                        print(j)
+                        logger.error("Failed to update episode status: %s, episode: %s", ex, j)
                 # cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(j[0],) )
 
 
@@ -299,14 +297,13 @@ class AddChannelThread(QtCore.QThread):
         try:
             resp = requests.get(feed_link, timeout=REQUEST_TIMEOUT, headers=headers)
         except requests.ReadTimeout as e:
-            print(e)
-            # logger.warn("Timeout when reading RSS %s", rss_feed)
+            logger.warning("Timeout when reading RSS %s: %s", feed_link, e)
             return
         except requests.exceptions.ConnectTimeout as e:
-            print(e)
+            logger.warning("Connect timeout for %s: %s", feed_link, e)
             return
         except requests.exceptions.ConnectionError as e:
-            print(e)
+            logger.error("Connection error for %s: %s", feed_link, e)
             return
         # Put it to memory stream object universal feedparser
         content = BytesIO(resp.content)
@@ -323,11 +320,11 @@ class AddChannelThread(QtCore.QThread):
             ChannelTitle = feed_link
 
         if self.ui.db.getChannelByLink(feed_link):
-            print(f"channel already exists {feed_link}")
+            logger.info("Channel already exists: %s", feed_link)
             return
 
         if self.ui.db.getChannelByTitle(ChannelTitle):
-            print(f"channel already exists {ChannelTitle}")
+            logger.info("Channel already exists: %s", ChannelTitle)
             return
 
         ChannelDir = self.ui.regex_white_space.sub("", ChannelTitle)
@@ -364,7 +361,7 @@ class AddChannelThread(QtCore.QThread):
 
         #  download favicon
         if "link" in feed_content.feed:
-            print(feed_content.feed.link)
+            logger.debug("Feed link: %s", feed_content.feed.link)
             favicon_url = get_icon_url("https://" + QtCore.QUrl(feed_content.feed.link).host())
         else:
             favicon_url = get_icon_url(feed_link)
@@ -539,7 +536,7 @@ class BrePodder(MainUi):
                 # self.AudioPlayer.setUrl(enc)
 
             except (TypeError, KeyError) as e:
-                print(f"EpisodeActivated exception: {e}")
+                logger.warning("EpisodeActivated exception: %s", e)
 
     def DownloadActivated(self, item, i):
         self.itemZaPrekid = item
@@ -572,7 +569,7 @@ class BrePodder(MainUi):
         try:
             item.setText(5, e["enclosure"])
         except TypeError:
-            print(TypeError)
+            logger.warning("No enclosure link for episode")
             item.setText(5, "No link")
 
         if len(self.downloadList) > 0:
@@ -632,7 +629,7 @@ class BrePodder(MainUi):
             self.update_episode_list(selection)
         except (TypeError, AttributeError) as e:
             # This can happen when a folder is selected instead of a channel
-            print(f"Failed to update episode list for '{selection}': {e}")
+            logger.debug("Failed to update episode list for '%s': %s", selection, e)
         
         self.actionCancel.setToolTip("Delete Selected Channel")
         self.actionUpdateFeeds.setToolTip("Update Selected Channel")
@@ -650,11 +647,11 @@ class BrePodder(MainUi):
                 shutil.rmtree(ChannelDir)
             except (TypeError, AttributeError, OSError) as e:
                 # Channel deletion failed, try deleting as taxonomy/folder instead
-                print(f"Channel deletion failed, trying as folder: {e}")
+                logger.debug("Channel deletion failed, trying as folder: %s", e)
                 try:
                     self.db.deleteTaxonomy(self.CurrentChannel)
                 except Exception as folder_error:
-                    print(f"Failed to delete folder: {folder_error}")
+                    logger.error("Failed to delete folder: %s", folder_error)
 
         self.update_channel_list()
 
@@ -693,7 +690,7 @@ class BrePodder(MainUi):
                 b = gmtime(float(e[5]))
                 epDate = strftime("%x", b)
             except (ValueError, TypeError, OverflowError) as date_err:
-                print(f"Failed to parse episode date: {date_err}")
+                logger.debug("Failed to parse episode date: %s", date_err)
                 b = gmtime()
                 epDate = strftime("%x", b)
 
@@ -719,7 +716,7 @@ class BrePodder(MainUi):
                 b = gmtime(float(e['date']))
                 epDate = strftime("%x", b)
             except (ValueError, TypeError, OverflowError, KeyError) as date_err:
-                print(f"Failed to parse playlist episode date: {date_err}")
+                logger.debug("Failed to parse playlist episode date: %s", date_err)
                 b = gmtime()
                 epDate = strftime("%x", b)
 
@@ -770,7 +767,7 @@ class BrePodder(MainUi):
                 else:
                     sizeReadable = str(size_int) + ' B'
             except (ValueError, TypeError) as e:
-                print(f"Failed to convert size to readable format: {e}")
+                logger.debug("Failed to convert size to readable format: %s", e)
                 sizeReadable = str(size)
         else:
             sizeReadable = 'None'
@@ -801,7 +798,7 @@ class BrePodder(MainUi):
                 b = gmtime(float(t[5]))  # .date
                 epDate = strftime("%x", b)
             except (ValueError, TypeError, OverflowError) as date_err:
-                print(f"Failed to parse episode date: {date_err}")
+                logger.debug("Failed to parse episode date: %s", date_err)
                 b = gmtime()
                 epDate = strftime("%x", b)
             item2.setText(2, epDate)
@@ -810,7 +807,7 @@ class BrePodder(MainUi):
                 item2.setFont(0, self.fontBold)
 
     def update_channel_list(self, search_term: str = ''):
-        print(search_term)
+        logger.debug("Updating channel list with search term: %s", search_term)
         channels = self.db.getAllChannelsWOFolder()
         folders = self.db.getAllFolders()
         self.listWidget.clear()
@@ -912,9 +909,9 @@ class BrePodder(MainUi):
 
         for channel in self.updated_channes_list:
             try:
-                print(channel['channel_feedlink'])
+                logger.debug("Updating channel: %s", channel['channel_feedlink'])
             except TypeError:
-                print("ERROR")
+                logger.error("Invalid channel data, skipping")
                 continue
 
             ch = channel['channel_row']
@@ -951,13 +948,13 @@ class BrePodder(MainUi):
                         try:
                             new_episode['enclosure'] = i.enclosures[0].href
                         except (IndexError, AttributeError) as e:
-                            print(f"Failed to parse enclosure href: {e}")
+                            logger.warning("Failed to parse enclosure href: %s", e)
                             new_episode['enclosure'] = "None"
 
                         try:
                             new_episode['size'] = int(i.enclosures[0].length)
                         except (IndexError, AttributeError, ValueError, TypeError) as e:
-                            print(f"Failed to parse enclosure size: {e}")
+                            logger.warning("Failed to parse enclosure size: %s", e)
                             new_episode['size'] = '1'
                         new_episode['status'] = u"new"
                     else:
@@ -983,21 +980,18 @@ class BrePodder(MainUi):
                     self.db.insertEpisode(new_episode_tupple)
 
                 elif 'title' not in i:
-                    print("No title")
+                    logger.debug("Episode entry has no title")
                 else:
                     if j[2] != u"old":
                         try:
-                            # print "old"
                             self.db.updateEpisodeStatus(j[0])
-
                         except Exception as ex:
-                            print(ex)
-                            print(j)
+                            logger.error("Failed to update episode status: %s, episode: %s", ex, j)
                     # cur.execute('update  sql_episode set status= "old" where sql_episode.id = ?',(j[0],) )
-        print("update_db_with_all_channels DONE.")
+        logger.info("Database update for all channels completed")
 
     def sendMessage(self, message):
-        print(message)
+        logger.info(message)
 
     def update_done(self):
         self.updateProgressBar.hide()

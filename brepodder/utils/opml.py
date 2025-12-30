@@ -5,6 +5,9 @@ import datetime
 import requests
 
 from config import USER_AGENT
+from logger import get_logger
+
+logger = get_logger(__name__)
 
 class Exporter(object):
     """
@@ -73,7 +76,7 @@ class Exporter(object):
             with open(self.filename, 'wb') as fp:
                 fp.write(doc.toprettyxml(encoding='utf-8'))
         except (IOError, OSError, PermissionError) as e:
-            print(f"Could not write OPML file '{self.filename}': {e}")
+            logger.error("Could not write OPML file '%s': %s", self.filename, e)
             return False
 
         return True
@@ -98,13 +101,13 @@ class Importer(object):
         try:
             response = requests.get(url, headers=headers)
         except requests.exceptions.ConnectionError as e:
-            print('404', e)
+            logger.error("Connection error for %s: %s", url, e)
             return ''
         except requests.exceptions.HTTPError as e:
-            print('404', e)
+            logger.error("HTTP error for %s: %s", url, e)
             return ''
         except requests.exceptions.MissingSchema as e:
-            print('MissingSchema', e)
+            logger.error("Missing schema for %s: %s", url, e)
             return ''
         else:
             return response.content
@@ -138,10 +141,9 @@ class Importer(object):
 
                     self.items.append(channel)
             if not len(self.items):
-                print('OPML import finished, but no items found: ' + url)
-#                log( 'OPML import finished, but no items found: %s', url, sender = self)
+                logger.warning("OPML import finished, but no items found: %s", url)
         except IndexError:
-            print('Cannot import OPML from URL: ' + url)
+            logger.error("Cannot import OPML from URL: %s", url)
 #            log( 'Cannot import OPML from URL: %s', url, sender = self)
 
     def format_channel(self, channel):

@@ -1,6 +1,9 @@
 from ui.Ui_mainwindow import *
 import os
 from PyQt5 import QtCore, QtNetwork
+from logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class Download(QtCore.QObject):
@@ -41,9 +44,9 @@ class Download(QtCore.QObject):
     def downloadFile(self):
         self.header = QtNetwork.QNetworkRequest(self.link)
         if self._status == "paused":
-            print("resuming")
+            logger.debug("Resuming download")
             resume_bytes = "bytes=" + str(self.bytesRead) + "-"
-            print(resume_bytes)
+            logger.debug("Resume bytes: %s", resume_bytes)
             self.header.setRawHeader(b'Range', bytes(resume_bytes, 'utf-8'))
 
         self.reply = self.manager.get(self.header)
@@ -70,7 +73,7 @@ class Download(QtCore.QObject):
 
         if self._status == "paused":
             self._status = "downloading"
-            print("downloading")
+            logger.debug("Downloading")
             self.tempBytes = self.bytesRead
             #self.bytesRead = self.bytesRead + bytesRead
 
@@ -78,16 +81,16 @@ class Download(QtCore.QObject):
         try:
             downloaded = str(round((float(self.bytesRead) / float(self.totalBytes)) * 100))
         except (ZeroDivisionError, ValueError, TypeError) as e:
-            print(f"Failed to calculate download progress: {e}")
+            logger.debug("Failed to calculate download progress: %s", e)
             downloaded = '0'
 
         self.itemZaPrenos.setText(3, downloaded)
 
 
     def replyFinished(self, reply, file):
-        print("replyFinished")
+        logger.debug("Reply finished for %s", file)
         status = self.reply.attribute(QtNetwork.QNetworkRequest.HttpStatusCodeAttribute)
-        print(status)
+        logger.debug("HTTP status: %s", status)
 
         if (status == 200):
             self.finishedDownloading = True
@@ -105,9 +108,7 @@ class Download(QtCore.QObject):
             self.downloadFile()
 
         else:
-
-            print("Network Error")
-            print(status)
+            logger.error("Network error, status: %s", status)
 
     def on_reply_readyRead(self):
         if (self.fp == None or self.fp.closed):
@@ -148,10 +149,6 @@ class Download(QtCore.QObject):
             os.remove(self.saveFileName)
 
     def on_reply_error(self, code):
-        print("on_reply_error")
-        print(code)
+        logger.error("Download error (code %s): %s", code, self.reply.errorString())
         self._status = "error"
-        #self.trigger.emit(QtCore.SIGNAL("statusChanged()"))
-        #logging.error("Download(%s): %s" % (code, self.reply.errorString()))
-        #self.trigger.emit(QtCore.SIGNAL("error(int, QString)"), code, self.reply.errorString())
 
