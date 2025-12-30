@@ -3,7 +3,7 @@ Settings dialog for brePodder.
 
 Allows configuration of audio player and other preferences.
 """
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 from config import DEFAULT_FONT_SIZE
 from config_players import (
@@ -81,6 +81,18 @@ class SettingsDialog(QtWidgets.QDialog):
         # GUI Settings Group
         gui_group = QtWidgets.QGroupBox("GUI Settings")
         gui_layout = QtWidgets.QFormLayout(gui_group)
+
+        # Theme selection combo box
+        self.themeCombo = QtWidgets.QComboBox()
+        self.themeCombo.addItem("System Default", "system")
+        self.themeCombo.addItem("Light", "light")
+        self.themeCombo.addItem("Dark", "dark")
+        gui_layout.addRow("Theme:", self.themeCombo)
+
+        # Theme description
+        theme_help = QtWidgets.QLabel("Select application color theme")
+        theme_help.setStyleSheet("color: gray; font-size: 10px;")
+        gui_layout.addRow("", theme_help)
 
         # Font size spinner
         self.fontSizeSpinner = QtWidgets.QSpinBox()
@@ -187,6 +199,12 @@ class SettingsDialog(QtWidgets.QDialog):
             self.fontSizeSpinner.setValue(int(font_size))
         else:
             self.fontSizeSpinner.setValue(DEFAULT_FONT_SIZE)
+        
+        # Load theme setting
+        theme = self.db.getSetting('gui_theme') or 'system'
+        theme_index = self.themeCombo.findData(theme)
+        if theme_index >= 0:
+            self.themeCombo.setCurrentIndex(theme_index)
 
     def saveSettings(self):
         """Save settings to database."""
@@ -199,16 +217,63 @@ class SettingsDialog(QtWidgets.QDialog):
         
         # Save GUI settings
         self.db.setSetting('gui_font_size', str(self.fontSizeSpinner.value()))
+        self.db.setSetting('gui_theme', self.themeCombo.currentData())
         
-        logger.info("Settings saved: player=%s, custom=%s, font_size=%d", 
-                    player_key, self.customPlayerCheck.isChecked(), self.fontSizeSpinner.value())
+        logger.info("Settings saved: player=%s, custom=%s, font_size=%d, theme=%s", 
+                    player_key, self.customPlayerCheck.isChecked(), self.fontSizeSpinner.value(),
+                    self.themeCombo.currentData())
+
+    def applyTheme(self, theme):
+        """Apply the selected theme to the application."""
+        app = QtWidgets.QApplication.instance()
+        if theme == 'dark':
+            app.setStyle('Fusion')
+            dark_palette = QtGui.QPalette()
+            dark_palette.setColor(QtGui.QPalette.Window, QtGui.QColor(53, 53, 53))
+            dark_palette.setColor(QtGui.QPalette.WindowText, QtGui.QColor(255, 255, 255))
+            dark_palette.setColor(QtGui.QPalette.Base, QtGui.QColor(35, 35, 35))
+            dark_palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(53, 53, 53))
+            dark_palette.setColor(QtGui.QPalette.ToolTipBase, QtGui.QColor(25, 25, 25))
+            dark_palette.setColor(QtGui.QPalette.ToolTipText, QtGui.QColor(255, 255, 255))
+            dark_palette.setColor(QtGui.QPalette.Text, QtGui.QColor(255, 255, 255))
+            dark_palette.setColor(QtGui.QPalette.Button, QtGui.QColor(53, 53, 53))
+            dark_palette.setColor(QtGui.QPalette.ButtonText, QtGui.QColor(255, 255, 255))
+            dark_palette.setColor(QtGui.QPalette.BrightText, QtGui.QColor(255, 0, 0))
+            dark_palette.setColor(QtGui.QPalette.Link, QtGui.QColor(42, 130, 218))
+            dark_palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(42, 130, 218))
+            dark_palette.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(35, 35, 35))
+            dark_palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtGui.QColor(127, 127, 127))
+            dark_palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, QtGui.QColor(127, 127, 127))
+            app.setPalette(dark_palette)
+        elif theme == 'light':
+            app.setStyle('Fusion')
+            light_palette = QtGui.QPalette()
+            light_palette.setColor(QtGui.QPalette.Window, QtGui.QColor(240, 240, 240))
+            light_palette.setColor(QtGui.QPalette.WindowText, QtGui.QColor(0, 0, 0))
+            light_palette.setColor(QtGui.QPalette.Base, QtGui.QColor(255, 255, 255))
+            light_palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(245, 245, 245))
+            light_palette.setColor(QtGui.QPalette.ToolTipBase, QtGui.QColor(255, 255, 220))
+            light_palette.setColor(QtGui.QPalette.ToolTipText, QtGui.QColor(0, 0, 0))
+            light_palette.setColor(QtGui.QPalette.Text, QtGui.QColor(0, 0, 0))
+            light_palette.setColor(QtGui.QPalette.Button, QtGui.QColor(240, 240, 240))
+            light_palette.setColor(QtGui.QPalette.ButtonText, QtGui.QColor(0, 0, 0))
+            light_palette.setColor(QtGui.QPalette.BrightText, QtGui.QColor(255, 0, 0))
+            light_palette.setColor(QtGui.QPalette.Link, QtGui.QColor(0, 100, 200))
+            light_palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(0, 120, 215))
+            light_palette.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255, 255, 255))
+            app.setPalette(light_palette)
+        else:  # system
+            app.setStyle('')
+            app.setPalette(app.style().standardPalette())
 
     def applySettings(self):
         """Apply settings without closing dialog."""
         self.saveSettings()
+        self.applyTheme(self.themeCombo.currentData())
         QtWidgets.QMessageBox.information(self, "Settings", "Settings applied successfully.")
 
     def accept(self):
         """Save settings and close dialog."""
         self.saveSettings()
+        self.applyTheme(self.themeCombo.currentData())
         super().accept()

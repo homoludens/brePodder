@@ -26,8 +26,50 @@ if __name__ == "__main__":
 
     app = QtWidgets.QApplication(sys.argv)
     
-    # Apply font size setting
     db = DBOperation()
+    
+    # Apply theme setting
+    theme = db.getSetting('gui_theme') or 'system'
+    logger.info("Applying theme: %s", theme)
+    if theme == 'dark':
+        app.setStyle('Fusion')
+        dark_palette = QtGui.QPalette()
+        dark_palette.setColor(QtGui.QPalette.Window, QtGui.QColor(53, 53, 53))
+        dark_palette.setColor(QtGui.QPalette.WindowText, QtGui.QColor(255, 255, 255))
+        dark_palette.setColor(QtGui.QPalette.Base, QtGui.QColor(35, 35, 35))
+        dark_palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(53, 53, 53))
+        dark_palette.setColor(QtGui.QPalette.ToolTipBase, QtGui.QColor(25, 25, 25))
+        dark_palette.setColor(QtGui.QPalette.ToolTipText, QtGui.QColor(255, 255, 255))
+        dark_palette.setColor(QtGui.QPalette.Text, QtGui.QColor(255, 255, 255))
+        dark_palette.setColor(QtGui.QPalette.Button, QtGui.QColor(53, 53, 53))
+        dark_palette.setColor(QtGui.QPalette.ButtonText, QtGui.QColor(255, 255, 255))
+        dark_palette.setColor(QtGui.QPalette.BrightText, QtGui.QColor(255, 0, 0))
+        dark_palette.setColor(QtGui.QPalette.Link, QtGui.QColor(42, 130, 218))
+        dark_palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(42, 130, 218))
+        dark_palette.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(35, 35, 35))
+        dark_palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtGui.QColor(127, 127, 127))
+        dark_palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, QtGui.QColor(127, 127, 127))
+        app.setPalette(dark_palette)
+    elif theme == 'light':
+        app.setStyle('Fusion')
+        light_palette = QtGui.QPalette()
+        light_palette.setColor(QtGui.QPalette.Window, QtGui.QColor(240, 240, 240))
+        light_palette.setColor(QtGui.QPalette.WindowText, QtGui.QColor(0, 0, 0))
+        light_palette.setColor(QtGui.QPalette.Base, QtGui.QColor(255, 255, 255))
+        light_palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(245, 245, 245))
+        light_palette.setColor(QtGui.QPalette.ToolTipBase, QtGui.QColor(255, 255, 220))
+        light_palette.setColor(QtGui.QPalette.ToolTipText, QtGui.QColor(0, 0, 0))
+        light_palette.setColor(QtGui.QPalette.Text, QtGui.QColor(0, 0, 0))
+        light_palette.setColor(QtGui.QPalette.Button, QtGui.QColor(240, 240, 240))
+        light_palette.setColor(QtGui.QPalette.ButtonText, QtGui.QColor(0, 0, 0))
+        light_palette.setColor(QtGui.QPalette.BrightText, QtGui.QColor(255, 0, 0))
+        light_palette.setColor(QtGui.QPalette.Link, QtGui.QColor(0, 100, 200))
+        light_palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(0, 120, 215))
+        light_palette.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255, 255, 255))
+        app.setPalette(light_palette)
+    # else: 'system' - use default system theme
+    
+    # Apply font size setting
     font_size_str = db.getSetting('gui_font_size')
     if font_size_str:
         try:
