@@ -1,12 +1,14 @@
 import requests
 import favicon
 import os
+from typing import Optional
+
 from logger import get_logger
 
 logger = get_logger(__name__)
 
 
-def get_icon_url(url):
+def get_icon_url(url: str) -> Optional[str]:
     try:
         icons = favicon.get(url)
         icon = icons[0]
@@ -21,9 +23,10 @@ def get_icon_url(url):
         logger.debug("Missing schema for %s: %s", url, e)
     except requests.exceptions.InvalidURL as e:
         logger.debug("Invalid URL %s: %s", url, e)
+    return None
 
 
-def get_icon(url, local_file_name):
+def get_icon(url: str, local_file_name: str) -> None:
     logger.debug("get_icon called for: %s", url)
     try:
         icons = favicon.get(url)
@@ -39,7 +42,7 @@ def get_icon(url, local_file_name):
         logger.debug("Invalid URL %s: %s", url, e)
 
 
-def download_image(url, local_file_path):
+def download_image(url: str, local_file_path: str) -> None:
     headers = {
         'User-Agent': 'brePodder/0.02'
     }

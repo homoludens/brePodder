@@ -12,14 +12,14 @@ from config import DATA_DIR, APP_NAME
 
 
 # Log file path
-LOG_FILE = DATA_DIR / "brepodder.log"
+LOG_FILE: Path = DATA_DIR / "brepodder.log"
 
 # Log format
-LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+LOG_DATE_FORMAT: str = "%Y-%m-%d %H:%M:%S"
 
 
-def setup_logging(level=logging.INFO):
+def setup_logging(level: int = logging.INFO) -> logging.Logger:
     """
     Configure logging for the application.
     

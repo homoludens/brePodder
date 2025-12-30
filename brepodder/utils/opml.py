@@ -3,13 +3,15 @@ import xml.sax.saxutils
 import os.path
 import datetime
 import requests
+from typing import Any, Union
 
 from config import USER_AGENT
 from logger import get_logger
 
 logger = get_logger(__name__)
 
-class Exporter(object):
+
+class Exporter:
     """
     Helper class to export a list of channel objects
     to a local file in OPML 1.1 format.
@@ -17,15 +19,15 @@ class Exporter(object):
     See www.opml.org for the OPML specification.
     """
 
-    FEED_TYPE = 'rss'
+    FEED_TYPE: str = 'rss'
 
-    def __init__(self, filename):
+    def __init__(self, filename: str) -> None:
         if filename.endswith('.opml') or filename.endswith('.xml'):
             self.filename = filename
         else:
             self.filename = '%s.opml' % (filename, )
 
-    def create_node(self, doc, name, content):
+    def create_node(self, doc: xml.dom.minidom.Document, name: str, content: str) -> xml.dom.minidom.Element:
         """
         Creates a simple XML Element node in a document
         with tag name "name" and text content "content",
@@ -35,7 +37,7 @@ class Exporter(object):
         node.appendChild(doc.createTextNode(content))
         return node
 
-    def create_outline(self, doc, channel):
+    def create_outline(self, doc: xml.dom.minidom.Document, channel: tuple[Any, ...]) -> xml.dom.minidom.Element:
         """
         Creates a OPML outline as XML Element node in a
         document for the supplied channel.
@@ -47,7 +49,7 @@ class Exporter(object):
         outline.setAttribute('type', self.FEED_TYPE)
         return outline
 
-    def write(self, channels):
+    def write(self, channels: list[tuple[Any, ...]]) -> bool:
         """
         Creates a XML document containing metadata for each
         channel object in the "channels" parameter, which
@@ -82,7 +84,7 @@ class Exporter(object):
         return True
 
 
-class Importer(object):
+class Importer:
     """
     Helper class to import an OPML feed from protocols
     supported by urllib2 (e.g. HTTP) and return a GTK
@@ -92,9 +94,9 @@ class Importer(object):
     contains workarounds to support odeo.com feeds.
     """
 
-    VALID_TYPES = ('rss', 'link')
+    VALID_TYPES: tuple[str, str] = ('rss', 'link')
 
-    def read_url(self, url):
+    def read_url(self, url: str) -> Union[bytes, str]:
         headers = {
             'User-Agent': USER_AGENT
         }
@@ -112,12 +114,12 @@ class Importer(object):
         else:
             return response.content
 
-    def __init__(self, url):
+    def __init__(self, url: str) -> None:
         """
         Parses the OPML feed from the given URL into
         a local data structure containing channel metadata.
         """
-        self.items = []
+        self.items: list[dict[str, str]] = []
         try:
             if os.path.exists(url):
                 # assume local filename
@@ -145,7 +147,7 @@ class Importer(object):
         except IndexError:
             logger.error("Cannot import OPML from URL: %s", url)
 
-    def get_model(self):
+    def get_model(self) -> list[dict[str, str]]:
         model = []
         for channel in self.items:
             model.append(channel)

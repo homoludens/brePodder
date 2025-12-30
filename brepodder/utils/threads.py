@@ -10,6 +10,7 @@ import os
 import sqlite3
 import feedparser
 import requests
+from typing import Any, Optional, Union
 
 from config import DATA_DIR, DATABASE_FILE, USER_AGENT, REQUEST_TIMEOUT
 from logger import get_logger
@@ -34,18 +35,18 @@ class UpdateChannelThread_network(QtCore.QThread):
     updatesignal_episodelist = QtCore.pyqtSignal()
     updateAllChannelsDoneSignal = QtCore.pyqtSignal()
 
-    def __init__(self, channel, ui, update_progress=0):
+    def __init__(self, channel: Any, ui: Any, update_progress: int = 0) -> None:
         QtCore.QThread.__init__(self)
-        self.channel = channel
-        self.ui = ui
-        self.updateProgress = update_progress
-        self.newEpisodeExists = 0
-        self.main_directory = str(DATA_DIR) + '/'
-        self.headers = {
+        self.channel: Any = channel
+        self.ui: Any = ui
+        self.updateProgress: int = update_progress
+        self.newEpisodeExists: int = 0
+        self.main_directory: str = str(DATA_DIR) + '/'
+        self.headers: dict[str, str] = {
             'User-Agent': USER_AGENT
         }
 
-    def run(self):
+    def run(self) -> None:
         self.ui.Sem.acquire(1)
 
         self.ui.updated_channes_list.append(self.update_channel(self.channel))
@@ -60,7 +61,7 @@ class UpdateChannelThread_network(QtCore.QThread):
 
         self.ui.Sem.release(1)
 
-    def update_channel(self, channel_row=None):
+    def update_channel(self, channel_row: Any = None) -> Optional[dict[str, Any]]:
         """
         Fetch and parse the feed for a channel.
         
@@ -70,28 +71,29 @@ class UpdateChannelThread_network(QtCore.QThread):
         Returns:
             dict: Contains channel_row, channel_feedlink, and parsed feed
         """
-        feed_link = channel_row['link']
+        feed_link: str = channel_row['link']
 
-        content = ''
+        content: Union[str, BytesIO] = ''
         try:
             resp = requests.get(feed_link, timeout=REQUEST_TIMEOUT, headers=self.headers)
         except requests.ReadTimeout as e:
             logger.warning("Timeout when reading RSS %s: %s", feed_link, e)
-            return
+            return None
         except requests.exceptions.ConnectionError as e:
             logger.error("Connection error for %s: %s", feed_link, e)
-            return ''
+            return None
         except requests.exceptions.HTTPError as e:
             logger.error("HTTP error for %s: %s", feed_link, e)
-            return ''
+            return None
         except requests.exceptions.MissingSchema as e:
             logger.error("Missing schema for %s: %s", feed_link, e)
+            return None
         else:
             content = BytesIO(resp.content)
 
         feed = feedparser.parse(content)
 
-        updated_channel_dict = {
+        updated_channel_dict: dict[str, Any] = {
             'channel_row': channel_row,
             'channel_feedlink': feed_link,
             'feed': feed
@@ -112,18 +114,18 @@ class UpdateChannelThread(QtCore.QThread):
     updateDoneSignal = QtCore.pyqtSignal()
     updatesignal_episodelist = QtCore.pyqtSignal()
 
-    def __init__(self, channel, ui, update_progress=0):
+    def __init__(self, channel: Any, ui: Any, update_progress: int = 0) -> None:
         QtCore.QThread.__init__(self)
-        self.channel = channel
-        self.ui = ui
-        self.updateProgress = update_progress
-        self.newEpisodeExists = 0
-        self.main_directory = str(DATA_DIR) + '/'
-        self.headers = {
+        self.channel: Any = channel
+        self.ui: Any = ui
+        self.updateProgress: int = update_progress
+        self.newEpisodeExists: int = 0
+        self.main_directory: str = str(DATA_DIR) + '/'
+        self.headers: dict[str, str] = {
             'User-Agent': USER_AGENT
         }
 
-    def run(self):
+    def run(self) -> None:
         self.ui.Sem.acquire(1)
         
         con = sqlite3.connect(str(DATABASE_FILE), check_same_thread=False)
@@ -145,10 +147,10 @@ class UpdateChannelThread(QtCore.QThread):
 
         self.ui.Sem.release(1)
 
-    def update_channel(self, ch=None, cursor=None):
+    def update_channel(self, ch: Any = None, cursor: Optional[sqlite3.Cursor] = None) -> Optional[str]:
         """Update channel episodes from feed."""
         cur = cursor
-        old_episodes = []
+        old_episodes: list[str] = []
         
         if ch is None:
             a, tt = self.ui.db.getCurrentChannel(self.ui.CurrentChannel[1])
@@ -161,22 +163,23 @@ class UpdateChannelThread(QtCore.QThread):
         for j in tt:
             old_episodes.append(j[1])
 
-        feed_link = a[2]
+        feed_link: str = a[2]
 
-        content = ''
+        content: Union[str, BytesIO] = ''
         try:
             resp = requests.get(feed_link, timeout=REQUEST_TIMEOUT, headers=self.headers)
         except requests.ReadTimeout as e:
             logger.warning("Timeout when reading RSS %s: %s", feed_link, e)
-            return
+            return None
         except requests.exceptions.ConnectionError as e:
             logger.error("Connection error for %s: %s", feed_link, e)
-            return ''
+            return None
         except requests.exceptions.HTTPError as e:
             logger.error("HTTP error for %s: %s", feed_link, e)
-            return ''
+            return None
         except requests.exceptions.MissingSchema as e:
             logger.error("Missing schema for %s: %s", feed_link, e)
+            return None
         else:
             content = BytesIO(resp.content)
 
@@ -203,6 +206,7 @@ class UpdateChannelThread(QtCore.QThread):
                         self.ui.db.updateEpisodeStatus(j[0])
                     except Exception as ex:
                         logger.error("Failed to update episode status: %s, episode: %s", ex, j)
+        return None
 
 
 class AddChannelThread(QtCore.QThread):
@@ -217,15 +221,15 @@ class AddChannelThread(QtCore.QThread):
     addDoneSignal = QtCore.pyqtSignal()
     addsignal_episodelist = QtCore.pyqtSignal()
 
-    def __init__(self, channel_url, ui, update_progress=0):
+    def __init__(self, channel_url: str, ui: Any, update_progress: int = 0) -> None:
         QtCore.QThread.__init__(self)
-        self.channel_url = channel_url
-        self.ui = ui
-        self.updateProgress = update_progress
-        self.newEpisodeExists = 0
-        self.main_directory = str(DATA_DIR) + '/'
+        self.channel_url: str = channel_url
+        self.ui: Any = ui
+        self.updateProgress: int = update_progress
+        self.newEpisodeExists: int = 0
+        self.main_directory: str = str(DATA_DIR) + '/'
 
-    def run(self):
+    def run(self) -> None:
         self.ui.Sem.acquire(1)
         
         con = sqlite3.connect(str(DATABASE_FILE), check_same_thread=False)
@@ -247,7 +251,7 @@ class AddChannelThread(QtCore.QThread):
 
         self.ui.Sem.release(1)
 
-    def add_channel(self, new_url=None, cursor=None):
+    def add_channel(self, new_url: Optional[str] = None, cursor: Optional[sqlite3.Cursor] = None) -> None:
         """Add a new channel from URL."""
         os.chdir(self.main_directory)
 
@@ -255,7 +259,7 @@ class AddChannelThread(QtCore.QThread):
         if is_video_link(feed_link):
             feed_link = get_youtube_rss(feed_link)
 
-        headers = {
+        headers: dict[str, str] = {
             'User-Agent': USER_AGENT
         }
         try:
@@ -276,7 +280,7 @@ class AddChannelThread(QtCore.QThread):
         item = QtWidgets.QTreeWidgetItem(self.ui.treeWidget)
 
         if 'title' in feed_content.feed:
-            ChannelTitle = feed_content.feed.title
+            ChannelTitle: str = feed_content.feed.title
         elif 'link' in feed_content.feed:
             ChannelTitle = feed_content.feed.link
         else:
@@ -290,7 +294,7 @@ class AddChannelThread(QtCore.QThread):
             logger.info("Channel already exists: %s", ChannelTitle)
             return
 
-        ChannelDir = self.ui.regex_white_space.sub("", ChannelTitle)
+        ChannelDir: str = self.ui.regex_white_space.sub("", ChannelTitle)
 
         if not os.path.exists(self.main_directory + ChannelDir):
             os.makedirs(self.main_directory + ChannelDir)
@@ -299,8 +303,8 @@ class AddChannelThread(QtCore.QThread):
         item.setText(0, ChannelTitle)
 
         # Download channel logo
-        logo_fileBig = ''
-        imageURL = ''
+        logo_fileBig: str = ''
+        imageURL: str = ''
         if 'image' in feed_content.feed:
             if feed_content.feed.image.href is not None:
                 if feed_content.feed.image.href[0] == '/':
@@ -329,14 +333,14 @@ class AddChannelThread(QtCore.QThread):
             favicon_url = get_icon_url(feed_link)
 
         if favicon_url:
-            url = favicon_url
+            url: str = favicon_url
         else:
             url = ''
 
         url_favicon = QtCore.QUrl(url)
         favicon_info = QtCore.QFileInfo(url_favicon.path())
-        favicon = favicon_info.fileName()
-        logo_file = ChannelDir + '/' + favicon
+        favicon_name = favicon_info.fileName()
+        logo_file: str = ChannelDir + '/' + favicon_name
 
         download_image(url, self.main_directory + logo_file)
         self.ui.resize_image(self.main_directory + logo_file, self.main_directory + logo_file)
@@ -352,7 +356,7 @@ class AddChannelThread(QtCore.QThread):
         item2.setText(5, url)
 
         if len(self.ui.downloadList) > 0:
-            downloadId = self.ui.downloadList[-1][0] + 1
+            downloadId: int = self.ui.downloadList[-1][0] + 1
         else:
             downloadId = 0
 
@@ -362,16 +366,16 @@ class AddChannelThread(QtCore.QThread):
         self.ui.downloadList[downloadId][1].faviconFound = True
 
         if 'subtitle' in feed_content.feed:
-            ChannelSubtitle = feed_content.feed.subtitle
+            ChannelSubtitle: str = feed_content.feed.subtitle
         else:
             ChannelSubtitle = 'No description'
 
         if 'links' in feed_content.feed:
-            ChannelHomepage = feed_content.feed.links[0].href
+            ChannelHomepage: str = feed_content.feed.links[0].href
         else:
             ChannelHomepage = 'http://google.com'
 
-        newChannel = (ChannelTitle, feed_link, ChannelHomepage, ChannelSubtitle, logo_file, logo_fileBig)
+        newChannel: tuple[str, str, str, str, str, str] = (ChannelTitle, feed_link, ChannelHomepage, ChannelSubtitle, logo_file, logo_fileBig)
         self.ui.db.insertChannel(newChannel)
 
         ChannelId = self.ui.db.getChannelByTitle(ChannelTitle)
@@ -381,7 +385,7 @@ class AddChannelThread(QtCore.QThread):
 
         os.chdir(str(DATA_DIR))
 
-    def add_episode(self, channel_id, episode):
+    def add_episode(self, channel_id: int, episode: Any) -> None:
         """Add an episode to the database."""
         from utils.feed_parser import parse_episode_from_feed_entry
         

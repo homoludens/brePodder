@@ -8,6 +8,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from time import gmtime, strftime
 import os
 import sqlite3
+from typing import Any, Optional, Union
 
 from ui.Ui_mainwindow import MainUi
 from utils.download import Download
@@ -19,10 +20,10 @@ from logger import get_logger
 logger = get_logger(__name__)
 
 # Qt item flags for tree widget items
-draggable = QtCore.Qt.ItemIsDragEnabled
-droppable = QtCore.Qt.ItemIsDropEnabled
-enabled = QtCore.Qt.ItemIsEnabled
-selectable = QtCore.Qt.ItemIsSelectable
+draggable: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsDragEnabled
+droppable: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsDropEnabled
+enabled: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsEnabled
+selectable: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsSelectable
 
 
 class BrePodder(MainUi):
@@ -33,23 +34,23 @@ class BrePodder(MainUi):
     This class handles all user interactions and application logic.
     """
 
-    def __init__(self, app):
+    def __init__(self, app: QtWidgets.QApplication) -> None:
         MainUi.__init__(self, app)
-        self.headers = {
+        self.headers: dict[str, str] = {
             'User-Agent': USER_AGENT
         }
-        self.app = app
+        self.app: QtWidgets.QApplication = app
         mainwindow = QtWidgets.QMainWindow()
         self.setupUi(mainwindow)
         mainwindow.show()
         self.update_channel_list()
         self.update_lastest_episodes_list()
         self.update_newest_episodes_list()
-        self.playlist = []
-        self.updated_channes_list = []
-        self.main_directory = str(DATA_DIR) + '/'
+        self.playlist: list[Any] = []
+        self.updated_channes_list: list[Any] = []
+        self.main_directory: str = str(DATA_DIR) + '/'
 
-    def resize_image(self, source_image, destination_image):
+    def resize_image(self, source_image: str, destination_image: str) -> None:
         """Resize an image to thumbnail size if it's too large."""
         pixmap = QtGui.QPixmap(source_image)
         if pixmap.height() > THUMBNAIL_MAX_SIZE or pixmap.width() > THUMBNAIL_MAX_SIZE:
@@ -58,7 +59,7 @@ class BrePodder(MainUi):
                 os.makedirs(os.path.dirname(destination_image))
             pixmap_resized.save(destination_image)
 
-    def episode_activated(self):
+    def episode_activated(self) -> None:
         """Handle episode selection - display episode details."""
         if self.treeWidget_2.selectedItems():
             selection = self.treeWidget_2.selectedItems()[0]
@@ -79,14 +80,14 @@ class BrePodder(MainUi):
             except (TypeError, KeyError) as e:
                 logger.warning("EpisodeActivated exception: %s", e)
 
-    def DownloadActivated(self, item, i):
+    def DownloadActivated(self, item: QtWidgets.QTreeWidgetItem, i: int) -> None:
         """Handle download item selection."""
         self.itemZaPrekid = item
         self.actionCancel.setToolTip("Remove Selected Download")
         self.actionPause.setToolTip("Pause Selected Download")
         self.actionResume.setToolTip("Resume Selected Download")
 
-    def EpisodeDoubleClicked(self, episode_row):
+    def EpisodeDoubleClicked(self, episode_row: Optional[QtWidgets.QTreeWidgetItem]) -> None:
         """Handle double-click on episode - start download."""
         if episode_row:
             episode_row.setFont(0, self.fontBold)
@@ -124,7 +125,7 @@ class BrePodder(MainUi):
 
         os.chdir(str(DATA_DIR))
 
-    def add_channel(self, new_url=None):
+    def add_channel(self, new_url: Optional[str] = None) -> None:
         """Add a new channel/podcast subscription."""
         os.chdir(str(DATA_DIR))
         if not new_url:
@@ -145,7 +146,7 @@ class BrePodder(MainUi):
         self.update_channel_threads.append(addChTr)
         addChTr.start()
 
-    def adding_channal_done(self):
+    def adding_channal_done(self) -> None:
         """Handle completion of channel addition."""
         self.updateProgressBar.hide()
         self.QLineEdit1.show()
@@ -154,7 +155,7 @@ class BrePodder(MainUi):
         self.update_channel_list()
         self.sendMessage("Updating Done")
 
-    def channel_activated(self):
+    def channel_activated(self) -> None:
         """Handle channel selection."""
         selection = self.listWidget.currentItem().text(0)
 
@@ -170,7 +171,7 @@ class BrePodder(MainUi):
         self.actionCancel.setToolTip("Delete Selected Channel")
         self.actionUpdateFeeds.setToolTip("Update Selected Channel")
 
-    def delete_channel(self):
+    def delete_channel(self) -> None:
         """Delete the currently selected channel."""
         if self.tab.isVisible():
             try:
@@ -192,7 +193,7 @@ class BrePodder(MainUi):
 
         self.update_channel_list()
 
-    def update_lastest_episodes_list(self):
+    def update_lastest_episodes_list(self) -> None:
         """Update the list of last 50 downloaded episodes."""
         episodes = self.db.getLatestDownloads()
         self.treeWidget_4.clear()
@@ -205,7 +206,7 @@ class BrePodder(MainUi):
             item.setText(2, self.getReadableSize(e[4]))
             item.setText(3, str(DATA_DIR / str(e[3])))
 
-    def update_newest_episodes_list(self):
+    def update_newest_episodes_list(self) -> None:
         """Update the list of newest episodes."""
         episodes = self.db.getLatestEpisodes()
         self.treeWidget_5.clear()
@@ -232,7 +233,7 @@ class BrePodder(MainUi):
             if e[2] and e[2] is not None:
                 item.setText(4, e[2])
 
-    def update_play_list(self, episodes):
+    def update_play_list(self, episodes: list[Any]) -> None:
         """Update the playlist display."""
         self.treewidget_playlist.clear()
 
@@ -257,25 +258,25 @@ class BrePodder(MainUi):
             if e['enclosure'] and e['enclosure'] is not None:
                 item.setText(4, e['enclosure'])
 
-    def PlaylistEpisodeDoubleClicked(self, a):
+    def PlaylistEpisodeDoubleClicked(self, a: QtWidgets.QTreeWidgetItem) -> None:
         """Handle double-click on playlist item - play episode."""
         self.AudioPlayer.setUrl(a.text(4))
 
-    def LastestEpisodeDoubleClicked(self, episode_row):
+    def LastestEpisodeDoubleClicked(self, episode_row: QtWidgets.QTreeWidgetItem) -> None:
         """Handle double-click on latest episode."""
         episodeTitle = episode_row.text(0)
         episode = self.db.getEpisodeByTitle(episodeTitle)
         self.playlist.append(episode)
         self.update_play_list(self.playlist)
 
-    def NewestEpisodeDoubleClicked(self, episode_row):
+    def NewestEpisodeDoubleClicked(self, episode_row: QtWidgets.QTreeWidgetItem) -> None:
         """Handle double-click on newest episode."""
         episode_title = episode_row.text(1)
         episode = self.db.getEpisodeByTitle(episode_title)
         self.playlist.append(episode)
         self.update_play_list(self.playlist)
 
-    def getReadableSize(self, size):
+    def getReadableSize(self, size: Optional[Union[int, str]]) -> str:
         """Convert byte size to human-readable format."""
         if size:
             try:
@@ -293,7 +294,7 @@ class BrePodder(MainUi):
             sizeReadable = 'None'
         return sizeReadable
 
-    def update_episode_list(self, channel_Title):
+    def update_episode_list(self, channel_Title: str) -> None:
         """Update the episode list for a channel."""
         if self.db.is_folder(channel_Title):
             tt = self.db.getFolderEpisodes(channel_Title)
@@ -331,7 +332,7 @@ class BrePodder(MainUi):
             if t[7] == 'new':
                 item2.setFont(0, self.fontBold)
 
-    def update_channel_list(self, search_term: str = ''):
+    def update_channel_list(self, search_term: str = '') -> None:
         """Update the channel list, optionally filtering by search term."""
         logger.debug("Updating channel list with search term: %s", search_term)
         channels = self.db.getAllChannelsWOFolder()
@@ -365,20 +366,20 @@ class BrePodder(MainUi):
                 item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(str(DATA_DIR / channel[6]))))
                 item.setFlags(enabled | draggable | selectable)
 
-    def updateProgressBarFromThread(self):
+    def updateProgressBarFromThread(self) -> None:
         """Update progress bar from background thread."""
         self.updateProgressBar.setValue(self.updateProgressBar.value() + 1)
         if self.updateProgressBar.value() == self.numberOfChannels - 1:
             self.update_done()
 
-    def create_new_foder(self):
+    def create_new_foder(self) -> None:
         """Create a new folder for organizing channels."""
         text, ok = QtWidgets.QInputDialog.getText(self.MW, 'Input Dialog', 'Enter name for new folder:')
         if ok:
             self.db.insertFolder(text)
         self.update_channel_list()
 
-    def update_channel(self):
+    def update_channel(self) -> None:
         """Update the currently selected channel."""
         self.QLineEdit1.hide()
         self.QPushButton1.hide()
@@ -397,13 +398,13 @@ class BrePodder(MainUi):
         self.update_channel_threads.append(updtChTr)
         updtChTr.start()
 
-    def update_all_channels(self):
+    def update_all_channels(self) -> None:
         """Update all channels in the background."""
         self.QLineEdit1.hide()
         self.QPushButton1.hide()
         self.updateProgressBar.show()
 
-        updtChTr = []
+        updtChTr: list[UpdateChannelThread_network] = []
         allChannels = self.db.getAllChannels()
 
         self.numberOfChannels = allChannels.__len__() - 1
@@ -422,7 +423,7 @@ class BrePodder(MainUi):
             updtChTr[j].start()
             j = j + 1
 
-    def update_db_with_all_channels(self):
+    def update_db_with_all_channels(self) -> None:
         """
         Process all fetched channel data and update database.
         
@@ -442,7 +443,7 @@ class BrePodder(MainUi):
             ch = channel['channel_row']
             feed = channel['feed']
 
-            old_episodes = []
+            old_episodes: list[str] = []
 
             cc = cur.execute('select id, title, link from sql_channel where title =?', (ch[1],))
             a = cc.fetchone()
@@ -476,11 +477,11 @@ class BrePodder(MainUi):
 
         logger.info("Database update for all channels completed")
 
-    def sendMessage(self, message):
+    def sendMessage(self, message: str) -> None:
         """Log a message."""
         logger.info(message)
 
-    def update_done(self):
+    def update_done(self) -> None:
         """Handle completion of channel update."""
         self.updateProgressBar.hide()
         self.QLineEdit1.show()

@@ -1,47 +1,50 @@
 from ui.Ui_mainwindow import *
 import os
-from PyQt5 import QtCore, QtNetwork
+from typing import Any, Optional, IO
+
+from PyQt5 import QtCore, QtNetwork, QtWidgets
+
 from logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class Download(QtCore.QObject):
-    fp = None
+    fp: Optional[IO[bytes]] = None
 
-    def __init__(self, link, item, downloadId, parent=None):
+    def __init__(self, link: str, item: QtWidgets.QTreeWidgetItem, downloadId: int, parent: Any = None) -> None:
 
         QtCore.QObject.__init__(self)
 
         url_done = QtCore.QUrl(link)
         fileInfo = QtCore.QFileInfo(url_done.path())
-        self.fileName = fileInfo.fileName()
+        self.fileName: str = fileInfo.fileName()
 
-        self._status = "downloading"
-        self.downloadId = downloadId
-        self.CurDir = os.getcwd()
-        self.saveFileName = self.CurDir + '/' + self.fileName
-        self.itemZaPrenos = item
+        self._status: str = "downloading"
+        self.downloadId: int = downloadId
+        self.CurDir: str = os.getcwd()
+        self.saveFileName: str = self.CurDir + '/' + self.fileName
+        self.itemZaPrenos: QtWidgets.QTreeWidgetItem = item
 
-        self.Parent = parent
-        self.manager = QtNetwork.QNetworkAccessManager()
-        self.link = QtCore.QUrl(link)
+        self.Parent: Any = parent
+        self.manager: QtNetwork.QNetworkAccessManager = QtNetwork.QNetworkAccessManager()
+        self.link: QtCore.QUrl = QtCore.QUrl(link)
 
-        self.CurrentChannel = None
-        self.header = None
-        self.totalBytes = 0
-        self.bytesRead = 0
-        self.tempBytes = 0
-        self.resumed = False
-        self.paused = False
-        self.urlRedirect = None
-        self.locationRedirect = None
-        self.httpRequestAborted = False
-        self.faviconFound = False
-        self.i = 0
+        self.CurrentChannel: Optional[str] = None
+        self.header: Optional[QtNetwork.QNetworkRequest] = None
+        self.totalBytes: int = 0
+        self.bytesRead: int = 0
+        self.tempBytes: int = 0
+        self.resumed: bool = False
+        self.paused: bool = False
+        self.urlRedirect: Optional[QtCore.QUrl] = None
+        self.locationRedirect: Optional[str] = None
+        self.httpRequestAborted: bool = False
+        self.faviconFound: bool = False
+        self.i: int = 0
         self.downloadFile()
 
-    def downloadFile(self):
+    def downloadFile(self) -> None:
         self.header = QtNetwork.QNetworkRequest(self.link)
         if self._status == "paused":
             logger.debug("Resuming download")
@@ -52,7 +55,7 @@ class Download(QtCore.QObject):
         self.reply = self.manager.get(self.header)
         self.reply.setParent(self)
 
-        self.manager.finished.connect(lambda reply: self.replyFinished( reply, self.fileName))
+        self.manager.finished.connect(lambda reply: self.replyFinished(reply, self.fileName))
         self.reply.error.connect(self.on_reply_error)
         self.reply.downloadProgress.connect(self.updateDataReadProgress)
         self.reply.readyRead.connect(self.on_reply_readyRead)
@@ -61,7 +64,7 @@ class Download(QtCore.QObject):
         self.Parent.actionPause.triggered.connect(self.pauseDownload)
         self.Parent.actionResume.triggered.connect(self.resumeDownload)
 
-    def updateDataReadProgress(self, bytesRead, totalBytes):
+    def updateDataReadProgress(self, bytesRead: int, totalBytes: int) -> None:
 
         if self.httpRequestAborted:
             return
@@ -85,8 +88,7 @@ class Download(QtCore.QObject):
 
         self.itemZaPrenos.setText(3, downloaded)
 
-
-    def replyFinished(self, reply, file):
+    def replyFinished(self, reply: QtNetwork.QNetworkReply, file: str) -> None:
         logger.debug("Reply finished for %s", file)
         status = self.reply.attribute(QtNetwork.QNetworkRequest.HttpStatusCodeAttribute)
         logger.debug("HTTP status: %s", status)
@@ -94,7 +96,7 @@ class Download(QtCore.QObject):
         if (status == 200):
             self.finishedDownloading = True
 
-            if not(self.fp == None or self.fp.closed):
+            if not (self.fp is None or self.fp.closed):
                 self.fp.close()
 
             self._status = "downloaded"
@@ -106,28 +108,26 @@ class Download(QtCore.QObject):
         else:
             logger.error("Network error, status: %s", status)
 
-    def on_reply_readyRead(self):
-        if (self.fp == None or self.fp.closed):
-           self.fp = open( self.saveFileName, "wb")
+    def on_reply_readyRead(self) -> None:
+        if (self.fp is None or self.fp.closed):
+            self.fp = open(self.saveFileName, "wb")
         read = self.reply.readAll()
         self.fp.write(read)
         self.fp.flush()
 
         if (read.length() > 0):
-            self.startedSaving  = True
+            self.startedSaving = True
 
-    def pauseDownload(self):
+    def pauseDownload(self) -> None:
         self.reply.abort()
         self._status = "paused"
 
-
-    def resumeDownload(self):
+    def resumeDownload(self) -> None:
         if (self._status == "paused"):
-            self.fp = open( self.saveFileName, "ab")
+            self.fp = open(self.saveFileName, "ab")
             self.downloadFile()
 
-
-    def cancelDownload(self):
+    def cancelDownload(self) -> None:
         if self.Parent.tab_2.isVisible():
             if self.itemZaPrenos == self.Parent.itemZaPrekid:
                 self.reply.abort()
@@ -135,14 +135,13 @@ class Download(QtCore.QObject):
                 self._status = "stoped"
                 self.remove_file()
 
-    def remove_file(self):
-        if not(self.fp == None or self.fp.closed):
+    def remove_file(self) -> None:
+        if not (self.fp is None or self.fp.closed):
             self.fp.close()
 
         if (os.path.exists(self.saveFileName)):
             os.remove(self.saveFileName)
 
-    def on_reply_error(self, code):
+    def on_reply_error(self, code: int) -> None:
         logger.error("Download error (code %s): %s", code, self.reply.errorString())
         self._status = "error"
-

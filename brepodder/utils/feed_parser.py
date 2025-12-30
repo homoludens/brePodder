@@ -2,12 +2,14 @@
 Feed parsing utilities for extracting episode data from RSS/Atom feeds.
 """
 from time import gmtime, mktime
+from typing import Any, Optional, Union
+
 from logger import get_logger
 
 logger = get_logger(__name__)
 
 
-def parse_episode_from_feed_entry(entry, channel_id):
+def parse_episode_from_feed_entry(entry: Any, channel_id: int) -> dict[str, Any]:
     """
     Parse a feed entry and extract episode data.
     
@@ -18,7 +20,7 @@ def parse_episode_from_feed_entry(entry, channel_id):
     Returns:
         dict: Episode data with keys: title, enclosure, size, date, description, status, channel_id
     """
-    new_episode = {
+    new_episode: dict[str, Any] = {
         'title': '',
         'enclosure': '',
         'size': 0,
@@ -62,7 +64,7 @@ def parse_episode_from_feed_entry(entry, channel_id):
     return new_episode
 
 
-def parse_episode_for_update(entry):
+def parse_episode_for_update(entry: Any) -> Optional[dict[str, Any]]:
     """
     Parse a feed entry for channel update operations.
     
@@ -76,7 +78,7 @@ def parse_episode_for_update(entry):
         logger.debug("Episode entry has no title")
         return None
         
-    new_episode = {}
+    new_episode: dict[str, Any] = {}
     
     if entry.title:
         new_episode['title'] = entry.title
@@ -118,7 +120,7 @@ def parse_episode_for_update(entry):
     return new_episode
 
 
-def episode_dict_to_tuple(episode):
+def episode_dict_to_tuple(episode: dict[str, Any]) -> tuple[str, str, Union[int, str], float, str, str, int]:
     """
     Convert an episode dictionary to a tuple for database insertion.
     
