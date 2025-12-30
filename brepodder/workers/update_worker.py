@@ -35,27 +35,27 @@ class UpdateChannelThread_network(QtCore.QThread):
         QtCore.QThread.__init__(self)
         self.channel: Any = channel
         self.ui: Any = ui
-        self.updateProgress: int = update_progress
-        self.newEpisodeExists: int = 0
+        self.update_progress: int = update_progress
+        self.new_episode_exists: int = 0
         self.main_directory: str = str(DATA_DIR) + '/'
         self.headers: dict[str, str] = {
             'User-Agent': USER_AGENT
         }
 
     def run(self) -> None:
-        self.ui.Sem.acquire(1)
+        self.ui.semaphore.acquire(1)
 
-        self.ui.updated_channes_list.append(self.update_channel(self.channel))
+        self.ui.updated_channels_list.append(self.update_channel(self.channel))
 
-        if len(self.ui.updated_channes_list) == self.ui.numberOfChannels:
+        if len(self.ui.updated_channels_list) == self.ui.number_of_channels:
             self.updateAllChannelsDoneSignal.emit()
 
         self.updateProgressSignal.emit()
 
-        if self.updateProgress == 0:
+        if self.update_progress == 0:
             self.updateDoneSignal.emit()
 
-        self.ui.Sem.release(1)
+        self.ui.semaphore.release(1)
 
     def update_channel(self, channel_row: Any = None) -> Optional[dict[str, Any]]:
         """
@@ -114,15 +114,15 @@ class UpdateChannelThread(QtCore.QThread):
         QtCore.QThread.__init__(self)
         self.channel: Any = channel
         self.ui: Any = ui
-        self.updateProgress: int = update_progress
-        self.newEpisodeExists: int = 0
+        self.update_progress: int = update_progress
+        self.new_episode_exists: int = 0
         self.main_directory: str = str(DATA_DIR) + '/'
         self.headers: dict[str, str] = {
             'User-Agent': USER_AGENT
         }
 
     def run(self) -> None:
-        self.ui.Sem.acquire(1)
+        self.ui.semaphore.acquire(1)
         
         con = sqlite3.connect(str(DATABASE_FILE), check_same_thread=False)
         con.isolation_level = None
@@ -133,15 +133,15 @@ class UpdateChannelThread(QtCore.QThread):
         con.commit()
         cur.close()
 
-        if self.newEpisodeExists:
+        if self.new_episode_exists:
             self.updatesignal.emit()
 
         self.updateProgressSignal.emit()
 
-        if self.updateProgress == 0:
+        if self.update_progress == 0:
             self.updateDoneSignal.emit()
 
-        self.ui.Sem.release(1)
+        self.ui.semaphore.release(1)
 
     def update_channel(self, ch: Any = None, cursor: Optional[sqlite3.Cursor] = None) -> Optional[str]:
         """Update channel episodes from feed."""
@@ -149,7 +149,7 @@ class UpdateChannelThread(QtCore.QThread):
         old_episodes: list[str] = []
         
         if ch is None:
-            a, tt = self.ui.db.getCurrentChannel(self.ui.CurrentChannel[1])
+            a, tt = self.ui.db.get_current_channel(self.ui.current_channel[1])
         else:
             cc = cur.execute('select id,title,link from sql_channel where title =?', (ch[1],))
             a = cc.fetchone()
@@ -188,18 +188,18 @@ class UpdateChannelThread(QtCore.QThread):
                 aa = None
 
             if 'title' in entry and aa is None:
-                self.newEpisodeExists = 1
+                self.new_episode_exists = 1
                 new_episode = parse_episode_for_update(entry)
                 if new_episode:
                     new_episode['channel_id'] = channel_id
-                    self.ui.db.insertEpisode(episode_dict_to_tuple(new_episode))
+                    self.ui.db.insert_episode(episode_dict_to_tuple(new_episode))
 
             elif 'title' not in entry:
                 logger.debug("Episode entry has no title")
             else:
                 if j[2] != 'old':
                     try:
-                        self.ui.db.updateEpisodeStatus(j[0])
+                        self.ui.db.update_episode_status(j[0])
                     except Exception as ex:
                         logger.error("Failed to update episode status: %s, episode: %s", ex, j)
         return None

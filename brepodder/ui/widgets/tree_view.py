@@ -21,24 +21,29 @@ class TreeViewWidget(QtWidgets.QTreeWidget):
         self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.sortByColumn(0, 0)
-        self.Parent = parent
+        self.parent_widget = parent
 
+    # Note: dropEvent, dropMimeData, dragEnterEvent are Qt overrides
+    # and must keep their exact names to work correctly
     def dropEvent(self, event):
-        for selectedItem in self.selectedItems():
+        """Handle drop events for drag-and-drop channel organization."""
+        for selected_item in self.selectedItems():
             if (self.itemAt(event.pos()) is not None) and (self.itemAt(event.pos()).flags() & QtCore.Qt.ItemIsDropEnabled):
-                channel_title = selectedItem.text(0)
+                channel_title = selected_item.text(0)
                 folder_title = self.itemAt(event.pos()).text(0)
             else:
-                channel_title = selectedItem.text(0)
+                channel_title = selected_item.text(0)
                 folder_title = None
 
             self.updateChannelList_db.emit(channel_title, folder_title)
         self.updateChannelList.emit()
 
     def dropMimeData(self, parent, row, data, action):
+        """Handle MIME data drops."""
         if action == QtCore.Qt.MoveAction:
             return self.moveSelection(parent, row)
         return False
 
     def dragEnterEvent(self, event):
+        """Handle drag enter events."""
         event.accept()

@@ -4,7 +4,7 @@ Custom LineEdit widget that clears on focus.
 from PyQt5 import QtWidgets
 
 
-class MyLineEdit(QtWidgets.QLineEdit):
+class ClearOnFocusLineEdit(QtWidgets.QLineEdit):
     """
     A QLineEdit that clears its contents when focused.
     
@@ -12,9 +12,15 @@ class MyLineEdit(QtWidgets.QLineEdit):
     """
 
     def __init__(self, parent=None):
-        self.Parent = parent
-        super(MyLineEdit, self).__init__(parent)
+        self.parent_widget = parent
+        super(ClearOnFocusLineEdit, self).__init__(parent)
 
+    # Note: focusInEvent is a Qt override and must keep its exact name
     def focusInEvent(self, event):
-        super(MyLineEdit, self).clear()
-        super(MyLineEdit, self).focusInEvent(event)
+        """Clear the text when the widget receives focus."""
+        super(ClearOnFocusLineEdit, self).clear()
+        super(ClearOnFocusLineEdit, self).focusInEvent(event)
+
+
+# Backward compatibility alias
+MyLineEdit = ClearOnFocusLineEdit

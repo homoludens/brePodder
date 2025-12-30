@@ -22,10 +22,10 @@ from logger import get_logger
 logger = get_logger(__name__)
 
 # Qt item flags for tree widget items
-draggable: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsDragEnabled
-droppable: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsDropEnabled
-enabled: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsEnabled
-selectable: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsSelectable
+DRAGGABLE: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsDragEnabled
+DROPPABLE: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsDropEnabled
+ENABLED: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsEnabled
+SELECTABLE: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsSelectable
 
 
 class BrePodder(MainUi):
@@ -43,17 +43,17 @@ class BrePodder(MainUi):
         }
         self.app: QtWidgets.QApplication = app
         mainwindow = QtWidgets.QMainWindow()
-        self.setupUi(mainwindow)
+        self.setup_ui(mainwindow)
         mainwindow.show()
         
         # Give AudioPlayer access to database for position saving
-        self.AudioPlayer._db = self.db
+        self.audio_player._db = self.db
         
         self.update_channel_list()
-        self.update_lastest_episodes_list()
+        self.update_latest_episodes_list()
         self.update_newest_episodes_list()
         self.playlist: list[Any] = []
-        self.updated_channes_list: list[Any] = []
+        self.updated_channels_list: list[Any] = []
         self.main_directory: str = str(DATA_DIR) + '/'
         
         # Load saved playlist from database
@@ -70,16 +70,16 @@ class BrePodder(MainUi):
 
     def episode_activated(self) -> None:
         """Handle episode selection - display episode details."""
-        if self.treeWidget_2.selectedItems():
-            selection = self.treeWidget_2.selectedItems()[0]
+        if self.tree_widget_episodes.selectedItems():
+            selection = self.tree_widget_episodes.selectedItems()[0]
             try:
-                e = self.db.getEpisodeByTitle(selection.text(0))
+                e = self.db.get_episode_by_title(selection.text(0))
 
                 enc = e["enclosure"] if e["enclosure"] else 'None'
                 desc = e["description"] if e["description"] else 'None'
                 local_file = e["localfile"] if e["localfile"] else 'None'
 
-                self.QTextBrowser1.setHtml(
+                self.text_browser_details.setHtml(
                     "<p>" + desc + "</br>\n\r</p>"
                     "<p><b>FILE: </b><a href=" + enc + ">" + enc + "</a></p>"
                     "<p><b>LOCALFILE: </b><a href=" + local_file + ">" + local_file + "</a></p>"
@@ -87,34 +87,34 @@ class BrePodder(MainUi):
                 )
 
             except (TypeError, KeyError) as e:
-                logger.warning("EpisodeActivated exception: %s", e)
+                logger.warning("episode_activated exception: %s", e)
 
-    def DownloadActivated(self, item: QtWidgets.QTreeWidgetItem, i: int) -> None:
+    def download_activated(self, item: QtWidgets.QTreeWidgetItem, i: int) -> None:
         """Handle download item selection."""
-        self.itemZaPrekid = item
+        self.item_for_cancel = item
         self.actionCancel.setToolTip("Remove Selected Download")
         self.actionPause.setToolTip("Pause Selected Download")
         self.actionResume.setToolTip("Resume Selected Download")
 
-    def EpisodeDoubleClicked(self, episode_row: Optional[QtWidgets.QTreeWidgetItem]) -> None:
+    def episode_double_clicked(self, episode_row: Optional[QtWidgets.QTreeWidgetItem]) -> None:
         """Handle double-click on episode - start download."""
         if episode_row:
-            episode_row.setFont(0, self.fontBold)
-            episodeTitle = episode_row.text(0)
-            e = self.db.getEpisodeByTitle(episodeTitle)
+            episode_row.setFont(0, self.font_bold)
+            episode_title = episode_row.text(0)
+            e = self.db.get_episode_by_title(episode_title)
         else:
             e = self.episode_row
 
         self.playlist.append(e)
 
-        channel = self.db.getChannelById(e["channel_id"])
-        ChannelDir = self.regex_white_space.sub("", channel["title"])
+        channel = self.db.get_channel_by_id(e["channel_id"])
+        channel_dir = self.regex_white_space.sub("", channel["title"])
 
-        os.chdir(str(DATA_DIR / ChannelDir))
-        item = QtWidgets.QTreeWidgetItem(self.treeWidget)
+        os.chdir(str(DATA_DIR / channel_dir))
+        item = QtWidgets.QTreeWidgetItem(self.tree_widget_downloads)
         item.setText(0, channel.get("title"))
         item.setText(1, e["title"])
-        item.setText(2, self.getReadableSize(e["size"]))
+        item.setText(2, self.get_readable_size(e["size"]))
         item.setText(3, '0')
         item.setText(4, '0')
 
@@ -124,15 +124,15 @@ class BrePodder(MainUi):
             logger.warning("No enclosure link for episode")
             item.setText(5, "No link")
 
-        if len(self.downloadList) > 0:
-            downloadId = self.downloadList[-1][0] + 1
+        if len(self.download_list) > 0:
+            download_id = self.download_list[-1][0] + 1
         else:
-            downloadId = 0
+            download_id = 0
 
-        self.itemsDownloading.append((downloadId, e["enclosure"].replace(" ", "%20")))
-        download = Download(e["enclosure"].replace(" ", "%20"), item, downloadId, self)
+        self.items_downloading.append((download_id, e["enclosure"].replace(" ", "%20")))
+        download = Download(e["enclosure"].replace(" ", "%20"), item, download_id, self)
         download.download_finished.connect(lambda fileName, savePath, dlId: self.on_download_finished(fileName, savePath, dlId, e["title"]))
-        self.downloadList.append((downloadId, download))
+        self.download_list.append((download_id, download))
 
         os.chdir(str(DATA_DIR))
 
@@ -141,15 +141,15 @@ class BrePodder(MainUi):
         logger.debug("Download completed for episode: %s", episode_title)
         
         # Get the episode from database
-        episode = self.db.getEpisodeByTitle(episode_title)
+        episode = self.db.get_episode_by_title(episode_title)
         
         if episode:
             # Update the episode with local file path and downloaded status
-            self.db.updateEpisode((save_path, "downloaded", episode["id"]))
+            self.db.update_episode((save_path, "downloaded", episode["id"]))
             logger.info("Updated episode '%s' with local file: %s", episode_title, save_path)
             
             # Refresh the latest downloads list
-            self.update_lastest_episodes_list()
+            self.update_latest_episodes_list()
         else:
             logger.warning("Could not find episode '%s' in database to update", episode_title)
 
@@ -157,38 +157,38 @@ class BrePodder(MainUi):
         """Add a new channel/podcast subscription."""
         os.chdir(str(DATA_DIR))
         if not new_url:
-            feed_link = self.QLineEdit1.text()
+            feed_link = self.line_edit_feed_url.text()
         else:
             feed_link = new_url
 
-        self.QLineEdit1.hide()
-        self.QPushButton1.hide()
-        self.updateProgressBar.setRange(0, 0)
-        self.updateProgressBar.show()
-        self.numberOfChannels = 1
+        self.line_edit_feed_url.hide()
+        self.button_add.hide()
+        self.update_progress_bar.setRange(0, 0)
+        self.update_progress_bar.show()
+        self.number_of_channels = 1
 
-        addChTr = AddChannelThread(feed_link, self, 0)
-        addChTr.addsignal.connect(self.update_channel_list, QtCore.Qt.QueuedConnection)
-        addChTr.addsignal_episodelist.connect(self.update_episode_list, QtCore.Qt.QueuedConnection)
-        addChTr.addDoneSignal.connect(self.adding_channal_done, QtCore.Qt.BlockingQueuedConnection)
-        self.update_channel_threads.append(addChTr)
-        addChTr.start()
+        add_channel_thread = AddChannelThread(feed_link, self, 0)
+        add_channel_thread.addsignal.connect(self.update_channel_list, QtCore.Qt.QueuedConnection)
+        add_channel_thread.addsignal_episodelist.connect(self.update_episode_list, QtCore.Qt.QueuedConnection)
+        add_channel_thread.addDoneSignal.connect(self.adding_channel_done, QtCore.Qt.BlockingQueuedConnection)
+        self.update_channel_threads.append(add_channel_thread)
+        add_channel_thread.start()
 
-    def adding_channal_done(self) -> None:
+    def adding_channel_done(self) -> None:
         """Handle completion of channel addition."""
-        self.updateProgressBar.hide()
-        self.QLineEdit1.show()
-        self.QPushButton1.show()
+        self.update_progress_bar.hide()
+        self.line_edit_feed_url.show()
+        self.button_add.show()
 
         self.update_channel_list()
-        self.sendMessage("Updating Done")
+        self.send_message("Updating Done")
 
     def channel_activated(self) -> None:
         """Handle channel selection."""
-        selection = self.listWidget.currentItem().text(0)
+        selection = self.list_widget_channels.currentItem().text(0)
 
         if selection:
-            self.CurrentChannel = selection
+            self.current_channel = selection
 
         try:
             self.update_episode_list(selection)
@@ -203,87 +203,87 @@ class BrePodder(MainUi):
         """Delete the currently selected channel."""
         if self.tab.isVisible():
             try:
-                self.db.deleteAllEpisodes(self.CurrentChannel)
-                self.db.deleteChannel(self.CurrentChannel)
+                self.db.delete_all_episodes(self.current_channel)
+                self.db.delete_channel(self.current_channel)
 
                 os.chdir(str(DATA_DIR))
-                ChannelDir = str(DATA_DIR / self.regex_white_space.sub("", self.CurrentChannel))
+                channel_dir = str(DATA_DIR / self.regex_white_space.sub("", self.current_channel))
 
                 import shutil
-                shutil.rmtree(ChannelDir)
+                shutil.rmtree(channel_dir)
             except (TypeError, AttributeError, OSError) as e:
                 # Channel deletion failed, try deleting as taxonomy/folder instead
                 logger.debug("Channel deletion failed, trying as folder: %s", e)
                 try:
-                    self.db.deleteTaxonomy(self.CurrentChannel)
+                    self.db.delete_taxonomy(self.current_channel)
                 except Exception as folder_error:
                     logger.error("Failed to delete folder: %s", folder_error)
 
         self.update_channel_list()
 
-    def update_lastest_episodes_list(self) -> None:
+    def update_latest_episodes_list(self) -> None:
         """Update the list of last 50 downloaded episodes."""
-        episodes = self.db.getLatestDownloads()
-        self.treeWidget_4.clear()
+        episodes = self.db.get_latest_downloads()
+        self.tree_widget_latest_downloads.clear()
 
         for e in episodes:
-            item = QtWidgets.QTreeWidgetItem(self.treeWidget_4)
+            item = QtWidgets.QTreeWidgetItem(self.tree_widget_latest_downloads)
             item.setText(0, str(e[10]))
             item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(str(DATA_DIR / e[14]))))
             item.setText(1, e[1])
-            item.setText(2, self.getReadableSize(e[4]))
+            item.setText(2, self.get_readable_size(e[4]))
             item.setText(3, str(DATA_DIR / str(e[3])))
 
     def update_newest_episodes_list(self) -> None:
         """Update the list of newest episodes."""
-        episodes = self.db.getLatestEpisodes()
-        self.treeWidget_5.clear()
+        episodes = self.db.get_latest_episodes()
+        self.tree_widget_newest_episodes.clear()
 
         for e in episodes:
-            item = QtWidgets.QTreeWidgetItem(self.treeWidget_5)
+            item = QtWidgets.QTreeWidgetItem(self.tree_widget_newest_episodes)
             item.setText(0, e[10])
             item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(str(DATA_DIR / e[15]))))
             item.setText(1, e[1])
             if e[4]:
-                item.setText(2, self.getReadableSize(e[4]))
+                item.setText(2, self.get_readable_size(e[4]))
             else:
                 item.setText(2, '???')
             try:
                 b = gmtime(float(e[5]))
-                epDate = strftime("%x", b)
+                ep_date = strftime("%x", b)
             except (ValueError, TypeError, OverflowError) as date_err:
                 logger.debug("Failed to parse episode date: %s", date_err)
                 b = gmtime()
-                epDate = strftime("%x", b)
+                ep_date = strftime("%x", b)
 
-            item.setText(3, epDate)
+            item.setText(3, ep_date)
 
             if e[2] and e[2] is not None:
                 item.setText(4, e[2])
 
-    def update_play_list(self, episodes: list[Any]) -> None:
+    def update_playlist(self, episodes: list[Any]) -> None:
         """Update the playlist display."""
-        self.treewidget_playlist.clear()
+        self.tree_widget_playlist.clear()
 
         for e in episodes:
-            item = QtWidgets.QTreeWidgetItem(self.treewidget_playlist)
+            item = QtWidgets.QTreeWidgetItem(self.tree_widget_playlist)
             # Store episode_id as hidden data for later use
             item.setData(0, QtCore.Qt.UserRole, e['id'])
             item.setText(0, str(e['channel_id']))
             item.setText(1, e['title'])
             if e['size']:
-                item.setText(2, self.getReadableSize(e['size']))
+                item.setText(2, self.get_readable_size(e['size']))
             else:
                 item.setText(2, '???')
             try:
                 b = gmtime(float(e['date']))
-                epDate = strftime("%x", b)
+                ep_date = strftime("%x", b)
             except (ValueError, TypeError, OverflowError, KeyError) as date_err:
                 logger.debug("Failed to parse playlist episode date: %s", date_err)
                 b = gmtime()
-                epDate = strftime("%x", b)
+                ep_date = strftime("%x", b)
 
-            item.setText(3, epDate)
+            item.setText(3, ep_date)
 
             # Prefer local file if available, otherwise use remote enclosure
             try:
@@ -301,12 +301,12 @@ class BrePodder(MainUi):
 
     def _load_playlist_from_db(self) -> None:
         """Load the playlist from database on startup."""
-        playlist_rows = self.db.getPlaylist()
+        playlist_rows = self.db.get_playlist()
         self.playlist = []
         for row in playlist_rows:
             # Convert Row to dict-like access
             self.playlist.append(row)
-        self.update_play_list(self.playlist)
+        self.update_playlist(self.playlist)
         logger.debug("Loaded %d episodes from saved playlist", len(self.playlist))
 
     def add_episode_to_playlist(self, episode) -> bool:
@@ -317,7 +317,7 @@ class BrePodder(MainUi):
         """
         if len(self.playlist) >= 50:
             QtWidgets.QMessageBox.warning(
-                self.MW,
+                self.main_window,
                 "Playlist Full",
                 "Playlist is limited to 50 episodes.\n\n"
                 "Please remove some episodes before adding more."
@@ -327,20 +327,20 @@ class BrePodder(MainUi):
         episode_id = episode['id']
         
         # Add to database
-        if not self.db.addToPlaylist(episode_id):
+        if not self.db.add_to_playlist(episode_id):
             logger.debug("Episode already in playlist or limit reached")
             return False
         
         # Add to local list
         self.playlist.append(episode)
-        self.update_play_list(self.playlist)
+        self.update_playlist(self.playlist)
         return True
 
     def clear_playlist(self) -> None:
         """Clear all episodes from the playlist."""
-        self.db.clearPlaylist()
+        self.db.clear_playlist()
         self.playlist = []
-        self.update_play_list(self.playlist)
+        self.update_playlist(self.playlist)
         logger.info("Playlist cleared")
 
     def play_episode(self, path: str) -> None:
@@ -353,15 +353,15 @@ class BrePodder(MainUi):
             path: Either a local file path or remote URL
         """
         # Get player settings from database
-        player_type = self.db.getSetting('player_type') or 'builtin'
-        use_custom = self.db.getSetting('use_custom_player') == 'true'
+        player_type = self.db.get_setting('player_type') or 'builtin'
+        use_custom = self.db.get_setting('use_custom_player') == 'true'
         
         # Determine which command to use
         if use_custom or player_type == 'custom':
-            play_command = self.db.getSetting('custom_play_command')
+            play_command = self.db.get_setting('custom_play_command')
             if not play_command:
                 QtWidgets.QMessageBox.warning(
-                    self.MW,
+                    self.main_window,
                     "No Player Configured",
                     "Custom player is selected but no play command is configured.\n\n"
                     "Please configure a play command in Settings."
@@ -378,7 +378,7 @@ class BrePodder(MainUi):
             play_command = get_play_command(player_type, path)
             if not play_command:
                 QtWidgets.QMessageBox.warning(
-                    self.MW,
+                    self.main_window,
                     "Player Not Configured",
                     f"No play command defined for player: {player_type}"
                 )
@@ -388,15 +388,15 @@ class BrePodder(MainUi):
     def _play_with_builtin_and_id(self, path: str, episode_id: int) -> None:
         """Play using built-in player with episode ID for position tracking."""
         # Stop any external player first
-        self.AudioPlayer.stopClicked()
+        self.audio_player.stop_clicked()
         
         if os.path.exists(path):
             logger.debug("Playing local file with position tracking: %s", path)
-            self.AudioPlayer.setUrl_local(path, episode_id)
+            self.audio_player.set_url_local(path, episode_id)
         else:
             logger.error("File not found: %s", path)
             QtWidgets.QMessageBox.warning(
-                self.MW,
+                self.main_window,
                 "File Not Found",
                 f"Cannot find the episode file:\n{path}"
             )
@@ -404,13 +404,13 @@ class BrePodder(MainUi):
     def _play_with_builtin(self, path: str) -> None:
         """Play using the built-in GStreamer player."""
         # Stop any external player first
-        self.AudioPlayer.stopClicked()
+        self.audio_player.stop_clicked()
         
         if path.startswith('http://') or path.startswith('https://'):
             # Remote URL - GStreamer may not support HTTPS
             logger.warning("Streaming from HTTPS not supported by built-in player.")
             QtWidgets.QMessageBox.warning(
-                self.MW,
+                self.main_window,
                 "Streaming Not Supported",
                 "Your system's GStreamer doesn't support HTTPS streaming.\n\n"
                 "Please download the episode first, or select an external player in Settings."
@@ -418,11 +418,11 @@ class BrePodder(MainUi):
         elif os.path.exists(path):
             # Local file
             logger.debug("Playing local file with built-in player: %s", path)
-            self.AudioPlayer.setUrl_local(path)
+            self.audio_player.set_url_local(path)
         else:
             logger.error("File not found: %s", path)
             QtWidgets.QMessageBox.warning(
-                self.MW,
+                self.main_window,
                 "File Not Found",
                 f"Cannot find the episode file:\n{path}"
             )
@@ -434,21 +434,21 @@ class BrePodder(MainUi):
             if not os.path.exists(path):
                 logger.error("File not found: %s", path)
                 QtWidgets.QMessageBox.warning(
-                    self.MW,
+                    self.main_window,
                     "File Not Found",
                     f"Cannot find the episode file:\n{path}"
                 )
                 return
         
         # Use AudioPlayer's external player support (handles stopping previous, tracking process)
-        if not self.AudioPlayer.playExternal(command, path):
+        if not self.audio_player.play_external(command, path):
             QtWidgets.QMessageBox.warning(
-                self.MW,
+                self.main_window,
                 "Player Error",
                 "Failed to start external player. Check the logs for details."
             )
 
-    def PlaylistEpisodeDoubleClicked(self, a: QtWidgets.QTreeWidgetItem) -> None:
+    def playlist_episode_double_clicked(self, a: QtWidgets.QTreeWidgetItem) -> None:
         """Handle double-click on playlist item - play episode."""
         path = a.text(4)
         episode_id = a.data(0, QtCore.Qt.UserRole)
@@ -459,21 +459,21 @@ class BrePodder(MainUi):
             else:
                 self.play_episode(path)
 
-    def LastestEpisodeDoubleClicked(self, episode_row: QtWidgets.QTreeWidgetItem) -> None:
+    def latest_episode_double_clicked(self, episode_row: QtWidgets.QTreeWidgetItem) -> None:
         """Handle double-click on latest episode - add to playlist and play."""
-        episodeTitle = episode_row.text(1)  # Column 1 is episode title
-        episode = self.db.getEpisodeByTitle(episodeTitle)
+        episode_title = episode_row.text(1)  # Column 1 is episode title
+        episode = self.db.get_episode_by_title(episode_title)
         if episode:
             self.add_episode_to_playlist(episode)
             # Play the episode - prefer local file over remote URL
             self._play_episode_with_id(episode)
         else:
-            logger.warning("Could not find episode '%s' in database", episodeTitle)
+            logger.warning("Could not find episode '%s' in database", episode_title)
 
-    def NewestEpisodeDoubleClicked(self, episode_row: QtWidgets.QTreeWidgetItem) -> None:
+    def newest_episode_double_clicked(self, episode_row: QtWidgets.QTreeWidgetItem) -> None:
         """Handle double-click on newest episode - add to playlist and play."""
         episode_title = episode_row.text(1)
-        episode = self.db.getEpisodeByTitle(episode_title)
+        episode = self.db.get_episode_by_title(episode_title)
         if episode:
             self.add_episode_to_playlist(episode)
             # Play the episode - prefer local file over remote URL
@@ -493,33 +493,33 @@ class BrePodder(MainUi):
             if episode['enclosure']:
                 self.play_episode(episode['enclosure'])
 
-    def getReadableSize(self, size: Optional[Union[int, str]]) -> str:
+    def get_readable_size(self, size: Optional[Union[int, str]]) -> str:
         """Convert byte size to human-readable format."""
         if size:
             try:
                 size_int = int(size)
                 if size_int > 1024 * 1024:
-                    sizeReadable = str(size_int // 1024 // 1024) + ' MB'
+                    size_readable = str(size_int // 1024 // 1024) + ' MB'
                 elif size_int > 1024:
-                    sizeReadable = str(size_int // 1024) + ' kB'
+                    size_readable = str(size_int // 1024) + ' kB'
                 else:
-                    sizeReadable = str(size_int) + ' B'
+                    size_readable = str(size_int) + ' B'
             except (ValueError, TypeError) as e:
                 logger.debug("Failed to convert size to readable format: %s", e)
-                sizeReadable = str(size)
+                size_readable = str(size)
         else:
-            sizeReadable = 'None'
-        return sizeReadable
+            size_readable = 'None'
+        return size_readable
 
-    def update_episode_list(self, channel_Title: str) -> None:
+    def update_episode_list(self, channel_title: str) -> None:
         """Update the episode list for a channel."""
-        if self.db.is_folder(channel_Title):
-            tt = self.db.getFolderEpisodes(channel_Title)
+        if self.db.is_folder(channel_title):
+            tt = self.db.get_folder_episodes(channel_title)
         else:
-            tt = self.db.getChannelEpisodes(channel_Title)
-            cc = self.db.getChannelByTitle(channel_Title)
+            tt = self.db.get_channel_episodes(channel_title)
+            cc = self.db.get_channel_by_title(channel_title)
             if cc:
-                self.QTextBrowser1.setHtml(
+                self.text_browser_details.setHtml(
                     "<p>" + cc[4] + "</p>"
                     "<p><b>Feed link:</b> <a href=" + cc[2] + ">" + cc[2] + "</a></p>"
                     "<p><b>Homepage: </b><a href=" + cc[3] + ">" + cc[3] + "</a></p>"
@@ -527,117 +527,117 @@ class BrePodder(MainUi):
             else:
                 return
                 
-        self.treeWidget_2.clear()
+        self.tree_widget_episodes.clear()
         for t in tt:
-            item2 = QtWidgets.QTreeWidgetItem(self.treeWidget_2)
+            item2 = QtWidgets.QTreeWidgetItem(self.tree_widget_episodes)
 
             if not t[3]:  # localfile
                 item2.setIcon(0, QtGui.QIcon(":/icons/build.png"))
             else:
                 item2.setIcon(0, QtGui.QIcon(":/icons/mp3.png"))
             item2.setText(0, t[1])  # title
-            item2.setText(1, self.getReadableSize(t[4]))  # size
+            item2.setText(1, self.get_readable_size(t[4]))  # size
             try:
                 b = gmtime(float(t[5]))  # date
-                epDate = strftime("%x", b)
+                ep_date = strftime("%x", b)
             except (ValueError, TypeError, OverflowError) as date_err:
                 logger.debug("Failed to parse episode date: %s", date_err)
                 b = gmtime()
-                epDate = strftime("%x", b)
-            item2.setText(2, epDate)
+                ep_date = strftime("%x", b)
+            item2.setText(2, ep_date)
 
             if t[7] == 'new':
-                item2.setFont(0, self.fontBold)
+                item2.setFont(0, self.font_bold)
 
     def update_channel_list(self, search_term: str = '') -> None:
         """Update the channel list, optionally filtering by search term."""
         logger.debug("Updating channel list with search term: %s", search_term)
-        channels = self.db.getAllChannelsWOFolder()
-        folders = self.db.getAllFolders()
-        self.listWidget.clear()
+        channels = self.db.get_all_channels_without_folder()
+        folders = self.db.get_all_folders()
+        self.list_widget_channels.clear()
         search_term = search_term.lower()
 
         for folder in folders:
-            itemF = QtWidgets.QTreeWidgetItem(self.listWidget)
-            itemF.setText(0, folder[1])
-            itemF.setIcon(0, QtGui.QIcon(':/icons/folder-blue.png'))
-            itemF.setFlags(enabled | droppable)
-            itemF.setExpanded(True)
+            item_folder = QtWidgets.QTreeWidgetItem(self.list_widget_channels)
+            item_folder.setText(0, folder[1])
+            item_folder.setIcon(0, QtGui.QIcon(':/icons/folder-blue.png'))
+            item_folder.setFlags(ENABLED | DROPPABLE)
+            item_folder.setExpanded(True)
             
-            childChannels = self.db.getFolderChannels(folder[0])
+            child_channels = self.db.get_folder_channels(folder[0])
 
-            for childChannel in childChannels:
-                title_description = childChannel['title'] + childChannel['description']
+            for child_channel in child_channels:
+                title_description = child_channel['title'] + child_channel['description']
                 if (search_term != '' and search_term in title_description.lower()) or (search_term == ''):
-                    itemChildChannel = QtWidgets.QTreeWidgetItem(itemF)
-                    itemChildChannel.setText(0, childChannel[1])
-                    itemChildChannel.setIcon(0, QtGui.QIcon(
-                        QtGui.QPixmap(str(DATA_DIR / childChannel[6]))))
-                    itemF.addChild(itemChildChannel)
+                    item_child_channel = QtWidgets.QTreeWidgetItem(item_folder)
+                    item_child_channel.setText(0, child_channel[1])
+                    item_child_channel.setIcon(0, QtGui.QIcon(
+                        QtGui.QPixmap(str(DATA_DIR / child_channel[6]))))
+                    item_folder.addChild(item_child_channel)
 
         for channel in channels:
             title_description = channel['title'] + channel['description']
             if (search_term != '' and search_term in title_description.lower()) or (search_term == ''):
-                item = QtWidgets.QTreeWidgetItem(self.listWidget)
+                item = QtWidgets.QTreeWidgetItem(self.list_widget_channels)
                 item.setText(0, channel[1])
                 item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(str(DATA_DIR / channel[6]))))
-                item.setFlags(enabled | draggable | selectable)
+                item.setFlags(ENABLED | DRAGGABLE | SELECTABLE)
 
-    def updateProgressBarFromThread(self) -> None:
+    def update_progress_bar_from_thread(self) -> None:
         """Update progress bar from background thread."""
-        self.updateProgressBar.setValue(self.updateProgressBar.value() + 1)
-        if self.updateProgressBar.value() == self.numberOfChannels - 1:
+        self.update_progress_bar.setValue(self.update_progress_bar.value() + 1)
+        if self.update_progress_bar.value() == self.number_of_channels - 1:
             self.update_done()
 
-    def create_new_foder(self) -> None:
+    def create_new_folder(self) -> None:
         """Create a new folder for organizing channels."""
-        text, ok = QtWidgets.QInputDialog.getText(self.MW, 'Input Dialog', 'Enter name for new folder:')
+        text, ok = QtWidgets.QInputDialog.getText(self.main_window, 'Input Dialog', 'Enter name for new folder:')
         if ok:
-            self.db.insertFolder(text)
+            self.db.insert_folder(text)
         self.update_channel_list()
 
     def update_channel(self) -> None:
         """Update the currently selected channel."""
-        self.QLineEdit1.hide()
-        self.QPushButton1.hide()
-        self.updateProgressBar.setRange(0, 0)
-        self.updateProgressBar.show()
-        self.numberOfChannels = 1
+        self.line_edit_feed_url.hide()
+        self.button_add.hide()
+        self.update_progress_bar.setRange(0, 0)
+        self.update_progress_bar.show()
+        self.number_of_channels = 1
 
-        ch = self.db.getChannelByTitle(self.CurrentChannel)
+        ch = self.db.get_channel_by_title(self.current_channel)
 
-        self.ChannelForUpdate = ch
+        self.channel_for_update = ch
 
-        updtChTr = UpdateChannelThread(ch, self, 0)
-        updtChTr.updatesignal.connect(self.update_channel_list, QtCore.Qt.QueuedConnection)
-        updtChTr.updatesignal_episodelist.connect(self.update_episode_list, QtCore.Qt.QueuedConnection)
-        updtChTr.updateDoneSignal.connect(self.update_done, QtCore.Qt.BlockingQueuedConnection)
-        self.update_channel_threads.append(updtChTr)
-        updtChTr.start()
+        update_channel_thread = UpdateChannelThread(ch, self, 0)
+        update_channel_thread.updatesignal.connect(self.update_channel_list, QtCore.Qt.QueuedConnection)
+        update_channel_thread.updatesignal_episodelist.connect(self.update_episode_list, QtCore.Qt.QueuedConnection)
+        update_channel_thread.updateDoneSignal.connect(self.update_done, QtCore.Qt.BlockingQueuedConnection)
+        self.update_channel_threads.append(update_channel_thread)
+        update_channel_thread.start()
 
     def update_all_channels(self) -> None:
         """Update all channels in the background."""
-        self.QLineEdit1.hide()
-        self.QPushButton1.hide()
-        self.updateProgressBar.show()
+        self.line_edit_feed_url.hide()
+        self.button_add.hide()
+        self.update_progress_bar.show()
 
-        updtChTr: list[UpdateChannelThread_network] = []
-        allChannels = self.db.getAllChannels()
+        update_channel_threads: list[UpdateChannelThread_network] = []
+        all_channels = self.db.get_all_channels()
 
-        self.numberOfChannels = allChannels.__len__() - 1
-        self.updateProgressBar.setRange(0, self.numberOfChannels + 1)
-        self.updateProgressBar.setValue(0)
-        self.updateProgressBar.setFormat("%v" + " of " + "%m")
+        self.number_of_channels = len(all_channels) - 1
+        self.update_progress_bar.setRange(0, self.number_of_channels + 1)
+        self.update_progress_bar.setValue(0)
+        self.update_progress_bar.setFormat("%v" + " of " + "%m")
         
         j = 0
-        for i in allChannels:
-            updtChTr.append(UpdateChannelThread_network(i, self, j))
-            self.update_channel_threads.append(updtChTr[j])
-            updtChTr[j].updateProgressSignal.connect(self.updateProgressBarFromThread,
+        for i in all_channels:
+            update_channel_threads.append(UpdateChannelThread_network(i, self, j))
+            self.update_channel_threads.append(update_channel_threads[j])
+            update_channel_threads[j].updateProgressSignal.connect(self.update_progress_bar_from_thread,
                                                      QtCore.Qt.BlockingQueuedConnection)
-            updtChTr[j].updateAllChannelsDoneSignal.connect(self.update_db_with_all_channels,
+            update_channel_threads[j].updateAllChannelsDoneSignal.connect(self.update_db_with_all_channels,
                                                             QtCore.Qt.QueuedConnection)
-            updtChTr[j].start()
+            update_channel_threads[j].start()
             j = j + 1
 
     def update_db_with_all_channels(self) -> None:
@@ -650,7 +650,7 @@ class BrePodder(MainUi):
         con.isolation_level = None
         cur = con.cursor()
 
-        for channel in self.updated_channes_list:
+        for channel in self.updated_channels_list:
             try:
                 logger.debug("Updating channel: %s", channel['channel_feedlink'])
             except TypeError:
@@ -677,32 +677,32 @@ class BrePodder(MainUi):
                     aa = None
 
                 if 'title' in entry and aa is None:
-                    self.newEpisodeExists = 1
+                    self.new_episode_exists = 1
                     new_episode = parse_episode_for_update(entry)
                     if new_episode:
                         new_episode['channel_id'] = channel_id
-                        self.db.insertEpisode(episode_dict_to_tuple(new_episode))
+                        self.db.insert_episode(episode_dict_to_tuple(new_episode))
 
                 elif 'title' not in entry:
                     logger.debug("Episode entry has no title")
                 else:
                     if j[2] != 'old':
                         try:
-                            self.db.updateEpisodeStatus(j[0])
+                            self.db.update_episode_status(j[0])
                         except Exception as ex:
                             logger.error("Failed to update episode status: %s, episode: %s", ex, j)
 
         logger.info("Database update for all channels completed")
 
-    def sendMessage(self, message: str) -> None:
+    def send_message(self, message: str) -> None:
         """Log a message."""
         logger.info(message)
 
     def update_done(self) -> None:
         """Handle completion of channel update."""
-        self.updateProgressBar.hide()
-        self.QLineEdit1.show()
-        self.QPushButton1.show()
+        self.update_progress_bar.hide()
+        self.line_edit_feed_url.show()
+        self.button_add.show()
 
         self.update_channel_list()
-        self.sendMessage("Updating Done")
+        self.send_message("Updating Done")

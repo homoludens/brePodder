@@ -75,67 +75,79 @@ class DBOperation:
             self._local.db = None
             self._local.cur = None
 
-    def insertChannel(self, channel: tuple[str, str, str, str, str, str]) -> None:
+    def insert_channel(self, channel: tuple[str, str, str, str, str, str]) -> None:
+        """Insert a new channel into the database."""
         self.cur.execute(
             'INSERT INTO sql_channel(title, link, homepage, description, logo, logobig) '
             'VALUES (?,?,?,?,?,?)', 
             channel
         )
 
-    def getFolderChannels(self, folder: int) -> list[sqlite3.Row]:
+    def get_folder_channels(self, folder: int) -> list[sqlite3.Row]:
+        """Get all channels in a specific folder."""
         self.cur.execute('SELECT * FROM sql_channel WHERE folder_id = ?', (folder,))
         return self.cur.fetchall()
 
-    def getChannelById(self, channel_id: int) -> Optional[dict[str, Any]]:
+    def get_channel_by_id(self, channel_id: int) -> Optional[dict[str, Any]]:
+        """Get a channel by its ID."""
         channel = self.cur.execute(
             'SELECT * FROM sql_channel WHERE id = ?', 
             (channel_id,)
         ).fetchone()
         return dict(channel) if channel else None
 
-    def getChannelByTitle(self, channel_title: str) -> Optional[sqlite3.Row]:
+    def get_channel_by_title(self, channel_title: str) -> Optional[sqlite3.Row]:
+        """Get a channel by its title."""
         return self.cur.execute(
             'SELECT * FROM sql_channel WHERE title = ?', 
             (channel_title,)
         ).fetchone()
 
-    def getChannelByLink(self, channel_link: str) -> Optional[sqlite3.Row]:
+    def get_channel_by_link(self, channel_link: str) -> Optional[sqlite3.Row]:
+        """Get a channel by its feed link."""
         return self.cur.execute(
             'SELECT * FROM sql_channel WHERE link = ?', 
             (channel_link,)
         ).fetchone()
 
-    def getChannelByFeed(self, channel: str) -> sqlite3.Cursor:
+    def get_channel_by_feed(self, channel: str) -> sqlite3.Cursor:
+        """Get a channel by its feed title."""
         return self.cur.execute(
             'SELECT * FROM sql_channel WHERE title = ?', 
             (channel,)
         )
 
-    def getEpisodeByTitle(self, episode_title: str) -> Optional[sqlite3.Row]:
+    def get_episode_by_title(self, episode_title: str) -> Optional[sqlite3.Row]:
+        """Get an episode by its title."""
         return self.cur.execute(
             'SELECT * FROM sql_episode WHERE title = ?', 
             (episode_title,)
         ).fetchone()
 
-    def getAllChannels(self) -> list[sqlite3.Row]:
+    def get_all_channels(self) -> list[sqlite3.Row]:
+        """Get all channels."""
         return self.cur.execute('SELECT * FROM sql_channel').fetchall()
 
-    def getAllChannelsLinks(self) -> list[sqlite3.Row]:
+    def get_all_channels_links(self) -> list[sqlite3.Row]:
+        """Get all channel feed links."""
         return self.cur.execute('SELECT link FROM sql_channel').fetchall()
 
-    def getAllChannelsWOFolder(self) -> list[sqlite3.Row]:
+    def get_all_channels_without_folder(self) -> list[sqlite3.Row]:
+        """Get all channels that are not in any folder."""
         return self.cur.execute(
             'SELECT * FROM sql_channel WHERE folder_id IS NULL ORDER BY title'
         ).fetchall()
 
     def is_folder(self, title: str) -> bool:
+        """Check if a title corresponds to a folder."""
         test = self.cur.execute(
             "SELECT * FROM sql_taxonomy WHERE title = ?", 
             (title,)
         ).fetchall()
         return bool(test)
 
-    def getFolderEpisodes(self, channel_title: str) -> list[sqlite3.Row]:
+    def get_folder_episodes(self, channel_title: str) -> list[sqlite3.Row]:
+        """Get all episodes from channels in a folder."""
         query = """
         SELECT EP.id, (CH.title || " - " || EP.title), EP.enclosure, EP.localfile, 
                EP.size, EP.date, EP.description, EP.channel_id 
@@ -147,13 +159,15 @@ class DBOperation:
         """
         return self.cur.execute(query, (channel_title,)).fetchall()
 
-    def getAllFolders(self) -> list[sqlite3.Row]:
+    def get_all_folders(self) -> list[sqlite3.Row]:
+        """Get all folders ordered by title."""
         return self.cur.execute(
             'SELECT * FROM sql_taxonomy ORDER BY title'
         ).fetchall()
 
-    def getCurrentChannel(self, channel_title: str) -> tuple[Optional[sqlite3.Row], list[sqlite3.Row]]:
-        channel = self.getChannelByTitle(channel_title)
+    def get_current_channel(self, channel_title: str) -> tuple[Optional[sqlite3.Row], list[sqlite3.Row]]:
+        """Get a channel and its episodes by title."""
+        channel = self.get_channel_by_title(channel_title)
         channel_result = self.cur.execute(
             'SELECT id, title, status FROM sql_episode WHERE channel_id = ?', 
             (channel[0],)
@@ -161,14 +175,16 @@ class DBOperation:
         result = channel_result.fetchall()
         return channel, result
 
-    def insertFolder(self, folder_name: str) -> bool:
+    def insert_folder(self, folder_name: str) -> bool:
+        """Insert a new folder."""
         self.cur.execute(
             'INSERT INTO sql_taxonomy(title) VALUES (?)', 
             (folder_name,)
         )
         return True
 
-    def getLatestDownloads(self) -> list[sqlite3.Row]:
+    def get_latest_downloads(self) -> list[sqlite3.Row]:
+        """Get the 50 most recently downloaded episodes."""
         self.cur.execute(
             'SELECT * FROM sql_episode EP, sql_channel CH '
             'WHERE EP.channel_id = CH.id AND EP.status="downloaded" '
@@ -176,69 +192,78 @@ class DBOperation:
         )
         return self.cur.fetchall()
 
-    def getLatestEpisodes(self) -> list[sqlite3.Row]:
+    def get_latest_episodes(self) -> list[sqlite3.Row]:
+        """Get the 50 most recent episodes across all channels."""
         self.cur.execute(
             'SELECT * FROM sql_episode EP, sql_channel CH '
             'WHERE EP.channel_id = CH.id ORDER BY date DESC LIMIT 50'
         )
         return self.cur.fetchall()
 
-    def getChannelEpisodes(self, channelTitle: str) -> list[sqlite3.Row]:
+    def get_channel_episodes(self, channel_title: str) -> list[sqlite3.Row]:
+        """Get episodes for a specific channel."""
         self.cur.execute(
             'SELECT * FROM sql_episode EP, sql_channel CH '
             'WHERE EP.channel_id = CH.id AND CH.title = (?) '
             'ORDER BY date DESC LIMIT 50',
-            (channelTitle,)
+            (channel_title,)
         )
         return self.cur.fetchall()
 
-    def insertEpisode(self, ep: tuple[str, str, int, str, str, str, int]) -> None:
+    def insert_episode(self, ep: tuple[str, str, int, str, str, str, int]) -> None:
+        """Insert a new episode."""
         self.cur.execute(
             'INSERT INTO sql_episode(title, enclosure, size, date, description, status, channel_id) '
             'VALUES (?,?,?,?,?,?,?)',
             ep
         )
 
-    def updateEpisode(self, episode: tuple[str, str, int]) -> None:
+    def update_episode(self, episode: tuple[str, str, int]) -> None:
+        """Update an episode's localfile and status."""
         self.cur.execute(
             'UPDATE sql_episode SET localfile = ?, status = ? WHERE id = ?', 
             episode
         )
 
-    def updateEpisodeStatus(self, episodeId: int) -> None:
+    def update_episode_status(self, episode_id: int) -> None:
+        """Mark an episode as 'old'."""
         self.cur.execute(
             'UPDATE sql_episode SET status = "old" WHERE sql_episode.id = ?', 
-            (episodeId,)
+            (episode_id,)
         )
         self.db.commit()
 
-    def deleteAllEpisodes(self, channelTitle: str) -> None:
-        channel_id = self.getChannelByTitle(channelTitle)
+    def delete_all_episodes(self, channel_title: str) -> None:
+        """Delete all episodes for a channel."""
+        channel_id = self.get_channel_by_title(channel_title)
         try:
             self.cur.execute(
                 'DELETE FROM sql_episode WHERE channel_id = ?', 
                 (channel_id[0],)
             )
         except (sqlite3.Error, TypeError, IndexError) as e:
-            logger.error("Failed to delete episodes for channel '%s': %s", channelTitle, e)
+            logger.error("Failed to delete episodes for channel '%s': %s", channel_title, e)
         self.db.commit()
 
-    def deleteChannel(self, channelTitle: str) -> None:
-        channel_id = self.getChannelByTitle(channelTitle)
+    def delete_channel(self, channel_title: str) -> None:
+        """Delete a channel by title."""
+        channel_id = self.get_channel_by_title(channel_title)
         self.cur.execute(
             'DELETE FROM sql_channel WHERE id = ?', 
             (channel_id[0],)
         )
         self.db.commit()
 
-    def deleteTaxonomy(self, folderTitle: str) -> None:
+    def delete_taxonomy(self, folder_title: str) -> None:
+        """Delete a folder by title."""
         self.cur.execute(
             'DELETE FROM sql_taxonomy WHERE title = ?', 
-            (folderTitle,)
+            (folder_title,)
         )
         self.db.commit()
 
-    def addChannelToFolder(self, channel_title: str, folder_title: Optional[str]) -> None:
+    def add_channel_to_folder(self, channel_title: str, folder_title: Optional[str]) -> None:
+        """Add a channel to a folder, or remove from folder if folder_title is None."""
         self.cur.execute(
             'SELECT id FROM sql_channel WHERE title = ?', 
             [channel_title]
@@ -271,6 +296,7 @@ class DBOperation:
         self.db.commit()
 
     def create_db(self) -> None:
+        """Create all database tables if they don't exist."""
         try:
             self.cur.execute('''CREATE TABLE IF NOT EXISTS sql_channel (
                 id INTEGER NOT NULL,
@@ -324,7 +350,7 @@ class DBOperation:
         
         self.db.commit()
 
-    def getSetting(self, key: str) -> Optional[str]:
+    def get_setting(self, key: str) -> Optional[str]:
         """Get a setting value by key."""
         result = self.cur.execute(
             'SELECT value FROM sql_settings WHERE key = ?',
@@ -332,7 +358,7 @@ class DBOperation:
         ).fetchone()
         return result[0] if result else None
 
-    def setSetting(self, key: str, value: str) -> None:
+    def set_setting(self, key: str, value: str) -> None:
         """Set a setting value (insert or update)."""
         self.cur.execute(
             'INSERT OR REPLACE INTO sql_settings (key, value) VALUES (?, ?)',
@@ -341,7 +367,7 @@ class DBOperation:
         self.db.commit()
 
     # Playback position methods
-    def getPlaybackPosition(self, episode_id: int) -> int:
+    def get_playback_position(self, episode_id: int) -> int:
         """Get saved playback position for an episode (in seconds)."""
         result = self.cur.execute(
             'SELECT value FROM sql_settings WHERE key = ?',
@@ -349,7 +375,7 @@ class DBOperation:
         ).fetchone()
         return int(result[0]) if result else 0
 
-    def setPlaybackPosition(self, episode_id: int, position: int) -> None:
+    def set_playback_position(self, episode_id: int, position: int) -> None:
         """Save playback position for an episode (in seconds)."""
         self.cur.execute(
             'INSERT OR REPLACE INTO sql_settings (key, value) VALUES (?, ?)',
@@ -358,7 +384,7 @@ class DBOperation:
         self.db.commit()
 
     # Playlist methods
-    def getPlaylist(self) -> list[sqlite3.Row]:
+    def get_playlist(self) -> list[sqlite3.Row]:
         """Get all episodes in the playlist with their details."""
         return self.cur.execute(
             '''SELECT EP.*, CH.title as channel_title, CH.logo as channel_logo, PL.position as playlist_position
@@ -369,7 +395,7 @@ class DBOperation:
                LIMIT 50'''
         ).fetchall()
 
-    def addToPlaylist(self, episode_id: int) -> bool:
+    def add_to_playlist(self, episode_id: int) -> bool:
         """Add an episode to the playlist. Returns False if already in playlist or limit reached."""
         # Check if already in playlist
         exists = self.cur.execute(
@@ -391,7 +417,7 @@ class DBOperation:
         self.db.commit()
         return True
 
-    def removeFromPlaylist(self, episode_id: int) -> None:
+    def remove_from_playlist(self, episode_id: int) -> None:
         """Remove an episode from the playlist."""
         self.cur.execute(
             'DELETE FROM sql_playlist WHERE episode_id = ?',
@@ -399,15 +425,51 @@ class DBOperation:
         )
         self.db.commit()
 
-    def clearPlaylist(self) -> None:
+    def clear_playlist(self) -> None:
         """Remove all episodes from the playlist."""
         self.cur.execute('DELETE FROM sql_playlist')
         self.db.commit()
 
-    def isInPlaylist(self, episode_id: int) -> bool:
+    def is_in_playlist(self, episode_id: int) -> bool:
         """Check if an episode is in the playlist."""
         result = self.cur.execute(
             'SELECT id FROM sql_playlist WHERE episode_id = ?',
             (episode_id,)
         ).fetchone()
         return result is not None
+
+    # Backward compatibility aliases (deprecated - will be removed in future version)
+    # These allow existing code to work while transitioning to new names
+    insertChannel = insert_channel
+    getFolderChannels = get_folder_channels
+    getChannelById = get_channel_by_id
+    getChannelByTitle = get_channel_by_title
+    getChannelByLink = get_channel_by_link
+    getChannelByFeed = get_channel_by_feed
+    getEpisodeByTitle = get_episode_by_title
+    getAllChannels = get_all_channels
+    getAllChannelsLinks = get_all_channels_links
+    getAllChannelsWOFolder = get_all_channels_without_folder
+    getFolderEpisodes = get_folder_episodes
+    getAllFolders = get_all_folders
+    getCurrentChannel = get_current_channel
+    insertFolder = insert_folder
+    getLatestDownloads = get_latest_downloads
+    getLatestEpisodes = get_latest_episodes
+    getChannelEpisodes = get_channel_episodes
+    insertEpisode = insert_episode
+    updateEpisode = update_episode
+    updateEpisodeStatus = update_episode_status
+    deleteAllEpisodes = delete_all_episodes
+    deleteChannel = delete_channel
+    deleteTaxonomy = delete_taxonomy
+    addChannelToFolder = add_channel_to_folder
+    getSetting = get_setting
+    setSetting = set_setting
+    getPlaybackPosition = get_playback_position
+    setPlaybackPosition = set_playback_position
+    getPlaylist = get_playlist
+    addToPlaylist = add_to_playlist
+    removeFromPlaylist = remove_from_playlist
+    clearPlaylist = clear_playlist
+    isInPlaylist = is_in_playlist

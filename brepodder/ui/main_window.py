@@ -9,7 +9,7 @@ import re
 from services import opml
 from data.database import DBOperation
 from ui.widgets.tree_view import TreeViewWidget
-from ui.widgets.line_edit import MyLineEdit
+from ui.widgets.line_edit import ClearOnFocusLineEdit
 from ui.widgets.audio_player import AudioPlayer
 from ui.dialogs.settings_dialog import SettingsDialog
 import resources
@@ -29,40 +29,41 @@ class MainUi(QtWidgets.QWidget):
     def __init__(self, parent=None):
         QtWidgets.QWidget.__init__(self)
         self.http = []
-        self.httpGetId = []
-        self.outFile = []
-        self.downloadList = []
-        self.fontBold = QtGui.QFont()
-        self.fontBold.setWeight(75)
-        self.fontBold.setBold(True)
-        self.ChannelForUpdate = None
+        self.http_get_id = []
+        self.out_file = []
+        self.download_list = []
+        self.font_bold = QtGui.QFont()
+        self.font_bold.setWeight(75)
+        self.font_bold.setBold(True)
+        self.channel_for_update = None
         self.update_channel_threads = []
-        self.itemsDownloading = []
+        self.items_downloading = []
         self.regex_white_space = re.compile("\\W")
 
         self.db = DBOperation()
-        self.Sem = QtCore.QSemaphore(MAX_CONCURRENT_DOWNLOADS)
+        self.semaphore = QtCore.QSemaphore(MAX_CONCURRENT_DOWNLOADS)
         self.app = parent
 
     def closeEvent(self, test):
         logger.info("Closing brePodder")
         self.app.quit()
 
-    def setupUi(self, MainWindow):
-        self.MW = MainWindow
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(QtCore.QSize(QtCore.QRect(0, 0, 600, 400).size()).expandedTo(MainWindow.minimumSizeHint()))
-        MainWindow.setWindowIcon(QtGui.QIcon(":/icons/musicstore.png"))
+    def setup_ui(self, main_window):
+        """Set up the main window UI components."""
+        self.main_window = main_window
+        main_window.setObjectName("MainWindow")
+        main_window.resize(QtCore.QSize(QtCore.QRect(0, 0, 600, 400).size()).expandedTo(main_window.minimumSizeHint()))
+        main_window.setWindowIcon(QtGui.QIcon(":/icons/musicstore.png"))
 
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.central_widget = QtWidgets.QWidget(main_window)
 
-        self.gridlayout = QtWidgets.QGridLayout(self.centralwidget)
+        self.grid_layout = QtWidgets.QGridLayout(self.central_widget)
 
-        self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
+        self.tab_widget = QtWidgets.QTabWidget(self.central_widget)
 
         self.tab = QtWidgets.QWidget()
 
-        self.gridlayout1 = QtWidgets.QGridLayout(self.tab)
+        self.grid_layout_1 = QtWidgets.QGridLayout(self.tab)
 
         self.splitter_2 = QtWidgets.QSplitter(self.tab)
         self.splitter_2.setOrientation(QtCore.Qt.Horizontal)
@@ -72,35 +73,35 @@ class MainUi(QtWidgets.QWidget):
 
         self.splitter_223 = QtWidgets.QSplitter(self.splitter_22)
         self.splitter_223.setOrientation(QtCore.Qt.Horizontal)
-        self.QLineEdit_search_podcasts = MyLineEdit(self.splitter_223)
-        self.QLineEdit_search_podcasts.setText("Search")
-        self.QLineEdit_search_podcasts.setMinimumSize(QtCore.QSize(200, 20))
-        self.QLineEdit_search_podcasts.setMaximumSize(QtCore.QSize(500, 25))
-        self.QLineEdit_search_podcasts.textChanged.connect(lambda x: self.update_channel_list(x))
+        self.line_edit_search = ClearOnFocusLineEdit(self.splitter_223)
+        self.line_edit_search.setText("Search")
+        self.line_edit_search.setMinimumSize(QtCore.QSize(200, 20))
+        self.line_edit_search.setMaximumSize(QtCore.QSize(500, 25))
+        self.line_edit_search.textChanged.connect(lambda x: self.update_channel_list(x))
 
-        self.listWidget = TreeViewWidget(self.splitter_22)
-        self.listWidget.updateChannelList.connect(self.update_channel_list)
-        self.listWidget.updateChannelList_db.connect(self.db.addChannelToFolder)
+        self.list_widget_channels = TreeViewWidget(self.splitter_22)
+        self.list_widget_channels.updateChannelList.connect(self.update_channel_list)
+        self.list_widget_channels.updateChannelList_db.connect(self.db.add_channel_to_folder)
 
-        self.listWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.listWidget.setAlternatingRowColors(True)
-        self.listWidget.setDragEnabled(True)
-        self.listWidget.setDragDropOverwriteMode(True)
-        self.listWidget.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
+        self.list_widget_channels.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.list_widget_channels.setAlternatingRowColors(True)
+        self.list_widget_channels.setDragEnabled(True)
+        self.list_widget_channels.setDragDropOverwriteMode(True)
+        self.list_widget_channels.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
 
         self.splitter_222 = QtWidgets.QSplitter(self.splitter_22)
         self.splitter_222.setOrientation(QtCore.Qt.Horizontal)
 
-        self.QLineEdit1 = MyLineEdit(self.splitter_222)
+        self.line_edit_feed_url = ClearOnFocusLineEdit(self.splitter_222)
 
-        self.updateProgressBar = QtWidgets.QProgressBar(self.splitter_222)
-        self.updateProgressBar.setMaximumHeight(25)
-        self.updateProgressBar.hide()
+        self.update_progress_bar = QtWidgets.QProgressBar(self.splitter_222)
+        self.update_progress_bar.setMaximumHeight(25)
+        self.update_progress_bar.hide()
 
-        self.QPushButton1 = QtWidgets.QPushButton(self.splitter_222)
+        self.button_add = QtWidgets.QPushButton(self.splitter_222)
 
-        self.QPushButton1.setMinimumSize(QtCore.QSize(20, 20))
-        self.QPushButton1.setMaximumSize(QtCore.QSize(50, 25))
+        self.button_add.setMinimumSize(QtCore.QSize(20, 20))
+        self.button_add.setMaximumSize(QtCore.QSize(50, 25))
 
 
 
@@ -109,84 +110,84 @@ class MainUi(QtWidgets.QWidget):
         self.splitter = QtWidgets.QSplitter(self.splitter_2)
         self.splitter.setOrientation(QtCore.Qt.Vertical)
 
-        self.treeWidget_2 = QtWidgets.QTreeWidget(self.splitter)
-        self.treeWidget_2.setAlternatingRowColors(True)
+        self.tree_widget_episodes = QtWidgets.QTreeWidget(self.splitter)
+        self.tree_widget_episodes.setAlternatingRowColors(True)
 
-        self.QTextBrowser1 = QtWidgets.QTextBrowser(self.splitter)
+        self.text_browser_details = QtWidgets.QTextBrowser(self.splitter)
 
-        self.gridlayout1.addWidget(self.splitter_2, 0, 0, 1, 1)
+        self.grid_layout_1.addWidget(self.splitter_2, 0, 0, 1, 1)
 
-        self.tabWidget.addTab(self.tab, "")
+        self.tab_widget.addTab(self.tab, "")
 
         self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setObjectName("tab_2")
 
-        self.gridlayout2 = QtWidgets.QGridLayout(self.tab_2)
-        self.gridlayout2.setObjectName("gridlayout2")
+        self.grid_layout_2 = QtWidgets.QGridLayout(self.tab_2)
+        self.grid_layout_2.setObjectName("gridlayout2")
 
-        self.treeWidget = QtWidgets.QTreeWidget(self.tab_2)
-        self.treeWidget.setAlternatingRowColors(True)
-        self.treeWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.treeWidget.setObjectName("treeWidget")
-        self.gridlayout2.addWidget(self.treeWidget, 0, 0, 1, 1)
-        self.tabWidget.addTab(self.tab_2, "")
+        self.tree_widget_downloads = QtWidgets.QTreeWidget(self.tab_2)
+        self.tree_widget_downloads.setAlternatingRowColors(True)
+        self.tree_widget_downloads.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.tree_widget_downloads.setObjectName("treeWidget")
+        self.grid_layout_2.addWidget(self.tree_widget_downloads, 0, 0, 1, 1)
+        self.tab_widget.addTab(self.tab_2, "")
 
         self.tab_3 = QtWidgets.QWidget()
         self.tab_3.setObjectName("tab_3")
 
-        self.treeWidget_4 = QtWidgets.QTreeWidget(self.tab_3)
-        self.treeWidget_4.setObjectName("treeWidget_4")
+        self.tree_widget_latest_downloads = QtWidgets.QTreeWidget(self.tab_3)
+        self.tree_widget_latest_downloads.setObjectName("treeWidget_4")
 
-        self.gridlayout3 = QtWidgets.QGridLayout(self.tab_3)
-        self.gridlayout3.setObjectName("gridlayout3")
-        self.gridlayout3.addWidget(self.treeWidget_4, 0, 0, 1, 1)
-        self.tabWidget.addTab(self.tab_3, "")
-        self.gridlayout.addWidget(self.tabWidget, 0, 0, 1, 1)
+        self.grid_layout_3 = QtWidgets.QGridLayout(self.tab_3)
+        self.grid_layout_3.setObjectName("gridlayout3")
+        self.grid_layout_3.addWidget(self.tree_widget_latest_downloads, 0, 0, 1, 1)
+        self.tab_widget.addTab(self.tab_3, "")
+        self.grid_layout.addWidget(self.tab_widget, 0, 0, 1, 1)
 
         self.splitter_3 = QtWidgets.QSplitter(self.tab_3)
         self.splitter_3.setOrientation(QtCore.Qt.Horizontal)
-        self.gridlayout3.addWidget(self.splitter_3)
+        self.grid_layout_3.addWidget(self.splitter_3)
 
-        MainWindow.setCentralWidget(self.centralwidget)
+        main_window.setCentralWidget(self.central_widget)
 
         #Tab with newest episodes
         self.tab_4 = QtWidgets.QWidget()
         self.tab_4.setObjectName("tab_4")
 
-        self.treeWidget_5 = QtWidgets.QTreeWidget(self.tab_4)
+        self.tree_widget_newest_episodes = QtWidgets.QTreeWidget(self.tab_4)
 
-        self.gridlayout4 = QtWidgets.QGridLayout(self.tab_4)
-        self.gridlayout4.setObjectName("gridlayout4")
-        self.gridlayout4.addWidget(self.treeWidget_5, 0, 0, 1, 1)
-        self.tabWidget.addTab(self.tab_4, "")
-        self.gridlayout.addWidget(self.tabWidget, 0, 0, 1, 1)
+        self.grid_layout_4 = QtWidgets.QGridLayout(self.tab_4)
+        self.grid_layout_4.setObjectName("gridlayout4")
+        self.grid_layout_4.addWidget(self.tree_widget_newest_episodes, 0, 0, 1, 1)
+        self.tab_widget.addTab(self.tab_4, "")
+        self.grid_layout.addWidget(self.tab_widget, 0, 0, 1, 1)
 
         self.splitter_4 = QtWidgets.QSplitter(self.tab_4)
         self.splitter_4.setOrientation(QtCore.Qt.Horizontal)
-        self.gridlayout4.addWidget(self.splitter_4)
+        self.grid_layout_4.addWidget(self.splitter_4)
 
         # tab with playlist
         self.tab_playlist = QtWidgets.QWidget()
         self.tab_playlist.setObjectName("tab_playlist")
-        self.treewidget_playlist = QtWidgets.QTreeWidget(self.tab_playlist)
-        self.gridlayout_playlist = QtWidgets.QGridLayout(self.tab_playlist)
-        self.gridlayout_playlist.setObjectName("gridlayout5")
-        self.gridlayout_playlist.addWidget(self.treewidget_playlist, 0, 0, 1, 1)
-        self.tabWidget.addTab(self.tab_playlist, "")
-        self.gridlayout.addWidget(self.tabWidget, 0, 0, 1, 1)
+        self.tree_widget_playlist = QtWidgets.QTreeWidget(self.tab_playlist)
+        self.grid_layout_playlist = QtWidgets.QGridLayout(self.tab_playlist)
+        self.grid_layout_playlist.setObjectName("gridlayout5")
+        self.grid_layout_playlist.addWidget(self.tree_widget_playlist, 0, 0, 1, 1)
+        self.tab_widget.addTab(self.tab_playlist, "")
+        self.grid_layout.addWidget(self.tab_widget, 0, 0, 1, 1)
         self.splitter_playlist = QtWidgets.QSplitter(self.tab_playlist)
         self.splitter_playlist.setOrientation(QtCore.Qt.Horizontal)
-        self.gridlayout_playlist.addWidget(self.splitter_playlist)
+        self.grid_layout_playlist.addWidget(self.splitter_playlist)
 
         # Clear Playlist button
-        self.clearPlaylistBtn = QtWidgets.QPushButton("Clear Playlist", self.splitter_playlist)
-        self.clearPlaylistBtn.setMaximumWidth(120)
+        self.clear_playlist_btn = QtWidgets.QPushButton("Clear Playlist", self.splitter_playlist)
+        self.clear_playlist_btn.setMaximumWidth(120)
 
-        self.AudioPlayer = AudioPlayer("", self.splitter_playlist)
+        self.audio_player = AudioPlayer("", self.splitter_playlist)
 
-        MainWindow.setCentralWidget(self.centralwidget)
+        main_window.setCentralWidget(self.central_widget)
 
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar = QtWidgets.QMenuBar(main_window)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 604, 28))
         self.menubar.setObjectName("menubar")
 
@@ -203,27 +204,27 @@ class MainUi(QtWidgets.QWidget):
         self.menuEpisodeList.setObjectName("menuEpisodeList")
 
 
-        self.actionNew = QtWidgets.QAction(MainWindow)
+        self.actionNew = QtWidgets.QAction(main_window)
         self.actionNew.setIcon(QtGui.QIcon(":/icons/edit_add.png"))
         self.actionNew.setObjectName("actionNew")
 
-        self.actionUpdateAllChannels = QtWidgets.QAction(MainWindow)
+        self.actionUpdateAllChannels = QtWidgets.QAction(main_window)
         self.actionUpdateAllChannels.setIcon(QtGui.QIcon(":/icons/reload.png"))
         self.actionUpdateAllChannels.setObjectName("actionUpdate")
 
-        self.actionImport = QtWidgets.QAction(MainWindow)
+        self.actionImport = QtWidgets.QAction(main_window)
         self.actionImport.setIcon(QtGui.QIcon(":/icons/fileimport.png"))
         self.actionImport.setObjectName("actionImport")
 
-        self.actionExport = QtWidgets.QAction(MainWindow)
+        self.actionExport = QtWidgets.QAction(main_window)
         self.actionExport.setIcon(QtGui.QIcon(":/icons/fileexport.png"))
         self.actionExport.setObjectName("actionExport")
 
-        self.actionQuit = QtWidgets.QAction(MainWindow)
+        self.actionQuit = QtWidgets.QAction(main_window)
         self.actionQuit.setIcon(QtGui.QIcon(":/icons/exit.png"))
         self.actionQuit.setObjectName("actionQuit")
 
-        self.actionSettings = QtWidgets.QAction(MainWindow)
+        self.actionSettings = QtWidgets.QAction(main_window)
         self.actionSettings.setObjectName("actionSettings")
 
         self.menuPodcasts.addAction(self.actionNew)
@@ -235,46 +236,46 @@ class MainUi(QtWidgets.QWidget):
         self.menuPodcasts.addSeparator()
         self.menuPodcasts.addAction(self.actionQuit)
 
-        MainWindow.setMenuBar(self.menubar)
+        main_window.setMenuBar(self.menubar)
 
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar = QtWidgets.QStatusBar(main_window)
         self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
+        main_window.setStatusBar(self.statusbar)
 
-        self.toolBar = QtWidgets.QToolBar(MainWindow)
+        self.toolBar = QtWidgets.QToolBar(main_window)
         self.toolBar.setBaseSize(QtCore.QSize(100,0))
         self.toolBar.setMouseTracking(True)
         self.toolBar.setObjectName("toolBar")
-        MainWindow.addToolBar(QtCore.Qt.TopToolBarArea,self.toolBar)
+        main_window.addToolBar(QtCore.Qt.TopToolBarArea,self.toolBar)
 
         self.menubar.addAction(self.menuPodcasts.menuAction())
 
-        self.actionUpdateFeeds = QtWidgets.QAction(MainWindow)
+        self.actionUpdateFeeds = QtWidgets.QAction(main_window)
         self.actionUpdateFeeds.setIcon(QtGui.QIcon(":/icons/reload.png"))
         self.actionUpdateFeeds.setObjectName("actionUpdateFeeds")
 
-        self.actionNewFolder = QtWidgets.QAction(MainWindow)
+        self.actionNewFolder = QtWidgets.QAction(main_window)
         self.actionNewFolder.setIcon(QtGui.QIcon(":/icons/reload.png"))
         self.actionNewFolder.setObjectName("actionNewFolder")
 
-        self.actionCancel = QtWidgets.QAction(MainWindow)
+        self.actionCancel = QtWidgets.QAction(main_window)
         self.actionCancel.setIcon(QtGui.QIcon(":/icons/cancel.png"))
         self.actionCancel.setObjectName("actionCancel")
 
-        self.actionPause = QtWidgets.QAction(MainWindow)
+        self.actionPause = QtWidgets.QAction(main_window)
         self.actionPause.setIcon(QtGui.QIcon(":/icons/pause.png"))
         self.actionPause.setObjectName("actionPause")
 
-        self.actionResume = QtWidgets.QAction(MainWindow)
+        self.actionResume = QtWidgets.QAction(main_window)
         self.actionResume.setIcon(QtGui.QIcon(":/icons/resume.png"))
         self.actionResume.setObjectName("actionResume")
 
 
-        self.actionAddToPlaylist = QtWidgets.QAction(MainWindow)
+        self.actionAddToPlaylist = QtWidgets.QAction(main_window)
         self.actionAddToPlaylist.setIcon(QtGui.QIcon(":/icons/play.png"))
         self.actionAddToPlaylist.setObjectName("actionAddToPlaylist")
 
-        self.actionDownloadEpisode = QtWidgets.QAction(MainWindow)
+        self.actionDownloadEpisode = QtWidgets.QAction(main_window)
         self.actionDownloadEpisode.setObjectName("actionDownloadEpisode")
 
         self.menubar.addAction(self.menuPodcasts.menuAction())
@@ -297,29 +298,29 @@ class MainUi(QtWidgets.QWidget):
         self.menuEpisodeList.addSeparator()
         self.menuEpisodeList.addAction(self.actionDownloadEpisode)
 
-        self.trayIcon = QtWidgets.QSystemTrayIcon(QtGui.QIcon(":/icons/musicstore.png"), MainWindow)
-        self.trayIcon.setContextMenu(self.menuPodcasts)
-        self.trayIcon.show()
+        self.tray_icon = QtWidgets.QSystemTrayIcon(QtGui.QIcon(":/icons/musicstore.png"), main_window)
+        self.tray_icon.setContextMenu(self.menuPodcasts)
+        self.tray_icon.show()
 
-        self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(0)
-        self.listWidget.itemSelectionChanged.connect(self.channel_activated)
-        self.QPushButton1.clicked.connect(self.add_channel)
-        self.QPushButton1.clicked.connect(self.QLineEdit1.clear)
+        self.retranslate_ui(main_window)
+        self.tab_widget.setCurrentIndex(0)
+        self.list_widget_channels.itemSelectionChanged.connect(self.channel_activated)
+        self.button_add.clicked.connect(self.add_channel)
+        self.button_add.clicked.connect(self.line_edit_feed_url.clear)
 
-        self.treeWidget_2.itemSelectionChanged.connect(self.episode_activated)
-        self.treeWidget_2.itemDoubleClicked.connect(self.EpisodeDoubleClicked)
-        self.treeWidget_2.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.tree_widget_episodes.itemSelectionChanged.connect(self.episode_activated)
+        self.tree_widget_episodes.itemDoubleClicked.connect(self.episode_double_clicked)
+        self.tree_widget_episodes.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 
-        self.treeWidget_4.itemDoubleClicked.connect(self.LastestEpisodeDoubleClicked)
-        self.treeWidget_5.itemDoubleClicked.connect(self.NewestEpisodeDoubleClicked)
-        self.treewidget_playlist.itemDoubleClicked.connect(self.PlaylistEpisodeDoubleClicked)
-        self.clearPlaylistBtn.clicked.connect(self.clear_playlist)
+        self.tree_widget_latest_downloads.itemDoubleClicked.connect(self.latest_episode_double_clicked)
+        self.tree_widget_newest_episodes.itemDoubleClicked.connect(self.newest_episode_double_clicked)
+        self.tree_widget_playlist.itemDoubleClicked.connect(self.playlist_episode_double_clicked)
+        self.clear_playlist_btn.clicked.connect(self.clear_playlist)
 
-        self.treeWidget.itemClicked.connect(self.DownloadActivated)
-        self.trayIcon.activated.connect(self.trayIconActivated)
+        self.tree_widget_downloads.itemClicked.connect(self.download_activated)
+        self.tray_icon.activated.connect(self.tray_icon_activated)
         self.actionUpdateFeeds.triggered.connect(self.update_channel)
-        self.actionNewFolder.triggered.connect(self.create_new_foder)
+        self.actionNewFolder.triggered.connect(self.create_new_folder)
         self.actionQuit.triggered.connect(self.close)
         self.actionCancel.triggered.connect(self.delete_channel)
         self.actionUpdateAllChannels.triggered.connect(self.update_all_channels)
@@ -328,103 +329,104 @@ class MainUi(QtWidgets.QWidget):
         self.actionImport.triggered.connect(self.import_opml)
         self.actionSettings.triggered.connect(self.open_settings)
 
-        self.listWidget.customContextMenuRequested.connect(self.activeMenuChannels)
-        self.treeWidget.customContextMenuRequested.connect(self.activeMenuDownloads)
+        self.list_widget_channels.customContextMenuRequested.connect(self.activate_menu_channels)
+        self.tree_widget_downloads.customContextMenuRequested.connect(self.activate_menu_downloads)
 
-        self.actionAddToPlaylist.triggered.connect(self.addItemToPlaylist)
-        self.actionDownloadEpisode.triggered.connect(self.EpisodeDoubleClicked)
-        self.treeWidget_2.customContextMenuRequested.connect(self.activeMenuEpisode)
+        self.actionAddToPlaylist.triggered.connect(self.add_item_to_playlist)
+        self.actionDownloadEpisode.triggered.connect(self.episode_double_clicked)
+        self.tree_widget_episodes.customContextMenuRequested.connect(self.activate_menu_episode)
 
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(main_window)
 
-        MainWindow.setTabOrder(self.QLineEdit1, self.QPushButton1)
-        MainWindow.setTabOrder(self.QPushButton1, self.QTextBrowser1)
-        MainWindow.setTabOrder(self.QTextBrowser1, self.tabWidget)
+        main_window.setTabOrder(self.line_edit_feed_url, self.button_add)
+        main_window.setTabOrder(self.button_add, self.text_browser_details)
+        main_window.setTabOrder(self.text_browser_details, self.tab_widget)
 
-    def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "brePodder", None))
-        self.listWidget.setStatusTip(QtWidgets.QApplication.translate("MainWindow", "kanali", None))
-        self.listWidget.clear()
+    def retranslate_ui(self, main_window):
+        """Set up UI text and translations."""
+        main_window.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "brePodder", None))
+        self.list_widget_channels.setStatusTip(QtWidgets.QApplication.translate("MainWindow", "kanali", None))
+        self.list_widget_channels.clear()
 
-        item = QtWidgets.QTreeWidgetItem(self.listWidget)
+        item = QtWidgets.QTreeWidgetItem(self.list_widget_channels)
         item.setText(0, QtWidgets.QApplication.translate("MainWindow", "naziv podkasta", None))
         item.setIcon(0, QtGui.QIcon(":/icons/musicstore.png"))
-        self.listWidget.headerItem().setText(0, QtWidgets.QApplication.translate("MainWindow", "Channels", None))
-        item1 = QtWidgets.QTreeWidgetItem(self.listWidget)
+        self.list_widget_channels.headerItem().setText(0, QtWidgets.QApplication.translate("MainWindow", "Channels", None))
+        item1 = QtWidgets.QTreeWidgetItem(self.list_widget_channels)
         item1.setText(0, QtWidgets.QApplication.translate("MainWindow", "New Item", None))
 
-        self.QLineEdit1.setText(QtWidgets.QApplication.translate("MainWindow", "Copy RSS or Youtube link", None))
-        self.QLineEdit1.selectAll()
-        self.QLineEdit1.hasFocus()
-        self.QPushButton1.setText(QtWidgets.QApplication.translate("MainWindow", "Add", None))
+        self.line_edit_feed_url.setText(QtWidgets.QApplication.translate("MainWindow", "Copy RSS or Youtube link", None))
+        self.line_edit_feed_url.selectAll()
+        self.line_edit_feed_url.hasFocus()
+        self.button_add.setText(QtWidgets.QApplication.translate("MainWindow", "Add", None))
 
-        self.treeWidget_2.setStatusTip(QtWidgets.QApplication.translate("MainWindow", "epizode", None))
-        self.treeWidget_2.headerItem().setText(0, QtWidgets.QApplication.translate("MainWindow", "episode", None))
-        self.treeWidget_2.headerItem().setText(1, QtWidgets.QApplication.translate("MainWindow", "size", None))
-        self.treeWidget_2.headerItem().setText(2, QtWidgets.QApplication.translate("MainWindow", "date", None))
-        self.treeWidget_2.header().resizeSection(0, 300)
+        self.tree_widget_episodes.setStatusTip(QtWidgets.QApplication.translate("MainWindow", "epizode", None))
+        self.tree_widget_episodes.headerItem().setText(0, QtWidgets.QApplication.translate("MainWindow", "episode", None))
+        self.tree_widget_episodes.headerItem().setText(1, QtWidgets.QApplication.translate("MainWindow", "size", None))
+        self.tree_widget_episodes.headerItem().setText(2, QtWidgets.QApplication.translate("MainWindow", "date", None))
+        self.tree_widget_episodes.header().resizeSection(0, 300)
 
-        self.treeWidget_2.clear()
+        self.tree_widget_episodes.clear()
 
-        self.QTextBrowser1.setHtml(QtWidgets.QApplication.translate("MainWindow", " ", None))
+        self.text_browser_details.setHtml(QtWidgets.QApplication.translate("MainWindow", " ", None))
 
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QtWidgets.QApplication.translate("MainWindow", "Channels", None))
-        self.treeWidget.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channel", None))
-        self.treeWidget.headerItem().setText(1,QtWidgets.QApplication.translate("MainWindow", "Episode", None))
-        self.treeWidget.headerItem().setText(2,QtWidgets.QApplication.translate("MainWindow", "Size", None))
-        self.treeWidget.headerItem().setText(3,QtWidgets.QApplication.translate("MainWindow", "%", None))
-        self.treeWidget.headerItem().setText(4,QtWidgets.QApplication.translate("MainWindow", "Speed", None))
-        self.treeWidget.headerItem().setText(5,QtWidgets.QApplication.translate("MainWindow", "Link", None))
-        self.treeWidget.header().resizeSection(0, 200)
-        self.treeWidget.header().resizeSection(1, 200)
-        self.treeWidget.clear()
-
-
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QtWidgets.QApplication.translate("MainWindow", "Downloads", None))
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab), QtWidgets.QApplication.translate("MainWindow", "Channels", None))
+        self.tree_widget_downloads.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channel", None))
+        self.tree_widget_downloads.headerItem().setText(1,QtWidgets.QApplication.translate("MainWindow", "Episode", None))
+        self.tree_widget_downloads.headerItem().setText(2,QtWidgets.QApplication.translate("MainWindow", "Size", None))
+        self.tree_widget_downloads.headerItem().setText(3,QtWidgets.QApplication.translate("MainWindow", "%", None))
+        self.tree_widget_downloads.headerItem().setText(4,QtWidgets.QApplication.translate("MainWindow", "Speed", None))
+        self.tree_widget_downloads.headerItem().setText(5,QtWidgets.QApplication.translate("MainWindow", "Link", None))
+        self.tree_widget_downloads.header().resizeSection(0, 200)
+        self.tree_widget_downloads.header().resizeSection(1, 200)
+        self.tree_widget_downloads.clear()
 
 
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QtWidgets.QApplication.translate("MainWindow", "Downloads", None))
-        self.treeWidget_4.setToolTip(QtWidgets.QApplication.translate("MainWindow", "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_2), QtWidgets.QApplication.translate("MainWindow", "Downloads", None))
+
+
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_2), QtWidgets.QApplication.translate("MainWindow", "Downloads", None))
+        self.tree_widget_latest_downloads.setToolTip(QtWidgets.QApplication.translate("MainWindow", "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
         "p, li { white-space: pre-wrap; }\n"
         "</style></head><body style=\" font-family:\'Sans Serif\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
         "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">jn</p></body></html>", None))
-        self.treeWidget_4.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channel", None))
-        self.treeWidget_4.headerItem().setText(1,QtWidgets.QApplication.translate("MainWindow", "Episode", None))
-        self.treeWidget_4.headerItem().setText(2,QtWidgets.QApplication.translate("MainWindow", "Size", None))
-        self.treeWidget_4.headerItem().setText(3,QtWidgets.QApplication.translate("MainWindow", "Local Link", None))
-        self.treeWidget_4.header().resizeSection(0, 200)
-        self.treeWidget_4.header().resizeSection(1, 200)
-        self.treeWidget_4.clear()
+        self.tree_widget_latest_downloads.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channel", None))
+        self.tree_widget_latest_downloads.headerItem().setText(1,QtWidgets.QApplication.translate("MainWindow", "Episode", None))
+        self.tree_widget_latest_downloads.headerItem().setText(2,QtWidgets.QApplication.translate("MainWindow", "Size", None))
+        self.tree_widget_latest_downloads.headerItem().setText(3,QtWidgets.QApplication.translate("MainWindow", "Local Link", None))
+        self.tree_widget_latest_downloads.header().resizeSection(0, 200)
+        self.tree_widget_latest_downloads.header().resizeSection(1, 200)
+        self.tree_widget_latest_downloads.clear()
 
-        self.treeWidget_5.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channel", None))
-        self.treeWidget_5.headerItem().setText(1,QtWidgets.QApplication.translate("MainWindow", "Episode", None))
-        self.treeWidget_5.headerItem().setText(2,QtWidgets.QApplication.translate("MainWindow", "Size", None))
-        self.treeWidget_5.headerItem().setText(3,QtWidgets.QApplication.translate("MainWindow", "Date", None))
-        self.treeWidget_5.headerItem().setText(4,QtWidgets.QApplication.translate("MainWindow", "Enclosure", None))
-        self.treeWidget_5.header().resizeSection(0, 200)
-        self.treeWidget_5.header().resizeSection(1, 200)
-        self.treeWidget_5.clear()
+        self.tree_widget_newest_episodes.headerItem().setText(0,QtWidgets.QApplication.translate("MainWindow", "Channel", None))
+        self.tree_widget_newest_episodes.headerItem().setText(1,QtWidgets.QApplication.translate("MainWindow", "Episode", None))
+        self.tree_widget_newest_episodes.headerItem().setText(2,QtWidgets.QApplication.translate("MainWindow", "Size", None))
+        self.tree_widget_newest_episodes.headerItem().setText(3,QtWidgets.QApplication.translate("MainWindow", "Date", None))
+        self.tree_widget_newest_episodes.headerItem().setText(4,QtWidgets.QApplication.translate("MainWindow", "Enclosure", None))
+        self.tree_widget_newest_episodes.header().resizeSection(0, 200)
+        self.tree_widget_newest_episodes.header().resizeSection(1, 200)
+        self.tree_widget_newest_episodes.clear()
 
-        self.treewidget_playlist.headerItem().setText(0, QtWidgets.QApplication.translate("MainWindow", "Channel", None))
-        self.treewidget_playlist.headerItem().setText(1, QtWidgets.QApplication.translate("MainWindow", "Episode", None))
-        self.treewidget_playlist.headerItem().setText(2, QtWidgets.QApplication.translate("MainWindow", "Size", None))
-        self.treewidget_playlist.headerItem().setText(3, QtWidgets.QApplication.translate("MainWindow", "Date", None))
-        self.treewidget_playlist.headerItem().setText(4, QtWidgets.QApplication.translate("MainWindow", "Enclosure", None))
-        self.treewidget_playlist.header().resizeSection(0, 200)
-        self.treewidget_playlist.header().resizeSection(1, 200)
-        self.treewidget_playlist.clear()
+        self.tree_widget_playlist.headerItem().setText(0, QtWidgets.QApplication.translate("MainWindow", "Channel", None))
+        self.tree_widget_playlist.headerItem().setText(1, QtWidgets.QApplication.translate("MainWindow", "Episode", None))
+        self.tree_widget_playlist.headerItem().setText(2, QtWidgets.QApplication.translate("MainWindow", "Size", None))
+        self.tree_widget_playlist.headerItem().setText(3, QtWidgets.QApplication.translate("MainWindow", "Date", None))
+        self.tree_widget_playlist.headerItem().setText(4, QtWidgets.QApplication.translate("MainWindow", "Enclosure", None))
+        self.tree_widget_playlist.header().resizeSection(0, 200)
+        self.tree_widget_playlist.header().resizeSection(1, 200)
+        self.tree_widget_playlist.clear()
 
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_playlist),
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_playlist),
                                   QtWidgets.QApplication.translate("MainWindow", "Playlist", None))
 
-        item6 = QtWidgets.QTreeWidgetItem(self.treeWidget_4)
+        item6 = QtWidgets.QTreeWidgetItem(self.tree_widget_latest_downloads)
         item6.setText(0, QtWidgets.QApplication.translate("MainWindow", "ch", None))
         item6.setText(1, QtWidgets.QApplication.translate("MainWindow", "ep", None))
         item6.setText(2, QtWidgets.QApplication.translate("MainWindow", "size", None))
         item6.setText(3, QtWidgets.QApplication.translate("MainWindow", "local file", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), QtWidgets.QApplication.translate("MainWindow", "Lastest downloads", None))
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_3), QtWidgets.QApplication.translate("MainWindow", "Latest downloads", None))
 
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), QtWidgets.QApplication.translate("MainWindow", "Newest Episodes", None))
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab_4), QtWidgets.QApplication.translate("MainWindow", "Newest Episodes", None))
 
         self.menuPodcasts.setTitle(QtWidgets.QApplication.translate("MainWindow", "Podcasts", None))
         self.toolBar.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "toolBar", None))
@@ -440,62 +442,69 @@ class MainUi(QtWidgets.QWidget):
         self.actionAddToPlaylist.setText(QtWidgets.QApplication.translate("MainWindow", "Add to playlist", None))
         self.actionDownloadEpisode.setText(QtWidgets.QApplication.translate("MainWindow", "Download episode", None))
 
-    def trayIconActivated(self, reason):
+    def tray_icon_activated(self, reason):
+        """Handle tray icon activation."""
         if reason == 3 or reason == 2:
-            if self.MW.isHidden():
-                self.MW.show()
+            if self.main_window.isHidden():
+                self.main_window.show()
             else:
-                self.MW.hide()
+                self.main_window.hide()
 
     def dialog_add(self):
-        filename = QtWidgets.QFileDialog.getOpenFileName(self.MW, 'Open file', '/home')
+        """Open file dialog to add a podcast."""
+        filename = QtWidgets.QFileDialog.getOpenFileName(self.main_window, 'Open file', '/home')
         logger.debug("Opening file: %s", filename)
 
     def export_opml(self):
-        channels = self.db.getAllChannels()
+        """Export channels to OPML file."""
+        channels = self.db.get_all_channels()
         opml_file = opml.Exporter('brePodder.opml')
         opml_file.write(channels)
 
     def import_opml(self):
-        filename = QtWidgets.QFileDialog.getOpenFileName(self.MW, 'Open OPML file for import', '/home',  "(*.opml)")
+        """Import channels from OPML file."""
+        filename = QtWidgets.QFileDialog.getOpenFileName(self.main_window, 'Open OPML file for import', '/home',  "(*.opml)")
         i = opml.Importer(filename[0])
         i.get_model()
-        channels = self.db.getAllChannelsLinks()
+        channels = self.db.get_all_channels_links()
 
         for channel in i.items:
             if (channel['url'], ) not in channels:
                 self.add_channel(channel['url'])
 
-    def activeMenuChannels(self, pos):
-        logger.debug("activeMenuChannels")
-        globalPos = self.listWidget.mapToGlobal(pos)
-        globalPos.setY(globalPos.y() + 25)
-        t = self.listWidget.indexAt(pos)
-        self.menuChannels.popup(globalPos)
+    def activate_menu_channels(self, pos):
+        """Show context menu for channels."""
+        logger.debug("activate_menu_channels")
+        global_pos = self.list_widget_channels.mapToGlobal(pos)
+        global_pos.setY(global_pos.y() + 25)
+        t = self.list_widget_channels.indexAt(pos)
+        self.menuChannels.popup(global_pos)
 
-    def activeMenuDownloads(self, pos):
-        self.actionCancel.setText(QtWidgets.QApplication.translate("MainWindow", "Cancel downlaod", None))
-        globalPos = self.treeWidget.mapToGlobal(pos)
-        globalPos.setY(globalPos.y() + 25)
-        t = self.treeWidget.indexAt(pos)
-        self.menuDownloads.popup(globalPos)
+    def activate_menu_downloads(self, pos):
+        """Show context menu for downloads."""
+        self.actionCancel.setText(QtWidgets.QApplication.translate("MainWindow", "Cancel download", None))
+        global_pos = self.tree_widget_downloads.mapToGlobal(pos)
+        global_pos.setY(global_pos.y() + 25)
+        t = self.tree_widget_downloads.indexAt(pos)
+        self.menuDownloads.popup(global_pos)
 
-    def activeMenuEpisode(self, pos):
+    def activate_menu_episode(self, pos):
+        """Show context menu for episodes."""
         if pos:
-            globalPos = self.treeWidget_2.mapToGlobal(pos)
-            globalPos.setY(globalPos.y() + 25)
-            t = self.treeWidget_2.indexAt(pos)
-            self.menuEpisodeList.popup(globalPos)
-            self.episodeTitle = t.siblingAtColumn(0).data()
-            self.episode_row = self.db.getEpisodeByTitle(self.episodeTitle)
+            global_pos = self.tree_widget_episodes.mapToGlobal(pos)
+            global_pos.setY(global_pos.y() + 25)
+            t = self.tree_widget_episodes.indexAt(pos)
+            self.menuEpisodeList.popup(global_pos)
+            self.episode_title = t.siblingAtColumn(0).data()
+            self.episode_row = self.db.get_episode_by_title(self.episode_title)
 
-
-    def addItemToPlaylist(self, episode_row):
-        logger.debug("addItemToPlaylist: %s", episode_row)
+    def add_item_to_playlist(self, episode_row):
+        """Add selected episode to playlist."""
+        logger.debug("add_item_to_playlist: %s", episode_row)
         self.playlist.append(self.episode_row)
-        self.update_play_list(self.playlist)
+        self.update_playlist(self.playlist)
 
     def open_settings(self):
         """Open the settings dialog."""
-        dialog = SettingsDialog(self.MW)
+        dialog = SettingsDialog(self.main_window)
         dialog.exec_()

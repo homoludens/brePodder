@@ -38,12 +38,12 @@ class AddChannelThread(QtCore.QThread):
         QtCore.QThread.__init__(self)
         self.channel_url: str = channel_url
         self.ui: Any = ui
-        self.updateProgress: int = update_progress
-        self.newEpisodeExists: int = 0
+        self.update_progress: int = update_progress
+        self.new_episode_exists: int = 0
         self.main_directory: str = str(DATA_DIR) + '/'
 
     def run(self) -> None:
-        self.ui.Sem.acquire(1)
+        self.ui.semaphore.acquire(1)
         
         con = sqlite3.connect(str(DATABASE_FILE), check_same_thread=False)
         con.isolation_level = None
@@ -54,15 +54,15 @@ class AddChannelThread(QtCore.QThread):
         con.commit()
         cur.close()
 
-        if self.newEpisodeExists:
+        if self.new_episode_exists:
             self.addsignal.emit()
 
         self.addProgressSignal.emit()
 
-        if self.updateProgress == 0:
+        if self.update_progress == 0:
             self.addDoneSignal.emit()
 
-        self.ui.Sem.release(1)
+        self.ui.semaphore.release(1)
 
     def add_channel(self, new_url: Optional[str] = None, cursor: Optional[sqlite3.Cursor] = None) -> None:
         """Add a new channel from URL."""
@@ -90,53 +90,53 @@ class AddChannelThread(QtCore.QThread):
         content = BytesIO(resp.content)
         feed_content = feedparser.parse(content)
 
-        item = QtWidgets.QTreeWidgetItem(self.ui.treeWidget)
+        item = QtWidgets.QTreeWidgetItem(self.ui.tree_widget_downloads)
 
         if 'title' in feed_content.feed:
-            ChannelTitle: str = feed_content.feed.title
+            channel_title: str = feed_content.feed.title
         elif 'link' in feed_content.feed:
-            ChannelTitle = feed_content.feed.link
+            channel_title = feed_content.feed.link
         else:
-            ChannelTitle = feed_link
+            channel_title = feed_link
 
-        if self.ui.db.getChannelByLink(feed_link):
+        if self.ui.db.get_channel_by_link(feed_link):
             logger.info("Channel already exists: %s", feed_link)
             return
 
-        if self.ui.db.getChannelByTitle(ChannelTitle):
-            logger.info("Channel already exists: %s", ChannelTitle)
+        if self.ui.db.get_channel_by_title(channel_title):
+            logger.info("Channel already exists: %s", channel_title)
             return
 
-        ChannelDir: str = self.ui.regex_white_space.sub("", ChannelTitle)
+        channel_dir: str = self.ui.regex_white_space.sub("", channel_title)
 
-        if not os.path.exists(self.main_directory + ChannelDir):
-            os.makedirs(self.main_directory + ChannelDir)
+        if not os.path.exists(self.main_directory + channel_dir):
+            os.makedirs(self.main_directory + channel_dir)
 
-        os.chdir(self.main_directory + ChannelDir)
-        item.setText(0, ChannelTitle)
+        os.chdir(self.main_directory + channel_dir)
+        item.setText(0, channel_title)
 
         # Download channel logo
-        logo_fileBig: str = ''
-        imageURL: str = ''
+        logo_file_big: str = ''
+        image_url: str = ''
         if 'image' in feed_content.feed:
             if feed_content.feed.image.href is not None:
                 if feed_content.feed.image.href[0] == '/':
-                    imageURL = feed_content.feed.link + feed_content.feed.image.href
+                    image_url = feed_content.feed.link + feed_content.feed.image.href
                 else:
-                    imageURL = feed_content.feed.image.href
+                    image_url = feed_content.feed.image.href
 
-            url_done = QtCore.QUrl(imageURL)
-            fileInfo = QtCore.QFileInfo(url_done.path())
-            fileName = fileInfo.fileName()
-            logo_fileBig = ChannelDir + "/" + fileName
+            url_done = QtCore.QUrl(image_url)
+            file_info = QtCore.QFileInfo(url_done.path())
+            file_name = file_info.fileName()
+            logo_file_big = channel_dir + "/" + file_name
 
         if is_video_link(new_url):
-            imageURL = get_cover(new_url)
-            logo_fileBig = ChannelDir + "/" + "logo.jpg"
+            image_url = get_cover(new_url)
+            logo_file_big = channel_dir + "/" + "logo.jpg"
 
-        if imageURL:
-            download_image(imageURL, self.main_directory + logo_fileBig)
-            self.ui.resize_image(self.main_directory + logo_fileBig, self.main_directory + logo_fileBig)
+        if image_url:
+            download_image(image_url, self.main_directory + logo_file_big)
+            self.ui.resize_image(self.main_directory + logo_file_big, self.main_directory + logo_file_big)
 
         # Download favicon
         if "link" in feed_content.feed:
@@ -153,12 +153,12 @@ class AddChannelThread(QtCore.QThread):
         url_favicon = QtCore.QUrl(url)
         favicon_info = QtCore.QFileInfo(url_favicon.path())
         favicon_name = favicon_info.fileName()
-        logo_file: str = ChannelDir + '/' + favicon_name
+        logo_file: str = channel_dir + '/' + favicon_name
 
         download_image(url, self.main_directory + logo_file)
         self.ui.resize_image(self.main_directory + logo_file, self.main_directory + logo_file)
 
-        item2 = QtWidgets.QTreeWidgetItem(self.ui.treeWidget)
+        item2 = QtWidgets.QTreeWidgetItem(self.ui.tree_widget_downloads)
 
         if 'title' in feed_content.feed:
             item2.setText(0, feed_content.feed.title)
@@ -168,37 +168,37 @@ class AddChannelThread(QtCore.QThread):
         item2.setText(1, url)
         item2.setText(5, url)
 
-        if len(self.ui.downloadList) > 0:
-            downloadId: int = self.ui.downloadList[-1][0] + 1
+        if len(self.ui.download_list) > 0:
+            download_id: int = self.ui.download_list[-1][0] + 1
         else:
-            downloadId = 0
+            download_id = 0
 
-        self.ui.itemsDownloading.append((downloadId, url))
-        self.ui.downloadList.append((downloadId, Download(url, item2, downloadId, self.ui)))
+        self.ui.items_downloading.append((download_id, url))
+        self.ui.download_list.append((download_id, Download(url, item2, download_id, self.ui)))
 
-        self.ui.downloadList[downloadId][1].faviconFound = True
+        self.ui.download_list[download_id][1].favicon_found = True
 
         if 'subtitle' in feed_content.feed:
-            ChannelSubtitle: str = feed_content.feed.subtitle
+            channel_subtitle: str = feed_content.feed.subtitle
         else:
-            ChannelSubtitle = 'No description'
+            channel_subtitle = 'No description'
 
         if 'links' in feed_content.feed:
-            ChannelHomepage: str = feed_content.feed.links[0].href
+            channel_homepage: str = feed_content.feed.links[0].href
         else:
-            ChannelHomepage = 'http://google.com'
+            channel_homepage = 'http://google.com'
 
-        newChannel: tuple[str, str, str, str, str, str] = (ChannelTitle, feed_link, ChannelHomepage, ChannelSubtitle, logo_file, logo_fileBig)
-        self.ui.db.insertChannel(newChannel)
+        new_channel: tuple[str, str, str, str, str, str] = (channel_title, feed_link, channel_homepage, channel_subtitle, logo_file, logo_file_big)
+        self.ui.db.insert_channel(new_channel)
 
-        ChannelId = self.ui.db.getChannelByTitle(ChannelTitle)
+        channel_id = self.ui.db.get_channel_by_title(channel_title)
 
         for episode in feed_content.entries:
-            self.add_episode(ChannelId[0], episode)
+            self.add_episode(channel_id[0], episode)
 
         os.chdir(str(DATA_DIR))
 
     def add_episode(self, channel_id: int, episode: Any) -> None:
         """Add an episode to the database."""
         new_episode = parse_episode_from_feed_entry(episode, channel_id)
-        self.ui.db.insertEpisode(tuple(new_episode.values()))
+        self.ui.db.insert_episode(tuple(new_episode.values()))
