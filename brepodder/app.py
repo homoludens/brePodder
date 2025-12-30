@@ -10,10 +10,11 @@ import os
 import sqlite3
 from typing import Any, Optional, Union
 
-from ui.Ui_mainwindow import MainUi
-from utils.download import Download
-from utils.threads import UpdateChannelThread, UpdateChannelThread_network, AddChannelThread
-from utils.feed_parser import parse_episode_for_update, episode_dict_to_tuple
+from ui.main_window import MainUi
+from workers.download_worker import Download
+from workers.update_worker import UpdateChannelThread, UpdateChannelThread_network
+from workers.add_worker import AddChannelThread
+from services.feed_parser import parse_episode_for_update, episode_dict_to_tuple
 from config import DATA_DIR, DATABASE_FILE, USER_AGENT, THUMBNAIL_MAX_SIZE
 from logger import get_logger
 

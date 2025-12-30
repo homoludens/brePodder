@@ -1,4 +1,8 @@
-from ui.Ui_mainwindow import *
+"""
+Download manager for brePodder.
+
+Handles downloading podcast episodes with pause/resume support.
+"""
 import os
 import threading
 from typing import Any, Optional, IO
@@ -12,6 +16,12 @@ logger = get_logger(__name__)
 
 
 class Download(QtCore.QObject):
+    """
+    Download manager for a single file.
+    
+    Supports pause, resume, and cancel operations.
+    Uses threading to avoid blocking the UI.
+    """
     # Qt signals for thread-safe communication
     progress_updated = QtCore.pyqtSignal(int, int)
     download_finished = QtCore.pyqtSignal(str, int)

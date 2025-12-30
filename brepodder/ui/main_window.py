@@ -1,11 +1,17 @@
+"""
+Main window UI for brePodder.
+
+This module sets up the entire PyQt5 interface for the podcast client.
+"""
 from PyQt5 import QtCore, QtGui, QtWidgets, QtNetwork
 import re
-from utils import opml
-from utils.sql import *
-from ui.treeviewwidget import TreeViewWidget
-from ui.mylineeditwidget import MyLineEdit
+
+from services import opml
+from data.database import DBOperation
+from ui.widgets.tree_view import TreeViewWidget
+from ui.widgets.line_edit import MyLineEdit
+from ui.widgets.audio_player import AudioPlayer
 import resources
-from utils.audioplayer import AudioPlayer
 from config import MAX_CONCURRENT_DOWNLOADS
 from logger import get_logger
 
@@ -13,6 +19,11 @@ logger = get_logger(__name__)
 
 
 class MainUi(QtWidgets.QWidget):
+    """
+    Main window UI class.
+    
+    Sets up all UI components and connects signals/slots.
+    """
 
     def __init__(self, parent=None):
         QtWidgets.QWidget.__init__(self)
@@ -425,9 +436,6 @@ class MainUi(QtWidgets.QWidget):
 
     def dialog_add(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(self.MW, 'Open file', '/home')
-#        file=open(filename)
-#        cd = OpenFile()
-#        cd.showDialog()
         logger.debug("Opening file: %s", filename)
 
     def export_opml(self):
@@ -473,4 +481,3 @@ class MainUi(QtWidgets.QWidget):
         logger.debug("addItemToPlaylist: %s", episode_row)
         self.playlist.append(self.episode_row)
         self.update_play_list(self.playlist)
-

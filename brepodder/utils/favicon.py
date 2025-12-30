@@ -1,3 +1,6 @@
+"""
+Favicon fetching utilities for brePodder.
+"""
 import requests
 import favicon
 import os
@@ -9,6 +12,15 @@ logger = get_logger(__name__)
 
 
 def get_icon_url(url: str) -> Optional[str]:
+    """
+    Get the favicon URL for a website.
+    
+    Args:
+        url: The website URL to get the favicon for
+        
+    Returns:
+        The favicon URL, or None if not found
+    """
     try:
         icons = favicon.get(url)
         icon = icons[0]
@@ -27,6 +39,13 @@ def get_icon_url(url: str) -> Optional[str]:
 
 
 def get_icon(url: str, local_file_name: str) -> None:
+    """
+    Download a favicon to a local file.
+    
+    Args:
+        url: The website URL to get the favicon from
+        local_file_name: The base filename to save to (extension added automatically)
+    """
     logger.debug("get_icon called for: %s", url)
     try:
         icons = favicon.get(url)
@@ -43,8 +62,17 @@ def get_icon(url: str, local_file_name: str) -> None:
 
 
 def download_image(url: str, local_file_path: str) -> None:
+    """
+    Download an image from a URL to a local file.
+    
+    Args:
+        url: The image URL to download
+        local_file_path: The local path to save the image to
+    """
+    from config import USER_AGENT
+    
     headers = {
-        'User-Agent': 'brePodder/0.02'
+        'User-Agent': USER_AGENT
     }
 
     try:

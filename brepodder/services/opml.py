@@ -1,3 +1,6 @@
+"""
+OPML import/export functionality for brePodder.
+"""
 import xml.dom.minidom
 import xml.sax.saxutils
 import os.path

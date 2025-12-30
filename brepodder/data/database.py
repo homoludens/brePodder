@@ -1,3 +1,8 @@
+"""
+Database operations for brePodder.
+
+This module provides thread-safe database access using SQLite.
+"""
 import sqlite3
 import threading
 from typing import Any, Optional

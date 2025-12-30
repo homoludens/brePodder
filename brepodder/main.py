@@ -1,4 +1,9 @@
 #!/usr/bin/python
+"""
+brePodder - A PyQt5 podcast client.
+
+This is the main entry point for the application.
+"""
 import os
 import sys
 from PyQt5 import QtWidgets
@@ -16,7 +21,7 @@ if __name__ == "__main__":
     logger.info("Starting brePodder")
     
     # Import after logging is set up
-    from brePodder import BrePodder
+    from app import BrePodder
 
     app = QtWidgets.QApplication(sys.argv)
     ui = BrePodder(app)

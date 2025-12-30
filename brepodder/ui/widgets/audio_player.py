@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
 """
-https://github.com/pyqt/examples/blob/5225c0e7f070cc4496407c1ea565319be9274e29/src/pyqt-official/multimediawidgets/player.py
+Audio player widget for brePodder.
+
+Based on: https://github.com/pyqt/examples/blob/5225c0e7f070cc4496407c1ea565319be9274e29/src/pyqt-official/multimediawidgets/player.py
 """
 import sys
 from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
@@ -11,11 +12,13 @@ logger = get_logger(__name__)
 
 
 class AudioPlayer(QtWidgets.QWidget):
+    """
+    An audio player widget with play/pause, seek, and download controls.
+    """
+    
     def __init__(self, url, parent=None):
         super(AudioPlayer, self).__init__(parent)
         logger.debug("AudioPlayer initialized with URL: %s", url)
-        # url = 'https://traffic.libsyn.com/secure/517c6bec-81cc-498a-86df-3a668eba6a93/CC0001_TheCatLadyAndThePetitioner.mp3'
-        # self.url = QtCore.QUrl(url)
 
         self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.slider.setRange(0, 1000)
@@ -28,7 +31,6 @@ class AudioPlayer(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self, parent)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
 
-        # self.content = QtCore.QUrl.fromLocalFile(url)
         self.content = QtMultimedia.QMediaContent(QtCore.QUrl(url))
 
         self.player = QtMultimedia.QMediaPlayer()
@@ -94,12 +96,10 @@ class AudioPlayer(QtWidgets.QWidget):
         if is_video_link(url):
             url, duration = get_real_download_url(url, True)
         logger.debug("Setting media URL: %s", url)
-        #print url
         self.player.setMedia(QtMultimedia.QMediaContent(QtCore.QUrl(url)))
         self.player.play()
 
     def setUrl_local(self, url):
-        # QtCore.QUrl.setUrl()
         uri = QtCore.QUrl.fromLocalFile(url)
         self.player.setMedia(QtMultimedia.QMediaContent(uri))
 
@@ -124,13 +124,9 @@ class AudioPlayer(QtWidgets.QWidget):
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    # window = AudioPlayer(sys.argv[1])
-    # window = AudioPlayer('/home/homoludens/.brePodder/SecurityNowMP3/sn0700.mp3')
-    # window = AudioPlayer('https://traffic.libsyn.com/secure/517c6bec-81cc-498a-86df-3a668eba6a93/CC0001_TheCatLadyAndThePetitioner.mp3')
     window = AudioPlayer("https://chtbl.com/track/4E942/audioboom.com/posts/7996900.mp3?modified=1647234100&source=rss&stitched=1")
     window.setWindowTitle("Audio Player")
     window.show()
-    # It's exec_ because exec is a reserved word in Python
     sys.exit(app.exec_())
 
 

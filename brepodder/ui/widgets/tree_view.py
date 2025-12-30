@@ -1,8 +1,15 @@
-from PyQt5 import QtCore,  QtWidgets
+"""
+Custom TreeView widget with drag-and-drop support for organizing channels.
+"""
+from PyQt5 import QtCore, QtWidgets
 
 
-#override QTreeViewWidget for handling Drag & Drop events
 class TreeViewWidget(QtWidgets.QTreeWidget):
+    """
+    Override QTreeViewWidget for handling Drag & Drop events.
+    
+    Allows channels to be dragged into folders for organization.
+    """
 
     updateChannelList = QtCore.pyqtSignal()
     updateChannelList_db = QtCore.pyqtSignal(str, str)
@@ -25,7 +32,7 @@ class TreeViewWidget(QtWidgets.QTreeWidget):
                 channel_title = selectedItem.text(0)
                 folder_title = None
 
-            self.updateChannelList_db.emit(channel_title,  folder_title)
+            self.updateChannelList_db.emit(channel_title, folder_title)
         self.updateChannelList.emit()
 
     def dropMimeData(self, parent, row, data, action):
@@ -35,5 +42,3 @@ class TreeViewWidget(QtWidgets.QTreeWidget):
 
     def dragEnterEvent(self, event):
         event.accept()
-        # print('drag')
-
