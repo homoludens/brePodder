@@ -1,10 +1,7 @@
 import sqlite3
-import os
 import threading
 
-
-# Database path constant
-DATABASE_PATH = os.path.expanduser('~') + "/.brePodder/podcasts.sqlite"
+from config import DATABASE_FILE, DATABASE_TIMEOUT
 
 
 class DBOperation:
@@ -22,7 +19,7 @@ class DBOperation:
     def _get_connection(self):
         """Get or create a thread-local database connection."""
         if not hasattr(self._local, 'db') or self._local.db is None:
-            self._local.db = sqlite3.connect(DATABASE_PATH, timeout=20)
+            self._local.db = sqlite3.connect(str(DATABASE_FILE), timeout=DATABASE_TIMEOUT)
             self._local.db.isolation_level = None
             self._local.cur = self._local.db.cursor()
             self._local.cur.row_factory = sqlite3.Row

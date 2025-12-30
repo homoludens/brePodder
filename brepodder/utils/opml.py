@@ -3,7 +3,8 @@ import xml.sax.saxutils
 import os.path
 import datetime
 import requests
-import sys
+
+from config import USER_AGENT
 
 class Exporter(object):
     """
@@ -92,7 +93,7 @@ class Importer(object):
 
     def read_url(self, url):
         headers = {
-            'User-Agent': 'brePodder/0.02'
+            'User-Agent': USER_AGENT
         }
         try:
             response = requests.get(url, headers=headers)

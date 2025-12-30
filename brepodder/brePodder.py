@@ -10,6 +10,10 @@ from io import BytesIO
 import sqlite3
 from ui.Ui_mainwindow import MainUi
 from utils.youtube import is_video_link, is_channel_url, get_youtube_rss, get_channel_url, get_cover
+from config import (
+    DATA_DIR, DATABASE_FILE, USER_AGENT, REQUEST_TIMEOUT,
+    MAX_CONCURRENT_DOWNLOADS, THUMBNAIL_MAX_SIZE
+)
 import logging
 
 
@@ -34,11 +38,10 @@ class UpdateChannelThread_network(QtCore.QThread):
         self.ui = ui
         self.updateProgress = update_progress
         self.newEpisodeExists = 0
-        self.main_directory = os.path.expanduser('~') + '/.brePodder/'
-        # self.updated_channes_list = []
+        self.main_directory = str(DATA_DIR) + '/'
 
         self.headers = {
-            'User-Agent': 'brePodder/0.02'
+            'User-Agent': USER_AGENT
         }
 
     def run(self):
@@ -69,7 +72,7 @@ class UpdateChannelThread_network(QtCore.QThread):
         # Do request using requests library and timeout
         content = ''
         try:
-            resp = requests.get(feed_link, timeout=10.0, headers=self.headers)
+            resp = requests.get(feed_link, timeout=REQUEST_TIMEOUT, headers=self.headers)
         except requests.ReadTimeout as e:
             # logger.warn("Timeout when reading RSS %s", rss_feed)
             print('timeout', e)
@@ -110,17 +113,17 @@ class UpdateChannelThread(QtCore.QThread):
         self.ui = ui
         self.updateProgress = update_progress
         self.newEpisodeExists = 0
-        self.main_directory = os.path.expanduser('~') + '/.brePodder/'
+        self.main_directory = str(DATA_DIR) + '/'
 
         self.headers = {
-            'User-Agent': 'brePodder/0.02'
+            'User-Agent': USER_AGENT
         }
 
     def run(self):
         # ui.Mutex.lock()
         self.ui.Sem.acquire(1)
         # TODO: SQL--this one is in thread and is making problems
-        con = sqlite3.connect(self.main_directory + "podcasts.sqlite", check_same_thread=False)
+        con = sqlite3.connect(str(DATABASE_FILE), check_same_thread=False)
         con.isolation_level = None
         cur = con.cursor()
 
@@ -167,7 +170,7 @@ class UpdateChannelThread(QtCore.QThread):
         # Do request using requests library and timeout
         content = ''
         try:
-            resp = requests.get(feed_link, timeout=10.0, headers=self.headers)
+            resp = requests.get(feed_link, timeout=REQUEST_TIMEOUT, headers=self.headers)
         except requests.ReadTimeout as e:
             # logger.warn("Timeout when reading RSS %s", rss_feed)
             print('timeout', e)
@@ -258,13 +261,13 @@ class AddChannelThread(QtCore.QThread):
         self.ui = ui
         self.updateProgress = update_progress
         self.newEpisodeExists = 0
-        self.main_directory = os.path.expanduser('~') + '/.brePodder/'
+        self.main_directory = str(DATA_DIR) + '/'
 
     def run(self):
         # ui.Mutex.lock()
         self.ui.Sem.acquire(1)
         # TODO: SQL--this one is in thread and is making problems
-        con = sqlite3.connect(self.main_directory + "podcasts.sqlite", check_same_thread=False)
+        con = sqlite3.connect(str(DATABASE_FILE), check_same_thread=False)
         con.isolation_level = None
         cur = con.cursor()
 
@@ -291,10 +294,10 @@ class AddChannelThread(QtCore.QThread):
             feed_link = get_youtube_rss(feed_link)
 
         headers = {
-            'User-Agent': 'brePodder/0.02'
+            'User-Agent': USER_AGENT
         }
         try:
-            resp = requests.get(feed_link, timeout=10.0, headers=headers)
+            resp = requests.get(feed_link, timeout=REQUEST_TIMEOUT, headers=headers)
         except requests.ReadTimeout as e:
             print(e)
             # logger.warn("Timeout when reading RSS %s", rss_feed)
@@ -419,7 +422,7 @@ class AddChannelThread(QtCore.QThread):
             self.add_episode(ChannelId[0], episode)
 
         # self.ui.update_channel_list()
-        os.chdir(os.path.expanduser('~') + '/.brePodder')
+        os.chdir(str(DATA_DIR))
 
     def add_episode(self, channel_id, episode):
         new_episode = {'title': '',
@@ -470,7 +473,7 @@ class BrePodder(MainUi):
     def __init__(self, app):
         MainUi.__init__(self, app)
         self.headers = {
-            'User-Agent': 'brePodder/0.02'
+            'User-Agent': USER_AGENT
         }
         self.app = app
         mainwindow = QtWidgets.QMainWindow()
@@ -482,7 +485,7 @@ class BrePodder(MainUi):
         self.update_newest_episodes_list()
         self.playlist = []
         self.updated_channes_list = []
-        self.main_directory = os.path.expanduser('~') + '/.brePodder/'
+        self.main_directory = str(DATA_DIR) + '/'
 
     def memory_usage(self):
         """Memory usage of the current process in kilobytes."""
@@ -504,8 +507,8 @@ class BrePodder(MainUi):
 
     def resize_image(self, source_image, destination_image):
         pixmap = QtGui.QPixmap(source_image)
-        if pixmap.height() > 300 or pixmap.width() > 300:
-            pixmap_resized = pixmap.scaled(300, 300, QtCore.Qt.KeepAspectRatio)
+        if pixmap.height() > THUMBNAIL_MAX_SIZE or pixmap.width() > THUMBNAIL_MAX_SIZE:
+            pixmap_resized = pixmap.scaled(THUMBNAIL_MAX_SIZE, THUMBNAIL_MAX_SIZE, QtCore.Qt.KeepAspectRatio)
             if not os.path.exists(os.path.dirname(destination_image)):
                 os.makedirs(os.path.dirname(destination_image))
             pixmap_resized.save(destination_image)
@@ -558,7 +561,7 @@ class BrePodder(MainUi):
         channel = self.db.getChannelById(e["channel_id"])
         ChannelDir = self.regex_white_space.sub("", channel["title"])
 
-        os.chdir(os.path.expanduser('~') + '/.brePodder/' + ChannelDir)
+        os.chdir(str(DATA_DIR / ChannelDir))
         item = QtWidgets.QTreeWidgetItem(self.treeWidget)
         item.setText(0, channel.get("title"))
         item.setText(1, e["title"])
@@ -580,10 +583,10 @@ class BrePodder(MainUi):
         self.itemsDownloading.append((downloadId, e["enclosure"].replace(" ", "%20")))
         self.downloadList.append((downloadId, Download(e["enclosure"].replace(" ", "%20"), item, downloadId, self)))
 
-        os.chdir(os.path.expanduser('~') + '/.brePodder')
+        os.chdir(str(DATA_DIR))
 
     def add_channel(self, new_url=None):
-        os.chdir(os.path.expanduser('~') + '/.brePodder')
+        os.chdir(str(DATA_DIR))
         if not new_url:
             feed_link = self.QLineEdit1.text()
         else:
@@ -640,8 +643,8 @@ class BrePodder(MainUi):
                 self.db.deleteAllEpisodes(self.CurrentChannel)
                 self.db.deleteChannel(self.CurrentChannel)
 
-                os.chdir(os.path.expanduser('~') + '/.brePodder/')
-                ChannelDir = os.path.expanduser('~') + '/.brePodder/' + self.regex_white_space.sub("", self.CurrentChannel)
+                os.chdir(str(DATA_DIR))
+                ChannelDir = str(DATA_DIR / self.regex_white_space.sub("", self.CurrentChannel))
 
                 import shutil
                 shutil.rmtree(ChannelDir)
@@ -665,10 +668,10 @@ class BrePodder(MainUi):
         for e in episodes:
             item = QtWidgets.QTreeWidgetItem(self.treeWidget_4)
             item.setText(0, str(e[10]))
-            item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~') + '/.brePodder/' + e[14])))
+            item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(str(DATA_DIR / e[14]))))
             item.setText(1, e[1])
             item.setText(2, self.getReadableSize(e[4]))
-            item.setText(3, os.path.expanduser('~') + '/.brePodder/' + str(e[3]))
+            item.setText(3, str(DATA_DIR / str(e[3])))
 
     # newest episodes
     def update_newest_episodes_list(self):
@@ -680,7 +683,7 @@ class BrePodder(MainUi):
         for e in episodes:
             item = QtWidgets.QTreeWidgetItem(self.treeWidget_5)
             item.setText(0, e[10])
-            item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~') + '/.brePodder/' + e[15])))
+            item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(str(DATA_DIR / e[15]))))
             item.setText(1, e[1])
             if e[4]:
                 item.setText(2, self.getReadableSize(e[4]))
@@ -828,21 +831,16 @@ class BrePodder(MainUi):
                 if (search_term != '' and search_term in title_description.lower()) or (search_term == ''):
                     itemChildChannel = QtWidgets.QTreeWidgetItem(itemF)
                     itemChildChannel.setText(0, childChannel[1])
-                    # print "Ch. icon: "
-                    # print os.path.expanduser('~') + '/.brePodder/' + childChannel[5]
                     itemChildChannel.setIcon(0, QtGui.QIcon(
-                        QtGui.QPixmap(os.path.expanduser('~') + '/.brePodder/' + childChannel[6])))
+                        QtGui.QPixmap(str(DATA_DIR / childChannel[6]))))
                     itemF.addChild(itemChildChannel)
 
         for channel in channels:
             title_description = channel['title'] + channel['description']
             if (search_term != '' and search_term in title_description.lower()) or (search_term == ''):
                 item = QtWidgets.QTreeWidgetItem(self.listWidget)
-                #            if channel.episode[-1].status == u'new':
-                #                item.setFont(0, self.fontBold)
                 item.setText(0, channel[1])
-                # ~ print(channel[6])
-                item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(os.path.expanduser('~') + '/.brePodder/' + channel[6])))
+                item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(str(DATA_DIR / channel[6]))))
                 #            item.setToolTip(0,"<p><img src="+"'"+channel.logobig+"'"+"></p><p style='font-size:20pt'><b>"+channel.title+"</b></p><a href="+channel.link+">"+channel.link+"</a>")
                 item.setFlags(enabled | draggable | selectable)
 
@@ -908,7 +906,7 @@ class BrePodder(MainUi):
 
         :return:
         """
-        con = sqlite3.connect(self.main_directory + "podcasts.sqlite", check_same_thread=False)
+        con = sqlite3.connect(str(DATABASE_FILE), check_same_thread=False)
         con.isolation_level = None
         cur = con.cursor()
 

@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtGui, QtWidgets, QtNetwork #, QtWebKit
+from PyQt5 import QtCore, QtGui, QtWidgets, QtNetwork
 import re
 from utils import opml
 from utils.sql import *
@@ -6,6 +6,7 @@ from ui.treeviewwidget import TreeViewWidget
 from ui.mylineeditwidget import MyLineEdit
 import resources
 from utils.audioplayer import AudioPlayer
+from config import MAX_CONCURRENT_DOWNLOADS
 
 
 class MainUi(QtWidgets.QWidget):
@@ -16,20 +17,16 @@ class MainUi(QtWidgets.QWidget):
         self.httpGetId = []
         self.outFile = []
         self.downloadList = []
-        self.rawstr = r"""(?:\<img.*?\src=")(.*?)(?:\")"""  #it's better with "\src" (not "\c") but that doesn't work
-        self.compile_obj = re.compile(self.rawstr, re.I)
         self.fontBold = QtGui.QFont()
         self.fontBold.setWeight(75)
         self.fontBold.setBold(True)
         self.ChannelForUpdate = None
         self.update_channel_threads = []
-#        self.BufferSize = 5
-#        self.Mutex = QtCore.QMutex()
         self.itemsDownloading = []
         self.regex_white_space = re.compile("\\W")
 
         self.db = DBOperation()
-        self.Sem = QtCore.QSemaphore(20)
+        self.Sem = QtCore.QSemaphore(MAX_CONCURRENT_DOWNLOADS)
         self.app = parent
 
     def closeEvent(self, test):

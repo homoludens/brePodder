@@ -2,13 +2,13 @@
 import os
 import sys
 from PyQt5 import QtWidgets
-from brePodder import *
+from brePodder import BrePodder
+from config import DATA_DIR, ensure_data_dir
+
 
 if __name__ == "__main__":
-    os.chdir(os.path.expanduser('~'))
-    if not os.path.isdir('.brePodder'):
-        os.makedirs('.brePodder')
-    os.chdir('.brePodder')
+    ensure_data_dir()
+    os.chdir(str(DATA_DIR))
 
     app = QtWidgets.QApplication(sys.argv)
     ui = BrePodder(app)
