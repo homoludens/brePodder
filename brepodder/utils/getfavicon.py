@@ -32,19 +32,17 @@ def getIcoUrl(url):
 
 
     # Try to parse html at url and get favicon
-    if not url.startswith('http://') or url.startswith('https://'):
+    if not url.startswith('http://') and not url.startswith('https://'):
         url = 'http://%s' % url
+    
+    favicon_parser = FaviconFinder()
     try:
         site = urllib.request.urlopen(url)
         contents = site.read().decode('utf-8')
-
-        favicon_parser = FaviconFinder()
         favicon_parser.feed(contents)
-    except:
-        print("favicon except 1: ")
-        e = sys.exc_info()[0]
-        print(e)
-        pass
+    except (urllib.error.URLError, urllib.error.HTTPError, UnicodeDecodeError, 
+            http.client.HTTPException, OSError) as e:
+        print(f"Failed to fetch favicon from {url}: {e}")
 
     # Another try block in case the parser throws an exception
     # AFTER finding the appropriate url.
@@ -74,10 +72,7 @@ def getIcoUrl(url):
 
             if response.status == 200:
                 return 'http://%s/favicon.ico' % ('www.' + root_directory)
-    except:
-        print("favicon except 2: ")
-        e = sys.exc_info()[0]
-        print(e)
-        pass
+    except (http.client.HTTPException, OSError, AttributeError) as e:
+        print(f"Failed to find favicon.ico: {e}")
     return None
 

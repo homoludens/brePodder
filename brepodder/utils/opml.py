@@ -69,14 +69,10 @@ class Exporter(object):
         opml.appendChild(body)
 
         try:
-            fp = open(self.filename, 'w')
-            fp.write(doc.toprettyxml(encoding='utf-8'))
-            fp.close()
-        except:
-            print("exception: opml.py 76")
-            e = sys.exc_info()[0]
-            print(e)
-            #log( 'Could not open file for writing: %s', self.filename, sender = self)
+            with open(self.filename, 'wb') as fp:
+                fp.write(doc.toprettyxml(encoding='utf-8'))
+        except (IOError, OSError, PermissionError) as e:
+            print(f"Could not write OPML file '{self.filename}': {e}")
             return False
 
         return True

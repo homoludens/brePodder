@@ -201,14 +201,14 @@ class UpdateChannelThread(QtCore.QThread):
                 if 'enclosures' in i:
                     try:
                         new_episode['enclosure'] = i.enclosures[0].href
-                    except:
-                        print("catch all excetions brePodder.py 125")
+                    except (IndexError, AttributeError) as e:
+                        print(f"Failed to parse enclosure href: {e}")
                         new_episode['enclosure'] = "None"
 
                     try:
                         new_episode['size'] = int(i.enclosures[0].length)
-                    except:
-                        print("catch all excetions brePodder.py 131")
+                    except (IndexError, AttributeError, ValueError, TypeError) as e:
+                        print(f"Failed to parse enclosure size: {e}")
                         new_episode['size'] = '1'
                     new_episode['status'] = u"new"
                 else:
@@ -535,10 +535,8 @@ class BrePodder(MainUi):
 
                 # self.AudioPlayer.setUrl(enc)
 
-            except:
-                e = sys.exc_info()
-                print(e)
-                print("EpisodeActivated exception")
+            except (TypeError, KeyError) as e:
+                print(f"EpisodeActivated exception: {e}")
 
     def DownloadActivated(self, item, i):
         self.itemZaPrekid = item
@@ -627,18 +625,14 @@ class BrePodder(MainUi):
         if selection:
             self.CurrentChannel = selection
 
-        self.update_episode_list(selection)
         try:
             self.update_episode_list(selection)
-        except:
-            print("catch all excetions brePodder.py 715")
-            # if is folder
-            pass
-
-            #            self.update_episode_list(selection[0].text(0).toUtf8().data().decode('UTF8'))
-            #            self.CurrentChannel = selection[0].text(0).toUtf8().data().decode('UTF8')
-            self.actionCancel.setToolTip("Delete Selected Channel")
-            self.actionUpdateFeeds.setToolTip("Update Selected Channel")
+        except (TypeError, AttributeError) as e:
+            # This can happen when a folder is selected instead of a channel
+            print(f"Failed to update episode list for '{selection}': {e}")
+        
+        self.actionCancel.setToolTip("Delete Selected Channel")
+        self.actionUpdateFeeds.setToolTip("Update Selected Channel")
 
     def delete_channel(self):
         if self.tab.isVisible():
@@ -651,9 +645,13 @@ class BrePodder(MainUi):
 
                 import shutil
                 shutil.rmtree(ChannelDir)
-            except:
-                print("catch all excetions brePodder.py 736")
-                self.db.deleteTaxonomy(self.CurrentChannel)
+            except (TypeError, AttributeError, OSError) as e:
+                # Channel deletion failed, try deleting as taxonomy/folder instead
+                print(f"Channel deletion failed, trying as folder: {e}")
+                try:
+                    self.db.deleteTaxonomy(self.CurrentChannel)
+                except Exception as folder_error:
+                    print(f"Failed to delete folder: {folder_error}")
 
         self.update_channel_list()
 
@@ -691,8 +689,8 @@ class BrePodder(MainUi):
             try:
                 b = gmtime(float(e[5]))
                 epDate = strftime("%x", b)
-            except:
-                print("catch all excetions brePodder.py 776")
+            except (ValueError, TypeError, OverflowError) as date_err:
+                print(f"Failed to parse episode date: {date_err}")
                 b = gmtime()
                 epDate = strftime("%x", b)
 
@@ -717,8 +715,8 @@ class BrePodder(MainUi):
             try:
                 b = gmtime(float(e['date']))
                 epDate = strftime("%x", b)
-            except:
-                print("catch all excetions brePodder.py 776")
+            except (ValueError, TypeError, OverflowError, KeyError) as date_err:
+                print(f"Failed to parse playlist episode date: {date_err}")
                 b = gmtime()
                 epDate = strftime("%x", b)
 
@@ -760,16 +758,17 @@ class BrePodder(MainUi):
 
     def getReadableSize(self, size):
         if size:
-            if (size) > 1024 * 1024:
-                try:
-                    sizeReadable = str(size // 1024 // 1024) + ' MB'
-                except:
-                    print("catch all excetions brePodder.py 814")
-                    sizeReadable = size
-            elif (size) > 1024:
-                sizeReadable = str(size // 1024) + ' kB'
-            else:
-                sizeReadable = str(size) + ' B'
+            try:
+                size_int = int(size)
+                if size_int > 1024 * 1024:
+                    sizeReadable = str(size_int // 1024 // 1024) + ' MB'
+                elif size_int > 1024:
+                    sizeReadable = str(size_int // 1024) + ' kB'
+                else:
+                    sizeReadable = str(size_int) + ' B'
+            except (ValueError, TypeError) as e:
+                print(f"Failed to convert size to readable format: {e}")
+                sizeReadable = str(size)
         else:
             sizeReadable = 'None'
         return sizeReadable
@@ -798,11 +797,10 @@ class BrePodder(MainUi):
             try:
                 b = gmtime(float(t[5]))  # .date
                 epDate = strftime("%x", b)
-            except:
-                print("catch all excetions brePodder.py 846")
+            except (ValueError, TypeError, OverflowError) as date_err:
+                print(f"Failed to parse episode date: {date_err}")
                 b = gmtime()
                 epDate = strftime("%x", b)
-                print("date exception")
             item2.setText(2, epDate)
 
             if t[7] == 'new':
@@ -954,14 +952,14 @@ class BrePodder(MainUi):
                     if 'enclosures' in i:
                         try:
                             new_episode['enclosure'] = i.enclosures[0].href
-                        except:
-                            print("catch all excetions brePodder.py 125")
+                        except (IndexError, AttributeError) as e:
+                            print(f"Failed to parse enclosure href: {e}")
                             new_episode['enclosure'] = "None"
 
                         try:
                             new_episode['size'] = int(i.enclosures[0].length)
-                        except:
-                            print("catch all excetions brePodder.py 131")
+                        except (IndexError, AttributeError, ValueError, TypeError) as e:
+                            print(f"Failed to parse enclosure size: {e}")
                             new_episode['size'] = '1'
                         new_episode['status'] = u"new"
                     else:
@@ -1001,18 +999,7 @@ class BrePodder(MainUi):
         print("update_db_with_all_channels DONE.")
 
     def sendMessage(self, message):
-        try:
-            print(message)
-            # import pynotify
-            # if pynotify.init("brePodder"):
-            #    n = pynotify.Notification("brePodder", message)
-        #                n = pynotify.Notification("Title", "message", "icon-name")
-        #    n.show()
-        # else:
-        #    print "there was a problem initializing the pynotify module"
-        except:
-            print("catch all excetions brePodder.py 985")
-            print("you don't seem to have pynotify installed")
+        print(message)
 
     def update_done(self):
         self.updateProgressBar.hide()

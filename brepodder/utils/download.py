@@ -75,11 +75,10 @@ class Download(QtCore.QObject):
             #self.bytesRead = self.bytesRead + bytesRead
 
         self.bytesRead = self.tempBytes + bytesRead
-        #print "bytesRead: " + str(bytesRead)  + "	self.totalBytes: " + str(self.totalBytes)
         try:
             downloaded = str(round((float(self.bytesRead) / float(self.totalBytes)) * 100))
-        except:
-            print("catch all excetions download.py")
+        except (ZeroDivisionError, ValueError, TypeError) as e:
+            print(f"Failed to calculate download progress: {e}")
             downloaded = '0'
 
         self.itemZaPrenos.setText(3, downloaded)
