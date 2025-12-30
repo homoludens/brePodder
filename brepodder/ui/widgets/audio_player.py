@@ -3,8 +3,13 @@ Audio player widget for brePodder.
 
 Based on: https://github.com/pyqt/examples/blob/5225c0e7f070cc4496407c1ea565319be9274e29/src/pyqt-official/multimediawidgets/player.py
 """
+import os
+import signal
+import subprocess
 import sys
-from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
+from typing import Optional
+
+from PyQt5 import QtCore, QtMultimedia, QtWidgets
 from utils.youtube import get_real_download_url, is_video_link, is_channel_url
 from logger import get_logger
 
@@ -14,11 +19,18 @@ logger = get_logger(__name__)
 class AudioPlayer(QtWidgets.QWidget):
     """
     An audio player widget with play/pause, seek, and download controls.
+    
+    Supports both built-in QMediaPlayer and external players (mpv, mplayer, etc.)
     """
     
     def __init__(self, url, parent=None):
         super(AudioPlayer, self).__init__(parent)
         logger.debug("AudioPlayer initialized with URL: %s", url)
+
+        # External player process tracking
+        self._external_process: Optional[subprocess.Popen] = None
+        self._using_external: bool = False
+        self._current_file: str = ""
 
         self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.slider.setRange(0, 1000)
@@ -44,6 +56,10 @@ class AudioPlayer(QtWidgets.QWidget):
         self.play_pause.clicked.connect(self.playClicked)
         self.player.stateChanged.connect(self.stateChanged)
 
+        self.stop_btn = QtWidgets.QPushButton(self)
+        self.stop_btn.setText("Stop")
+        self.stop_btn.clicked.connect(self.stopClicked)
+
         self.slider.setRange(0, self.player.duration() // 1000)
 
         self.status = QtWidgets.QLabel(self)
@@ -54,6 +70,7 @@ class AudioPlayer(QtWidgets.QWidget):
 
         layout = QtWidgets.QHBoxLayout(self)
         layout.addWidget(self.play_pause)
+        layout.addWidget(self.stop_btn)
         layout.addWidget(self.slider)
         layout.addWidget(self.labelDuration)
         layout.addWidget(self.status)
@@ -96,30 +113,135 @@ class AudioPlayer(QtWidgets.QWidget):
         if is_video_link(url):
             url, duration = get_real_download_url(url, True)
         logger.debug("Setting media URL: %s", url)
+        self._using_external = False
+        self._current_file = url
         self.player.setMedia(QtMultimedia.QMediaContent(QtCore.QUrl(url)))
         self.player.play()
+        self.status.setText("Built-in")
 
     def setUrl_local(self, url):
+        """Play a local file using built-in player."""
+        self._using_external = False
+        self._current_file = url
         uri = QtCore.QUrl.fromLocalFile(url)
         self.player.setMedia(QtMultimedia.QMediaContent(uri))
+        self.player.play()
+        self.status.setText("Built-in")
+
+    def playExternal(self, command: str, file_path: str) -> bool:
+        """
+        Play using an external player command.
+        
+        Args:
+            command: The command to execute (with {file} already substituted)
+            file_path: The file being played (for display/tracking)
+            
+        Returns:
+            True if player started successfully, False otherwise
+        """
+        # Stop any currently playing content first
+        self.stopClicked()
+        
+        self._current_file = file_path
+        self._using_external = True
+        
+        logger.info("Playing with external player: %s", command)
+        try:
+            self._external_process = subprocess.Popen(
+                command,
+                shell=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                preexec_fn=os.setsid  # Create new process group for proper termination
+            )
+            self.play_pause.setText("Playing...")
+            self.status.setText("External")
+            
+            # Start a timer to check if process is still running
+            self._check_timer = QtCore.QTimer(self)
+            self._check_timer.timeout.connect(self._checkExternalProcess)
+            self._check_timer.start(1000)  # Check every second
+            
+            return True
+        except Exception as e:
+            logger.error("Failed to start external player: %s", e)
+            self._using_external = False
+            self._external_process = None
+            return False
+
+    def _checkExternalProcess(self):
+        """Check if external process is still running."""
+        if self._external_process is not None:
+            poll = self._external_process.poll()
+            if poll is not None:
+                # Process has ended
+                logger.debug("External player process ended with code: %s", poll)
+                self._external_process = None
+                self._using_external = False
+                self.play_pause.setText("Play")
+                self.status.setText("")
+                if hasattr(self, '_check_timer'):
+                    self._check_timer.stop()
 
     def enqueue(self, url):
         self.player.setMedia(QtMultimedia.QMediaContent(QtCore.QUrl.fromLocalFile(url)))
 
     def playClicked(self):
-        if self.player.state() == QtMultimedia.QMediaPlayer.PlayingState:
-            self.player.pause()
+        """Handle play/pause button click."""
+        if self._using_external:
+            # For external players, we can try to send pause signal
+            # but most CLI players don't support this well
+            # So we just stop instead
+            if self._external_process is not None:
+                self.stopClicked()
         else:
-            self.player.play()
+            if self.player.state() == QtMultimedia.QMediaPlayer.PlayingState:
+                self.player.pause()
+            else:
+                self.player.play()
+
+    def stopClicked(self):
+        """Stop all playback (both built-in and external)."""
+        # Stop built-in player
+        self.player.stop()
+        
+        # Stop external player if running
+        if self._external_process is not None:
+            try:
+                # Kill the entire process group
+                os.killpg(os.getpgid(self._external_process.pid), signal.SIGTERM)
+                self._external_process.wait(timeout=2)
+            except (ProcessLookupError, subprocess.TimeoutExpired, OSError) as e:
+                logger.debug("Error stopping external player: %s", e)
+                try:
+                    self._external_process.kill()
+                except Exception:
+                    pass
+            finally:
+                self._external_process = None
+                self._using_external = False
+        
+        self.play_pause.setText("Play")
+        self.status.setText("")
+        if hasattr(self, '_check_timer'):
+            self._check_timer.stop()
+
+    def isPlaying(self) -> bool:
+        """Check if any playback is active."""
+        if self._using_external:
+            return self._external_process is not None and self._external_process.poll() is None
+        else:
+            return self.player.state() == QtMultimedia.QMediaPlayer.PlayingState
 
     def stateChanged(self, new):
-        if new == QtMultimedia.QMediaPlayer.PlayingState:
-            self.play_pause.setText("Pause")
-        else:
-            self.play_pause.setText("Play")
+        if not self._using_external:
+            if new == QtMultimedia.QMediaPlayer.PlayingState:
+                self.play_pause.setText("Pause")
+            else:
+                self.play_pause.setText("Play")
 
     def fetch(self):
-        logger.debug("Download requested for: %s", self.url)
+        logger.debug("Download requested for: %s", self._current_file)
 
 
 def main():

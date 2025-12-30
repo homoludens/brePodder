@@ -8,7 +8,6 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from time import gmtime, strftime
 import os
 import sqlite3
-import subprocess
 from typing import Any, Optional, Union
 
 from ui.main_window import MainUi
@@ -315,10 +314,12 @@ class BrePodder(MainUi):
                     "Please configure a play command in Settings."
                 )
                 return
+            # Substitute the file path
+            play_command = play_command.replace('{file}', path)
+            self._play_with_external(play_command, path)
         elif player_type == 'builtin':
             # Use built-in player
             self._play_with_builtin(path)
-            return
         else:
             # Use predefined external player
             play_command = get_play_command(player_type, path)
@@ -329,16 +330,13 @@ class BrePodder(MainUi):
                     f"No play command defined for player: {player_type}"
                 )
                 return
-        
-        # For custom commands, substitute the file path
-        if use_custom or player_type == 'custom':
-            play_command = play_command.replace('{file}', path)
-        
-        # Execute external player
-        self._play_with_external(play_command, path)
+            self._play_with_external(play_command, path)
 
     def _play_with_builtin(self, path: str) -> None:
         """Play using the built-in GStreamer player."""
+        # Stop any external player first
+        self.AudioPlayer.stopClicked()
+        
         if path.startswith('http://') or path.startswith('https://'):
             # Remote URL - GStreamer may not support HTTPS
             logger.warning("Streaming from HTTPS not supported by built-in player.")
@@ -373,21 +371,12 @@ class BrePodder(MainUi):
                 )
                 return
         
-        logger.info("Playing with external player: %s", command)
-        try:
-            # Run the player in background (don't wait for it to finish)
-            subprocess.Popen(
-                command,
-                shell=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-        except Exception as e:
-            logger.error("Failed to start external player: %s", e)
+        # Use AudioPlayer's external player support (handles stopping previous, tracking process)
+        if not self.AudioPlayer.playExternal(command, path):
             QtWidgets.QMessageBox.warning(
                 self.MW,
                 "Player Error",
-                f"Failed to start external player:\n{e}"
+                "Failed to start external player. Check the logs for details."
             )
 
     def PlaylistEpisodeDoubleClicked(self, a: QtWidgets.QTreeWidgetItem) -> None:
