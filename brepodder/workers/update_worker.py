@@ -98,6 +98,78 @@ class UpdateChannelThread_network(QtCore.QThread):
         return updated_channel_dict
 
 
+class UpdateDatabaseThread(QtCore.QThread):
+    """
+    Thread for updating the database with fetched channel data.
+    
+    This runs database operations in a background thread to keep the UI responsive.
+    """
+    updateDoneSignal = QtCore.pyqtSignal()
+
+    def __init__(self, updated_channels_list: list, db: Any) -> None:
+        QtCore.QThread.__init__(self)
+        self.updated_channels_list = updated_channels_list
+        self.db = db
+
+    def run(self) -> None:
+        con = sqlite3.connect(str(DATABASE_FILE), check_same_thread=False)
+        con.isolation_level = None
+        cur = con.cursor()
+
+        for channel in self.updated_channels_list:
+            if channel is None:
+                continue
+            try:
+                logger.debug("Updating channel: %s", channel['channel_feedlink'])
+            except (TypeError, KeyError):
+                logger.error("Invalid channel data, skipping")
+                continue
+
+            ch = channel['channel_row']
+            feed = channel['feed']
+
+            old_episodes: list[str] = []
+
+            cc = cur.execute('select id, title, link from sql_channel where title =?', (ch[1],))
+            a = cc.fetchone()
+            if a is None:
+                logger.error("Channel not found in database: %s", ch[1])
+                continue
+            tt = cur.execute('select id, title, status from sql_episode where channel_id = ?', (a[0],))
+
+            channel_id = a[0]
+            for j in tt:
+                old_episodes.append(j[1])
+
+            for entry in feed.entries:
+                try:
+                    aa = old_episodes.index(entry.title)
+                except ValueError:
+                    aa = None
+
+                if 'title' in entry and aa is None:
+                    new_episode = parse_episode_for_update(entry)
+                    if new_episode:
+                        new_episode['channel_id'] = channel_id
+                        try:
+                            cur.execute(
+                                'INSERT INTO sql_episode (title, description, enclosure, status, channel_id, date, size) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                                episode_dict_to_tuple(new_episode)
+                            )
+                        except sqlite3.Error as ex:
+                            logger.error("Failed to insert episode: %s", ex)
+
+                elif 'title' not in entry:
+                    logger.debug("Episode entry has no title")
+
+        con.commit()
+        cur.close()
+        con.close()
+
+        logger.info("Database update for all channels completed")
+        self.updateDoneSignal.emit()
+
+
 class UpdateChannelThread(QtCore.QThread):
     """
     Thread for updating a single channel with database operations.

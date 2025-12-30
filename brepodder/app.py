@@ -12,7 +12,7 @@ from typing import Any, Optional, Union
 
 from ui.main_window import MainUi
 from workers.download_worker import Download
-from workers.update_worker import UpdateChannelThread, UpdateChannelThread_network
+from workers.update_worker import UpdateChannelThread, UpdateChannelThread_network, UpdateDatabaseThread
 from workers.add_worker import AddChannelThread
 from services.feed_parser import parse_episode_for_update, episode_dict_to_tuple
 from config import DATA_DIR, DATABASE_FILE, USER_AGENT, THUMBNAIL_MAX_SIZE
@@ -634,7 +634,7 @@ class BrePodder(MainUi):
             update_channel_threads.append(UpdateChannelThread_network(i, self, j))
             self.update_channel_threads.append(update_channel_threads[j])
             update_channel_threads[j].updateProgressSignal.connect(self.update_progress_bar_from_thread,
-                                                     QtCore.Qt.BlockingQueuedConnection)
+                                                     QtCore.Qt.QueuedConnection)
             update_channel_threads[j].updateAllChannelsDoneSignal.connect(self.update_db_with_all_channels,
                                                             QtCore.Qt.QueuedConnection)
             update_channel_threads[j].start()
@@ -645,54 +645,11 @@ class BrePodder(MainUi):
         Process all fetched channel data and update database.
         
         This is called after all network threads have finished fetching feeds.
+        Runs database operations in a background thread to keep UI responsive.
         """
-        con = sqlite3.connect(str(DATABASE_FILE), check_same_thread=False)
-        con.isolation_level = None
-        cur = con.cursor()
-
-        for channel in self.updated_channels_list:
-            try:
-                logger.debug("Updating channel: %s", channel['channel_feedlink'])
-            except TypeError:
-                logger.error("Invalid channel data, skipping")
-                continue
-
-            ch = channel['channel_row']
-            feed = channel['feed']
-
-            old_episodes: list[str] = []
-
-            cc = cur.execute('select id, title, link from sql_channel where title =?', (ch[1],))
-            a = cc.fetchone()
-            tt = cur.execute('select id, title, status from sql_episode where channel_id = ?', (a[0],))
-
-            channel_id = a[0]
-            for j in tt:
-                old_episodes.append(j[1])
-
-            for entry in feed.entries:
-                try:
-                    aa = old_episodes.index(entry.title)
-                except ValueError:
-                    aa = None
-
-                if 'title' in entry and aa is None:
-                    self.new_episode_exists = 1
-                    new_episode = parse_episode_for_update(entry)
-                    if new_episode:
-                        new_episode['channel_id'] = channel_id
-                        self.db.insert_episode(episode_dict_to_tuple(new_episode))
-
-                elif 'title' not in entry:
-                    logger.debug("Episode entry has no title")
-                else:
-                    if j[2] != 'old':
-                        try:
-                            self.db.update_episode_status(j[0])
-                        except Exception as ex:
-                            logger.error("Failed to update episode status: %s, episode: %s", ex, j)
-
-        logger.info("Database update for all channels completed")
+        self.db_update_thread = UpdateDatabaseThread(self.updated_channels_list, self.db)
+        self.db_update_thread.updateDoneSignal.connect(self.update_done)
+        self.db_update_thread.start()
 
     def send_message(self, message: str) -> None:
         """Log a message."""
