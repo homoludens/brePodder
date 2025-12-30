@@ -8,6 +8,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from time import gmtime, strftime
 import os
 import sqlite3
+import subprocess
 from typing import Any, Optional, Union
 
 from ui.main_window import MainUi
@@ -16,6 +17,7 @@ from workers.update_worker import UpdateChannelThread, UpdateChannelThread_netwo
 from workers.add_worker import AddChannelThread
 from services.feed_parser import parse_episode_for_update, episode_dict_to_tuple
 from config import DATA_DIR, DATABASE_FILE, USER_AGENT, THUMBNAIL_MAX_SIZE
+from config_players import PLAYERS, get_play_command
 from logger import get_logger
 
 logger = get_logger(__name__)
@@ -293,21 +295,62 @@ class BrePodder(MainUi):
         """
         Play an episode from either local file or remote URL.
         
+        Uses the configured player from settings.
+        
         Args:
             path: Either a local file path or remote URL
         """
+        # Get player settings from database
+        player_type = self.db.getSetting('player_type') or 'builtin'
+        use_custom = self.db.getSetting('use_custom_player') == 'true'
+        
+        # Determine which command to use
+        if use_custom or player_type == 'custom':
+            play_command = self.db.getSetting('custom_play_command')
+            if not play_command:
+                QtWidgets.QMessageBox.warning(
+                    self.MW,
+                    "No Player Configured",
+                    "Custom player is selected but no play command is configured.\n\n"
+                    "Please configure a play command in Settings."
+                )
+                return
+        elif player_type == 'builtin':
+            # Use built-in player
+            self._play_with_builtin(path)
+            return
+        else:
+            # Use predefined external player
+            play_command = get_play_command(player_type, path)
+            if not play_command:
+                QtWidgets.QMessageBox.warning(
+                    self.MW,
+                    "Player Not Configured",
+                    f"No play command defined for player: {player_type}"
+                )
+                return
+        
+        # For custom commands, substitute the file path
+        if use_custom or player_type == 'custom':
+            play_command = play_command.replace('{file}', path)
+        
+        # Execute external player
+        self._play_with_external(play_command, path)
+
+    def _play_with_builtin(self, path: str) -> None:
+        """Play using the built-in GStreamer player."""
         if path.startswith('http://') or path.startswith('https://'):
-            # Remote URL - for now just log that streaming isn't supported
-            logger.warning("Streaming from HTTPS not supported. Please download the episode first.")
+            # Remote URL - GStreamer may not support HTTPS
+            logger.warning("Streaming from HTTPS not supported by built-in player.")
             QtWidgets.QMessageBox.warning(
                 self.MW,
                 "Streaming Not Supported",
                 "Your system's GStreamer doesn't support HTTPS streaming.\n\n"
-                "Please download the episode first to play it locally."
+                "Please download the episode first, or select an external player in Settings."
             )
         elif os.path.exists(path):
             # Local file
-            logger.debug("Playing local file: %s", path)
+            logger.debug("Playing local file with built-in player: %s", path)
             self.AudioPlayer.setUrl_local(path)
         else:
             logger.error("File not found: %s", path)
@@ -315,6 +358,36 @@ class BrePodder(MainUi):
                 self.MW,
                 "File Not Found",
                 f"Cannot find the episode file:\n{path}"
+            )
+
+    def _play_with_external(self, command: str, path: str) -> None:
+        """Play using an external player command."""
+        # Check if it's a local file that doesn't exist
+        if not path.startswith('http://') and not path.startswith('https://'):
+            if not os.path.exists(path):
+                logger.error("File not found: %s", path)
+                QtWidgets.QMessageBox.warning(
+                    self.MW,
+                    "File Not Found",
+                    f"Cannot find the episode file:\n{path}"
+                )
+                return
+        
+        logger.info("Playing with external player: %s", command)
+        try:
+            # Run the player in background (don't wait for it to finish)
+            subprocess.Popen(
+                command,
+                shell=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        except Exception as e:
+            logger.error("Failed to start external player: %s", e)
+            QtWidgets.QMessageBox.warning(
+                self.MW,
+                "Player Error",
+                f"Failed to start external player:\n{e}"
             )
 
     def PlaylistEpisodeDoubleClicked(self, a: QtWidgets.QTreeWidgetItem) -> None:

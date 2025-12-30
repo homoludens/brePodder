@@ -11,6 +11,7 @@ from data.database import DBOperation
 from ui.widgets.tree_view import TreeViewWidget
 from ui.widgets.line_edit import MyLineEdit
 from ui.widgets.audio_player import AudioPlayer
+from ui.dialogs.settings_dialog import SettingsDialog
 import resources
 from config import MAX_CONCURRENT_DOWNLOADS
 from logger import get_logger
@@ -218,10 +219,15 @@ class MainUi(QtWidgets.QWidget):
         self.actionQuit.setIcon(QtGui.QIcon(":/icons/exit.png"))
         self.actionQuit.setObjectName("actionQuit")
 
+        self.actionSettings = QtWidgets.QAction(MainWindow)
+        self.actionSettings.setObjectName("actionSettings")
+
         self.menuPodcasts.addAction(self.actionNew)
         self.menuPodcasts.addAction(self.actionUpdateAllChannels)
         self.menuPodcasts.addAction(self.actionImport)
         self.menuPodcasts.addAction(self.actionExport)
+        self.menuPodcasts.addSeparator()
+        self.menuPodcasts.addAction(self.actionSettings)
         self.menuPodcasts.addSeparator()
         self.menuPodcasts.addAction(self.actionQuit)
 
@@ -315,6 +321,7 @@ class MainUi(QtWidgets.QWidget):
         self.actionNew.triggered.connect(self.dialog_add)
         self.actionExport.triggered.connect(self.export_opml)
         self.actionImport.triggered.connect(self.import_opml)
+        self.actionSettings.triggered.connect(self.open_settings)
 
         self.listWidget.customContextMenuRequested.connect(self.activeMenuChannels)
         self.treeWidget.customContextMenuRequested.connect(self.activeMenuDownloads)
@@ -422,6 +429,7 @@ class MainUi(QtWidgets.QWidget):
         self.actionNew.setText(QtWidgets.QApplication.translate("MainWindow", "Add New", None))
         self.actionUpdateAllChannels.setText(QtWidgets.QApplication.translate("MainWindow", "Update All", None))
         self.actionQuit.setText(QtWidgets.QApplication.translate("MainWindow", "Quit", None))
+        self.actionSettings.setText(QtWidgets.QApplication.translate("MainWindow", "Settings...", None))
         self.actionUpdateFeeds.setText(QtWidgets.QApplication.translate("MainWindow", "Fetch Feed", None))
         self.actionNewFolder.setText(QtWidgets.QApplication.translate("MainWindow", "New Folder", None))
         self.actionAddToPlaylist.setText(QtWidgets.QApplication.translate("MainWindow", "Add to playlist", None))
@@ -481,3 +489,8 @@ class MainUi(QtWidgets.QWidget):
         logger.debug("addItemToPlaylist: %s", episode_row)
         self.playlist.append(self.episode_row)
         self.update_play_list(self.playlist)
+
+    def open_settings(self):
+        """Open the settings dialog."""
+        dialog = SettingsDialog(self.MW)
+        dialog.exec_()

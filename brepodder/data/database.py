@@ -24,6 +24,8 @@ class DBOperation:
     def __init__(self) -> None:
         # Initialize main thread connection
         self._get_connection()
+        # Ensure all tables exist (for upgrades)
+        self._ensure_settings_table()
     
     def _get_connection(self) -> sqlite3.Connection:
         """Get or create a thread-local database connection."""
@@ -33,6 +35,14 @@ class DBOperation:
             self._local.cur = self._local.db.cursor()
             self._local.cur.row_factory = sqlite3.Row
         return self._local.db
+
+    def _ensure_settings_table(self) -> None:
+        """Ensure the settings table exists (for database upgrades)."""
+        self.cur.execute('''CREATE TABLE IF NOT EXISTS sql_settings (
+            key VARCHAR(60) PRIMARY KEY,
+            value TEXT
+        )''')
+        self.db.commit()
     
     @property
     def db(self) -> sqlite3.Connection:
@@ -292,5 +302,29 @@ class DBOperation:
             )''')
         except sqlite3.OperationalError:
             logger.debug("Table sql_taxonomy already exists")
+
+        try:
+            self.cur.execute('''CREATE TABLE IF NOT EXISTS sql_settings (
+                key VARCHAR(60) PRIMARY KEY,
+                value TEXT
+            )''')
+        except sqlite3.OperationalError:
+            logger.debug("Table sql_settings already exists")
         
+        self.db.commit()
+
+    def getSetting(self, key: str) -> Optional[str]:
+        """Get a setting value by key."""
+        result = self.cur.execute(
+            'SELECT value FROM sql_settings WHERE key = ?',
+            (key,)
+        ).fetchone()
+        return result[0] if result else None
+
+    def setSetting(self, key: str, value: str) -> None:
+        """Set a setting value (insert or update)."""
+        self.cur.execute(
+            'INSERT OR REPLACE INTO sql_settings (key, value) VALUES (?, ?)',
+            (key, value)
+        )
         self.db.commit()
