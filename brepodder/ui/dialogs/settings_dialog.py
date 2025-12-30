@@ -103,7 +103,7 @@ class SettingsDialog(QtWidgets.QDialog):
         gui_layout.addRow("Font size:", self.fontSizeSpinner)
 
         # Font size description
-        font_help = QtWidgets.QLabel("Adjust the application font size (requires restart)")
+        font_help = QtWidgets.QLabel("Adjust the application font size")
         font_help.setStyleSheet("color: gray; font-size: 10px;")
         gui_layout.addRow("", font_help)
 
@@ -223,6 +223,13 @@ class SettingsDialog(QtWidgets.QDialog):
                     player_key, self.customPlayerCheck.isChecked(), self.fontSizeSpinner.value(),
                     self.themeCombo.currentData())
 
+    def applyFontSize(self, size):
+        """Apply the selected font size to the application."""
+        app = QtWidgets.QApplication.instance()
+        font = app.font()
+        font.setPointSize(size)
+        app.setFont(font)
+
     def applyTheme(self, theme):
         """Apply the selected theme to the application."""
         app = QtWidgets.QApplication.instance()
@@ -269,11 +276,13 @@ class SettingsDialog(QtWidgets.QDialog):
     def applySettings(self):
         """Apply settings without closing dialog."""
         self.saveSettings()
+        self.applyFontSize(self.fontSizeSpinner.value())
         self.applyTheme(self.themeCombo.currentData())
         QtWidgets.QMessageBox.information(self, "Settings", "Settings applied successfully.")
 
     def accept(self):
         """Save settings and close dialog."""
         self.saveSettings()
+        self.applyFontSize(self.fontSizeSpinner.value())
         self.applyTheme(self.themeCombo.currentData())
         super().accept()
