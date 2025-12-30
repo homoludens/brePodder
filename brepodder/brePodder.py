@@ -94,7 +94,7 @@ class UpdateChannelThread_network(QtCore.QThread):
         return updated_channel_dict
 
 
-class UpdateChannelThread_OLD(QtCore.QThread):
+class UpdateChannelThread(QtCore.QThread):
     """
     Replaced with UpdateChannelThread_network.
     Should be removed after testing.
