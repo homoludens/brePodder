@@ -24,7 +24,7 @@ class Download(QtCore.QObject):
     """
     # Qt signals for thread-safe communication
     progress_updated = QtCore.pyqtSignal(int, int)
-    download_finished = QtCore.pyqtSignal(str, int)
+    download_finished = QtCore.pyqtSignal(str, str, int)  # fileName, saveFilePath, downloadId
     download_error = QtCore.pyqtSignal(str)
 
     fp: Optional[IO[bytes]] = None
@@ -136,7 +136,7 @@ class Download(QtCore.QObject):
 
             # Check if download completed successfully
             if not self._stop_event.is_set() and not self._pause_event.is_set():
-                self.download_finished.emit(self.fileName, 200)
+                self.download_finished.emit(self.fileName, self.saveFileName, self.downloadId)
             elif self._pause_event.is_set():
                 logger.debug("Download paused at %d bytes", self.bytesRead)
 
@@ -165,8 +165,8 @@ class Download(QtCore.QObject):
 
         self.itemZaPrenos.setText(3, downloaded)
 
-    def _on_finished(self, file: str, status: int) -> None:
-        logger.debug("Download finished for %s", file)
+    def _on_finished(self, file: str, save_path: str, download_id: int) -> None:
+        logger.debug("Download finished for %s at %s", file, save_path)
         self._status = "downloaded"
 
     def _on_error(self, error: str) -> None:

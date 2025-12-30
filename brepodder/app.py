@@ -122,9 +122,28 @@ class BrePodder(MainUi):
             downloadId = 0
 
         self.itemsDownloading.append((downloadId, e["enclosure"].replace(" ", "%20")))
-        self.downloadList.append((downloadId, Download(e["enclosure"].replace(" ", "%20"), item, downloadId, self)))
+        download = Download(e["enclosure"].replace(" ", "%20"), item, downloadId, self)
+        download.download_finished.connect(lambda fileName, savePath, dlId: self.on_download_finished(fileName, savePath, dlId, e["title"]))
+        self.downloadList.append((downloadId, download))
 
         os.chdir(str(DATA_DIR))
+
+    def on_download_finished(self, file_name: str, save_path: str, download_id: int, episode_title: str) -> None:
+        """Handle download completion - update database and refresh UI."""
+        logger.debug("Download completed for episode: %s", episode_title)
+        
+        # Get the episode from database
+        episode = self.db.getEpisodeByTitle(episode_title)
+        
+        if episode:
+            # Update the episode with local file path and downloaded status
+            self.db.updateEpisode((save_path, "downloaded", episode["id"]))
+            logger.info("Updated episode '%s' with local file: %s", episode_title, save_path)
+            
+            # Refresh the latest downloads list
+            self.update_lastest_episodes_list()
+        else:
+            logger.warning("Could not find episode '%s' in database to update", episode_title)
 
     def add_channel(self, new_url: Optional[str] = None) -> None:
         """Add a new channel/podcast subscription."""
