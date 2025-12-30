@@ -189,3 +189,7 @@ This project is open source. See the LICENSE file for details.
 - Built with [PyQt5](https://www.riverbankcomputing.com/software/pyqt/)
 - Feed parsing by [feedparser](https://feedparser.readthedocs.io/)
 - HTTP requests with [requests](https://requests.readthedocs.io/)
+
+# Run tests
+    uv run pytest tests/ -v           # Run all tests
+    uv run pytest tests/ --cov        # Run with coverage
