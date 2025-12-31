@@ -1,7 +1,7 @@
 """
 Custom TreeView widget with drag-and-drop support for organizing channels.
 """
-from PyQt5 import QtCore, QtWidgets
+from PyQt6 import QtCore, QtWidgets
 
 
 class TreeViewWidget(QtWidgets.QTreeWidget):
@@ -18,9 +18,9 @@ class TreeViewWidget(QtWidgets.QTreeWidget):
         super(TreeViewWidget, self).__init__(parent)
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
-        self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
-        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.sortByColumn(0, 0)
+        self.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.InternalMove)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
         self.parent_widget = parent
 
     # Note: dropEvent, dropMimeData, dragEnterEvent are Qt overrides
@@ -28,9 +28,9 @@ class TreeViewWidget(QtWidgets.QTreeWidget):
     def dropEvent(self, event):
         """Handle drop events for drag-and-drop channel organization."""
         for selected_item in self.selectedItems():
-            if (self.itemAt(event.pos()) is not None) and (self.itemAt(event.pos()).flags() & QtCore.Qt.ItemIsDropEnabled):
+            if (self.itemAt(event.position().toPoint()) is not None) and (self.itemAt(event.position().toPoint()).flags() & QtCore.Qt.ItemFlag.ItemIsDropEnabled):
                 channel_title = selected_item.text(0)
-                folder_title = self.itemAt(event.pos()).text(0)
+                folder_title = self.itemAt(event.position().toPoint()).text(0)
             else:
                 channel_title = selected_item.text(0)
                 folder_title = None
@@ -40,7 +40,7 @@ class TreeViewWidget(QtWidgets.QTreeWidget):
 
     def dropMimeData(self, parent, row, data, action):
         """Handle MIME data drops."""
-        if action == QtCore.Qt.MoveAction:
+        if action == QtCore.Qt.DropAction.MoveAction:
             return self.moveSelection(parent, row)
         return False
 

@@ -4,7 +4,7 @@ Background thread class for adding new channels.
 This QThread subclass handles adding new podcast subscriptions
 in the background to keep the UI responsive.
 """
-from PyQt5 import QtCore, QtWidgets
+from PyQt6 import QtCore, QtWidgets
 from io import BytesIO
 import os
 import sqlite3

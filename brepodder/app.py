@@ -4,7 +4,7 @@ brePodder - Main application module.
 This module contains the BrePodder class which is the main application
 window and handles user interactions.
 """
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt6 import QtCore, QtWidgets, QtGui
 from time import gmtime, strftime
 import os
 import sqlite3
@@ -22,10 +22,10 @@ from logger import get_logger
 logger = get_logger(__name__)
 
 # Qt item flags for tree widget items
-DRAGGABLE: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsDragEnabled
-DROPPABLE: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsDropEnabled
-ENABLED: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsEnabled
-SELECTABLE: QtCore.Qt.ItemFlag = QtCore.Qt.ItemIsSelectable
+DRAGGABLE: QtCore.Qt.ItemFlag = QtCore.Qt.ItemFlag.ItemIsDragEnabled
+DROPPABLE: QtCore.Qt.ItemFlag = QtCore.Qt.ItemFlag.ItemIsDropEnabled
+ENABLED: QtCore.Qt.ItemFlag = QtCore.Qt.ItemFlag.ItemIsEnabled
+SELECTABLE: QtCore.Qt.ItemFlag = QtCore.Qt.ItemFlag.ItemIsSelectable
 
 
 class BrePodder(MainUi):
@@ -63,7 +63,7 @@ class BrePodder(MainUi):
         """Resize an image to thumbnail size if it's too large."""
         pixmap = QtGui.QPixmap(source_image)
         if pixmap.height() > THUMBNAIL_MAX_SIZE or pixmap.width() > THUMBNAIL_MAX_SIZE:
-            pixmap_resized = pixmap.scaled(THUMBNAIL_MAX_SIZE, THUMBNAIL_MAX_SIZE, QtCore.Qt.KeepAspectRatio)
+            pixmap_resized = pixmap.scaled(THUMBNAIL_MAX_SIZE, THUMBNAIL_MAX_SIZE, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
             if not os.path.exists(os.path.dirname(destination_image)):
                 os.makedirs(os.path.dirname(destination_image))
             pixmap_resized.save(destination_image)
@@ -168,9 +168,9 @@ class BrePodder(MainUi):
         self.number_of_channels = 1
 
         add_channel_thread = AddChannelThread(feed_link, self, 0)
-        add_channel_thread.addsignal.connect(self.update_channel_list, QtCore.Qt.QueuedConnection)
-        add_channel_thread.addsignal_episodelist.connect(self.update_episode_list, QtCore.Qt.QueuedConnection)
-        add_channel_thread.addDoneSignal.connect(self.adding_channel_done, QtCore.Qt.BlockingQueuedConnection)
+        add_channel_thread.addsignal.connect(self.update_channel_list, QtCore.Qt.ConnectionType.QueuedConnection)
+        add_channel_thread.addsignal_episodelist.connect(self.update_episode_list, QtCore.Qt.ConnectionType.QueuedConnection)
+        add_channel_thread.addDoneSignal.connect(self.adding_channel_done, QtCore.Qt.ConnectionType.BlockingQueuedConnection)
         self.update_channel_threads.append(add_channel_thread)
         add_channel_thread.start()
 
@@ -268,7 +268,7 @@ class BrePodder(MainUi):
         for e in episodes:
             item = QtWidgets.QTreeWidgetItem(self.tree_widget_playlist)
             # Store episode_id as hidden data for later use
-            item.setData(0, QtCore.Qt.UserRole, e['id'])
+            item.setData(0, QtCore.Qt.ItemDataRole.UserRole, e['id'])
             item.setText(0, str(e['channel_id']))
             item.setText(1, e['title'])
             if e['size']:
@@ -451,7 +451,7 @@ class BrePodder(MainUi):
     def playlist_episode_double_clicked(self, a: QtWidgets.QTreeWidgetItem) -> None:
         """Handle double-click on playlist item - play episode."""
         path = a.text(4)
-        episode_id = a.data(0, QtCore.Qt.UserRole)
+        episode_id = a.data(0, QtCore.Qt.ItemDataRole.UserRole)
         if path:
             if episode_id and os.path.exists(path):
                 # Local file with episode_id - use built-in player with position tracking
@@ -609,9 +609,9 @@ class BrePodder(MainUi):
         self.channel_for_update = ch
 
         update_channel_thread = UpdateChannelThread(ch, self, 0)
-        update_channel_thread.updatesignal.connect(self.update_channel_list, QtCore.Qt.QueuedConnection)
-        update_channel_thread.updatesignal_episodelist.connect(self.update_episode_list, QtCore.Qt.QueuedConnection)
-        update_channel_thread.updateDoneSignal.connect(self.update_done, QtCore.Qt.BlockingQueuedConnection)
+        update_channel_thread.updatesignal.connect(self.update_channel_list, QtCore.Qt.ConnectionType.QueuedConnection)
+        update_channel_thread.updatesignal_episodelist.connect(self.update_episode_list, QtCore.Qt.ConnectionType.QueuedConnection)
+        update_channel_thread.updateDoneSignal.connect(self.update_done, QtCore.Qt.ConnectionType.BlockingQueuedConnection)
         self.update_channel_threads.append(update_channel_thread)
         update_channel_thread.start()
 
@@ -634,9 +634,9 @@ class BrePodder(MainUi):
             update_channel_threads.append(UpdateChannelThread_network(i, self, j))
             self.update_channel_threads.append(update_channel_threads[j])
             update_channel_threads[j].updateProgressSignal.connect(self.update_progress_bar_from_thread,
-                                                     QtCore.Qt.QueuedConnection)
+                                                     QtCore.Qt.ConnectionType.QueuedConnection)
             update_channel_threads[j].updateAllChannelsDoneSignal.connect(self.update_db_with_all_channels,
-                                                            QtCore.Qt.QueuedConnection)
+                                                            QtCore.Qt.ConnectionType.QueuedConnection)
             update_channel_threads[j].start()
             j = j + 1
 

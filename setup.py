@@ -2,7 +2,7 @@ from setuptools import setup
 
 requirements = [
     'feedparser',
-    'PyQt5',
+    'PyQt6',
     'requests',
     'favicon'
 

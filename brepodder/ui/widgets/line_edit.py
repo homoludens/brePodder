@@ -1,7 +1,7 @@
 """
 Custom LineEdit widget that clears on focus.
 """
-from PyQt5 import QtWidgets
+from PyQt6 import QtWidgets
 
 
 class ClearOnFocusLineEdit(QtWidgets.QLineEdit):

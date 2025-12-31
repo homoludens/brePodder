@@ -1,7 +1,7 @@
 """
 Dialog for creating a new folder.
 """
-from PyQt5 import QtCore, QtWidgets
+from PyQt6 import QtCore, QtWidgets
 
 
 class Ui_Add_folder(object):
@@ -11,7 +11,7 @@ class Ui_Add_folder(object):
         Dialog.setObjectName("Dialog")
         Dialog.resize(QtCore.QSize(QtCore.QRect(0, 0, 267, 106).size()).expandedTo(Dialog.minimumSizeHint()))
 
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
@@ -19,8 +19,8 @@ class Ui_Add_folder(object):
 
         self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
         self.buttonBox.setGeometry(QtCore.QRect(-80, 70, 341, 32))
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel | QtWidgets.QDialogButtonBox.StandardButton.Ok)
         self.buttonBox.setObjectName("buttonBox")
 
         self.lineEdit = QtWidgets.QLineEdit(Dialog)
@@ -37,8 +37,8 @@ class Ui_Add_folder(object):
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QtWidgets.QApplication.translate("Dialog", "Dialog", None))
-        self.label.setText(QtWidgets.QApplication.translate("Dialog", "Name for new folder", None))
+        Dialog.setWindowTitle(QtCore.QCoreApplication.translate("Dialog", "Dialog", None))
+        self.label.setText(QtCore.QCoreApplication.translate("Dialog", "Name for new folder", None))
 
 
 if __name__ == "__main__":
@@ -48,4 +48,4 @@ if __name__ == "__main__":
     newFolder = Ui_Add_folder()
     newFolder.setupUi(Dialog)
     Dialog.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

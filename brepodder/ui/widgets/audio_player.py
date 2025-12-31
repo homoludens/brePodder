@@ -9,7 +9,7 @@ import subprocess
 import sys
 from typing import Optional
 
-from PyQt5 import QtCore, QtMultimedia, QtWidgets
+from PyQt6 import QtCore, QtMultimedia, QtWidgets
 from utils.youtube import get_real_download_url, is_video_link, is_channel_url
 from logger import get_logger
 
@@ -35,7 +35,7 @@ class AudioPlayer(QtWidgets.QWidget):
         self._db = None  # Will be set by parent app
         self._last_saved_position: int = 0
 
-        self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
         self.slider.setRange(0, 1000)
 
         self.slider.sliderMoved.connect(self.set_position)
@@ -44,20 +44,24 @@ class AudioPlayer(QtWidgets.QWidget):
         self.label_duration = QtWidgets.QLabel()
 
         QtWidgets.QWidget.__init__(self, parent)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
 
-        self.content = QtMultimedia.QMediaContent(QtCore.QUrl(url))
-
+        # PyQt6: QMediaContent is removed, use setSource() with QUrl directly
+        # PyQt6: QAudioOutput is now required for audio playback
+        self.audio_output = QtMultimedia.QAudioOutput()
         self.player = QtMultimedia.QMediaPlayer()
+        self.player.setAudioOutput(self.audio_output)
+        
         self.player.positionChanged.connect(self.position_changed)
         self.player.durationChanged.connect(self.duration_changed)
-        self.player.setMedia(self.content)
+        self.player.setSource(QtCore.QUrl(url))
         self.player.play()
 
         self.play_pause = QtWidgets.QPushButton(self)
         self.play_pause.setText("Play")
         self.play_pause.clicked.connect(self.play_clicked)
-        self.player.stateChanged.connect(self.state_changed)
+        # PyQt6: stateChanged is now playbackStateChanged
+        self.player.playbackStateChanged.connect(self.state_changed)
 
         self.stop_btn = QtWidgets.QPushButton(self)
         self.stop_btn.setText("Stop")
@@ -66,7 +70,7 @@ class AudioPlayer(QtWidgets.QWidget):
         self.slider.setRange(0, self.player.duration() // 1000)
 
         self.status = QtWidgets.QLabel(self)
-        self.status.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.status.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter)
 
         self.download = QtWidgets.QPushButton("Download", self)
         self.download.clicked.connect(self.fetch)
@@ -106,7 +110,7 @@ class AudioPlayer(QtWidgets.QWidget):
 
     def _on_media_status_changed(self, status):
         """Handle media status changes, particularly for seeking to saved position."""
-        if status == QtMultimedia.QMediaPlayer.BufferedMedia or status == QtMultimedia.QMediaPlayer.LoadedMedia:
+        if status == QtMultimedia.QMediaPlayer.MediaStatus.BufferedMedia or status == QtMultimedia.QMediaPlayer.MediaStatus.LoadedMedia:
             if hasattr(self, '_pending_seek') and self._pending_seek:
                 logger.debug("Seeking to saved position: %s seconds", self._pending_seek)
                 self.player.setPosition(self._pending_seek * 1000)
@@ -143,7 +147,8 @@ class AudioPlayer(QtWidgets.QWidget):
         logger.debug("Setting media URL: %s", url)
         self._using_external = False
         self._current_file = url
-        self.player.setMedia(QtMultimedia.QMediaContent(QtCore.QUrl(url)))
+        # PyQt6: Use setSource() instead of setMedia(QMediaContent())
+        self.player.setSource(QtCore.QUrl(url))
         self.player.play()
         self.status.setText("Built-in")
 
@@ -154,7 +159,8 @@ class AudioPlayer(QtWidgets.QWidget):
         self._current_episode_id = episode_id
         self._last_saved_position = 0
         uri = QtCore.QUrl.fromLocalFile(url)
-        self.player.setMedia(QtMultimedia.QMediaContent(uri))
+        # PyQt6: Use setSource() instead of setMedia(QMediaContent())
+        self.player.setSource(uri)
         
         # Seek to saved position if available
         if self._db and episode_id:
@@ -226,7 +232,8 @@ class AudioPlayer(QtWidgets.QWidget):
 
     def enqueue(self, url):
         """Add media to the queue."""
-        self.player.setMedia(QtMultimedia.QMediaContent(QtCore.QUrl.fromLocalFile(url)))
+        # PyQt6: Use setSource() instead of setMedia(QMediaContent())
+        self.player.setSource(QtCore.QUrl.fromLocalFile(url))
 
     def play_clicked(self):
         """Handle play/pause button click."""
@@ -237,7 +244,8 @@ class AudioPlayer(QtWidgets.QWidget):
             if self._external_process is not None:
                 self.stop_clicked()
         else:
-            if self.player.state() == QtMultimedia.QMediaPlayer.PlayingState:
+            # PyQt6: PlayingState is now under PlaybackState enum
+            if self.player.playbackState() == QtMultimedia.QMediaPlayer.PlaybackState.PlayingState:
                 self.player.pause()
             else:
                 self.player.play()
@@ -281,12 +289,14 @@ class AudioPlayer(QtWidgets.QWidget):
         if self._using_external:
             return self._external_process is not None and self._external_process.poll() is None
         else:
-            return self.player.state() == QtMultimedia.QMediaPlayer.PlayingState
+            # PyQt6: PlayingState is now under PlaybackState enum
+            return self.player.playbackState() == QtMultimedia.QMediaPlayer.PlaybackState.PlayingState
 
     def state_changed(self, new):
         """Handle player state change."""
         if not self._using_external:
-            if new == QtMultimedia.QMediaPlayer.PlayingState:
+            # PyQt6: PlayingState is now under PlaybackState enum
+            if new == QtMultimedia.QMediaPlayer.PlaybackState.PlayingState:
                 self.play_pause.setText("Pause")
             else:
                 self.play_pause.setText("Play")
@@ -301,7 +311,7 @@ def main():
     window = AudioPlayer("https://chtbl.com/track/4E942/audioboom.com/posts/7996900.mp3?modified=1647234100&source=rss&stitched=1")
     window.setWindowTitle("Audio Player")
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ Background thread classes for updating channels.
 These QThread subclasses handle network operations and database updates
 in the background to keep the UI responsive.
 """
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 from io import BytesIO
 import sqlite3
 import feedparser
