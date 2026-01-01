@@ -4,3 +4,6 @@ venv/
 *~
 *.swp
 .python-version
+.coverage
+.zed/
+CLAUDE_*.md
