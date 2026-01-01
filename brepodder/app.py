@@ -18,9 +18,10 @@ from .workers.download_worker import Download
 from .workers.update_worker import UpdateDatabaseThread
 from .workers.add_worker import AddChannelThread
 # from .services.feed_parser import parse_episode_for_update, episode_dict_to_tuple
-from .config import DATA_DIR, DATABASE_FILE, USER_AGENT, THUMBNAIL_MAX_SIZE
+from .config import DATA_DIR, DATABASE_FILE, USER_AGENT, THUMBNAIL_MAX_SIZE, DEFAULT_OPML_FILE
 from .config_players import PLAYERS, get_play_command
 from .logger import get_logger
+from .services import opml
 
 logger = get_logger(__name__)
 
@@ -123,6 +124,9 @@ class BrePodder(MainUi):
 
         # Load saved playlist from database
         self._load_playlist_from_db()
+
+        # Import default channels on first run
+        self._import_default_channels_on_first_run()
 
     def resize_image(self, source_image: str, destination_image: str) -> None:
         """Resize an image to thumbnail size if it's too large."""
@@ -247,6 +251,27 @@ class BrePodder(MainUi):
 
         self.update_channel_list()
         self.send_message("Updating Done")
+
+    def _import_default_channels_on_first_run(self) -> None:
+        """Import default channels from OPML file on first application run."""
+        if self.db.get_setting('first_run') != 'true':
+            return
+
+        if not DEFAULT_OPML_FILE.exists():
+            logger.warning("Default OPML file not found at %s", DEFAULT_OPML_FILE)
+            self.db.set_setting('first_run', 'false')
+            return
+
+        logger.info("First run detected - importing default channels from %s", DEFAULT_OPML_FILE)
+        importer = opml.Importer(str(DEFAULT_OPML_FILE))
+        channels = self.db.get_all_channels_links()
+
+        for channel in importer.items:
+            if (channel['url'],) not in channels:
+                self.add_channel(channel['url'])
+
+        # Mark first run as complete
+        self.db.set_setting('first_run', 'false')
 
     def channel_activated(self) -> None:
         """Handle channel selection."""
