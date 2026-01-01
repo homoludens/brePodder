@@ -7,3 +7,4 @@ venv/
 .coverage
 .zed/
 CLAUDE_*.md
+uv.lock
