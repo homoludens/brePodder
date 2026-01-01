@@ -46,7 +46,7 @@ where = ["."]
 include = ["brepodder*"]
 
 [tool.setuptools.package-data]
-brepodder = ["data/*", "resources/*"]
+brepodder = ["resources/*",]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

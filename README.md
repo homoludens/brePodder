@@ -98,7 +98,7 @@ Downloads appear in the "Downloads" tab with progress information.
 
 ### Import/Export
 
-- **Export**: Menu > Podcasts > Export - saves all subscriptions to `brePodder.opml`
+- **Export**: Menu > Podcasts > Export - saves all subscriptions to `brepodder.opml`
 - **Import**: Menu > Podcasts > Import - select an OPML file to import subscriptions
 
 ## Data Storage

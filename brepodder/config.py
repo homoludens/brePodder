@@ -14,6 +14,7 @@ USER_AGENT: str = f"{APP_NAME}/{APP_VERSION}"
 # Paths
 DATA_DIR: Path = Path.home() / ".brePodder"
 DATABASE_FILE: Path = DATA_DIR / "podcasts.sqlite"
+DEFAULT_OPML_FILE: Path = Path(__file__).parent.parent / "brepodder/resources/brepodder.opml"
 
 # Network settings
 REQUEST_TIMEOUT: float = 10.0

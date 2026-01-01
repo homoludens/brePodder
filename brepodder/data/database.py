@@ -7,7 +7,7 @@ import sqlite3
 import threading
 from typing import Any, Optional
 
-from brepodder.config import DATABASE_FILE, DATABASE_TIMEOUT
+from brepodder.config import DATABASE_FILE, DATABASE_TIMEOUT, DEFAULT_OPML_FILE
 from brepodder.logger import get_logger
 
 logger = get_logger(__name__)
@@ -24,8 +24,13 @@ class DBOperation:
     def __init__(self) -> None:
         # Initialize main thread connection
         self._get_connection()
+        # Check if this is a new database (first run)
+        is_new_db = self._is_new_database()
         # Create all tables if they don't exist
         self.create_db()
+        # Import default channels on first run
+        if is_new_db:
+            self._import_default_channels()
 
     def _get_connection(self) -> sqlite3.Connection:
         """Get or create a thread-local database connection."""
@@ -35,6 +40,48 @@ class DBOperation:
             self._local.cur = self._local.db.cursor()
             self._local.cur.row_factory = sqlite3.Row
         return self._local.db
+
+    def _is_new_database(self) -> bool:
+        """Check if this is a new database by checking if sql_channel table exists."""
+        try:
+            self._get_connection()
+            result = self._local.cur.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='sql_channel'"
+            ).fetchone()
+            return result is None
+        except sqlite3.Error:
+            return True
+
+    def _import_default_channels(self) -> None:
+        """Import default channels from the bundled OPML file on first run."""
+        if not DEFAULT_OPML_FILE.exists():
+            logger.warning("Default OPML file not found at %s", DEFAULT_OPML_FILE)
+            return
+
+        try:
+            from brepodder.services.opml import Importer
+            logger.info("First run detected - importing default channels from %s", DEFAULT_OPML_FILE)
+            importer = Importer(str(DEFAULT_OPML_FILE))
+            
+            for channel in importer.items:
+                # Check if channel already exists
+                existing = self.get_channel_by_link(channel['url'])
+                if not existing:
+                    # Insert channel with basic info (title, link, homepage, description, logo, logobig)
+                    self.insert_channel((
+                        channel['title'],
+                        channel['url'],
+                        channel['url'],  # Use feed URL as homepage
+                        channel['description'],
+                        '',  # logo - will be fetched later
+                        ''   # logobig - will be fetched later
+                    ))
+                    logger.info("Imported channel: %s", channel['title'])
+            
+            self.db.commit()
+            logger.info("Default channels imported successfully")
+        except Exception as e:
+            logger.error("Failed to import default channels: %s", e)
 
     @property
     def db(self) -> sqlite3.Connection:

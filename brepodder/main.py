@@ -24,6 +24,7 @@ def main():
     # Import after logging is set up
     from brepodder.app import BrePodder
     from brepodder.data.database import DBOperation
+    from brepodder import resources  # Initialize Qt resources (icons)
 
     app = QtWidgets.QApplication(sys.argv)
 

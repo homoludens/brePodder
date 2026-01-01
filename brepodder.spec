@@ -5,7 +5,9 @@ a = Analysis(
     ['brepodder/main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[
+        ('brepodder/resources', 'brepodder/resources'),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
