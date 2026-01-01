@@ -4,6 +4,7 @@ brePodder - Main application module.
 This module contains the BrePodder class which is the main application
 window and handles user interactions.
 """
+import logging
 from PyQt6 import QtCore, QtWidgets, QtGui
 from time import gmtime, strftime
 import os
@@ -664,26 +665,11 @@ class BrePodder(MainUi):
 
 
     def update_channel(self) -> None:
-        """Update the currently selected channel."""
-        self.line_edit_feed_url.hide()
-        self.button_add.hide()
-        self.update_progress_bar.setRange(0, 0)
-        self.update_progress_bar.show()
-        self.number_of_channels = 1
-
-        ch = self.db.get_channel_by_title(self.current_channel)
-
-        self.channel_for_update = ch
-
-        update_channel_thread = UpdateChannelThread(ch, self, 0)
-        update_channel_thread.updatesignal.connect(self.update_channel_list, QtCore.Qt.ConnectionType.QueuedConnection)
-        update_channel_thread.updatesignal_episodelist.connect(self.update_episode_list, QtCore.Qt.ConnectionType.QueuedConnection)
-        update_channel_thread.updateDoneSignal.connect(self.update_done, QtCore.Qt.ConnectionType.BlockingQueuedConnection)
-        self.update_channel_threads.append(update_channel_thread)
-        update_channel_thread.start()
+        ch = self.db.get_channel_by_title(self.current_channel)        # self.channel_for_update = ch
+        self.update_all_channels([ch])
 
 
-    def update_all_channels(self) -> None:
+    def update_all_channels(self, channels=None) -> None:
         """Update all channels using process pool."""
 
         self.line_edit_feed_url.hide()
@@ -692,9 +678,11 @@ class BrePodder(MainUi):
 
         self.updated_channels_list.clear()
 
-        all_channels = self.db.get_all_channels()
-
-        all_channels = all_channels[10:20]  # Test on 10 channels
+        if channels:
+            all_channels = channels
+        else:
+            all_channels = self.db.get_all_channels()
+            # all_channels = all_channels[10:20]  # Test on 10 channels
 
         self.number_of_channels = len(all_channels)
         self.update_progress_bar.setRange(0, self.number_of_channels)

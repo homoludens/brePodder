@@ -14,20 +14,20 @@ from logger import setup_logging, get_logger
 if __name__ == "__main__":
     ensure_data_dir()
     os.chdir(str(DATA_DIR))
-    
+
     # Initialize logging
-    setup_logging()
+    setup_logging(10)
     logger = get_logger("main")
     logger.info("Starting brePodder")
-    
+
     # Import after logging is set up
     from app import BrePodder
     from data.database import DBOperation
 
     app = QtWidgets.QApplication(sys.argv)
-    
+
     db = DBOperation()
-    
+
     # Apply theme setting
     theme = db.getSetting('gui_theme') or 'system'
     logger.info("Applying theme: %s", theme)
@@ -68,7 +68,7 @@ if __name__ == "__main__":
         light_palette.setColor(QtGui.QPalette.ColorRole.HighlightedText, QtGui.QColor(255, 255, 255))
         app.setPalette(light_palette)
     # else: 'system' - use default system theme
-    
+
     # Apply font size setting
     font_size_str = db.getSetting('gui_font_size')
     if font_size_str:
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         font = app.font()
         font.setPointSize(DEFAULT_FONT_SIZE)
         app.setFont(font)
-    
+
     ui = BrePodder(app)
 
     sys.exit(app.exec())
