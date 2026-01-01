@@ -249,6 +249,15 @@ class BrePodder(MainUi):
         self.line_edit_feed_url.show()
         self.button_add.show()
 
+        # Process pending folder assignments from OPML import
+        if hasattr(self, '_pending_folder_assignments') and self._pending_folder_assignments:
+            for channel_url, folder_name in list(self._pending_folder_assignments.items()):
+                channel = self.db.get_channel_by_link(channel_url)
+                if channel:
+                    self.db.add_channel_to_folder(channel['title'], folder_name)
+                    logger.debug("Assigned channel '%s' to folder '%s'", channel['title'], folder_name)
+                    del self._pending_folder_assignments[channel_url]
+
         self.update_channel_list()
         self.send_message("Updating Done")
 

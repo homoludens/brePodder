@@ -2,10 +2,14 @@
 <opml version="1.1">
 	<head>
 		<title>brePodder subscriptions</title>
-		<dateCreated>Thu Jan  1 22:42:43 2026</dateCreated>
+		<dateCreated>Fri Jan  2 00:11:17 2026</dateCreated>
 	</head>
 	<body>
-		<outline title="Huberman Lab" text="Andrew Huberman, Ph.D." xmlUrl="https://feeds.megaphone.fm/hubermanlab" type="rss"/>
-		<outline title="StarTalk Radio" text="Science, pop culture, and comedy collide on StarTalk Radio! Neil deGrasse Tyson, astrophysicist and Director of New York's Hayden Planetarium, and his comic co-hosts, guest celebrities, and scientific experts explore astronomy, physics, and everything else there is to know about life in the universe. New episodes premiere Tuesdays. Keep Looking Up! &#10;&#10;Subscribe to SiriusXM Podcasts+ to listen to new episodes of StarTalk Radio ad-free and a whole week early.&#10;Start a free trial now on Apple Podcasts or by visiting siriusxm.com/podcastsplus." xmlUrl="https://feeds.simplecast.com/4T39_jAj" type="rss"/>
+		<outline title="Health" text="Health">
+			<outline title="Huberman Lab" text="Andrew Huberman, Ph.D." xmlUrl="https://feeds.megaphone.fm/hubermanlab" type="rss"/>
+		</outline>
+		<outline title="Space" text="Space">
+			<outline title="StarTalk Radio" text="Science, pop culture, and comedy collide on StarTalk Radio! Neil deGrasse Tyson, astrophysicist and Director of New York's Hayden Planetarium, and his comic co-hosts, guest celebrities, and scientific experts explore astronomy, physics, and everything else there is to know about life in the universe. New episodes premiere Tuesdays. Keep Looking Up! &#10;&#10;Subscribe to SiriusXM Podcasts+ to listen to new episodes of StarTalk Radio ad-free and a whole week early.&#10;Start a free trial now on Apple Podcasts or by visiting siriusxm.com/podcastsplus." xmlUrl="https://feeds.simplecast.com/4T39_jAj" type="rss"/>
+		</outline>
 	</body>
 </opml>

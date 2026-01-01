@@ -162,6 +162,13 @@ class DBOperation:
             'SELECT * FROM sql_taxonomy ORDER BY title'
         ).fetchall()
 
+    def get_folder_by_title(self, folder_title: str) -> Optional[sqlite3.Row]:
+        """Get a folder by its title."""
+        return self.cur.execute(
+            'SELECT * FROM sql_taxonomy WHERE title = ?',
+            (folder_title,)
+        ).fetchone()
+
     def get_current_channel(self, channel_title: str) -> tuple[Optional[sqlite3.Row], list[sqlite3.Row]]:
         """Get a channel and its episodes by title."""
         channel = self.get_channel_by_title(channel_title)
@@ -459,6 +466,7 @@ class DBOperation:
     getAllChannelsWOFolder = get_all_channels_without_folder
     getFolderEpisodes = get_folder_episodes
     getAllFolders = get_all_folders
+    getFolderByTitle = get_folder_by_title
     getCurrentChannel = get_current_channel
     insertFolder = insert_folder
     getLatestDownloads = get_latest_downloads

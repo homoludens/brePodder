@@ -455,21 +455,56 @@ class MainUi(QtWidgets.QWidget):
         logger.debug("Opening file: %s", filename)
 
     def export_opml(self):
-        """Export channels to OPML file."""
-        channels = self.db.get_all_channels()
+        """Export channels to OPML file with folder structure."""
+        # Get channels without folders
+        channels_without_folder = self.db.get_all_channels_without_folder()
+        # Get all folders
+        folders = self.db.get_all_folders()
+
         opml_file = opml.Exporter('brePodder.opml')
-        opml_file.write(channels)
+        opml_file.write(
+            channels_without_folder,
+            folders=folders,
+            get_folder_channels_func=self.db.get_folder_channels
+        )
 
     def import_opml(self):
-        """Import channels from OPML file."""
+        """Import channels from OPML file with folder structure."""
         filename = QtWidgets.QFileDialog.getOpenFileName(self.main_window, 'Open OPML file for import', '/home',  "(*.opml)")
-        i = opml.Importer(filename[0])
-        i.get_model()
-        channels = self.db.get_all_channels_links()
+        if not filename[0]:
+            return
 
-        for channel in i.items:
-            if (channel['url'], ) not in channels:
+        importer = opml.Importer(filename[0])
+        importer.get_model()
+
+        # Create folders first
+        for folder_name in importer.get_folders():
+            existing_folder = self.db.get_folder_by_title(folder_name)
+            if not existing_folder:
+                self.db.insert_folder(folder_name)
+                logger.debug("Created folder: %s", folder_name)
+
+        # Store pending folder assignments (channel_url -> folder_name)
+        # These will be processed after channels are added
+        if not hasattr(self, '_pending_folder_assignments'):
+            self._pending_folder_assignments = {}
+
+        existing_channels = self.db.get_all_channels_links()
+
+        for channel in importer.items:
+            if (channel['url'],) not in existing_channels:
+                # Store folder assignment for later
+                if channel.get('folder'):
+                    self._pending_folder_assignments[channel['url']] = channel['folder']
                 self.add_channel(channel['url'])
+            else:
+                # Channel already exists, but might need folder assignment
+                if channel.get('folder'):
+                    existing_channel = self.db.get_channel_by_link(channel['url'])
+                    if existing_channel:
+                        self.db.add_channel_to_folder(existing_channel['title'], channel['folder'])
+
+        self.update_channel_list()
 
     def activeMenuChannels(self, pos):
         logger.debug("activeMenuChannels")
