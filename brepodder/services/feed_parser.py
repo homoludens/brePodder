@@ -9,14 +9,40 @@ from logger import get_logger
 logger = get_logger(__name__)
 
 
+
+def safe_mktime(value) -> Optional[float]:
+    """Safely convert to timestamp, return None on failure."""
+    try:
+        return mktime(value)
+    except Exception:
+        return None
+
+
+def get_episode_date(entry: dict) -> float:
+    """Extract episode date from entry, trying multiple fields in priority order."""
+
+    # Priority order: published_parsed > published > updated_parsed > updated
+    date_fields = ['published_parsed', 'published', 'updated_parsed', 'updated']
+
+    for field in date_fields:
+        if field in entry:
+            timestamp = safe_mktime(entry[field])
+            if timestamp is not None:
+                return timestamp
+            else:
+                entry.pop(field)  # Remove invalid field
+
+    return mktime(gmtime())  # Fallback to now
+
+
 def parse_episode_from_feed_entry(entry: Any, channel_id: int) -> dict[str, Any]:
     """
     Parse a feed entry and extract episode data.
-    
+
     Args:
         entry: A feedparser entry object
         channel_id: The database ID of the channel this episode belongs to
-        
+
     Returns:
         dict: Episode data with keys: title, enclosure, size, date, description, status, channel_id
     """
@@ -31,12 +57,13 @@ def parse_episode_from_feed_entry(entry: Any, channel_id: int) -> dict[str, Any]
     }
 
     if 'title' in entry:
-        new_episode['title'] = entry.title
+        new_episode['title'] = entry['title']
 
     if 'enclosures' in entry:
         try:
-            new_episode['enclosure'] = entry.enclosures[0].href
-            new_episode['size'] = entry.enclosures[0].length
+            print(entry['enclosures'][0])
+            new_episode['enclosure'] = entry['enclosures'][0]['href']
+            new_episode['size'] = entry['enclosures'][0]['length']
         except IndexError:
             pass
         except AttributeError:
@@ -44,20 +71,15 @@ def parse_episode_from_feed_entry(entry: Any, channel_id: int) -> dict[str, Any]
 
     if 'yt_videoid' in entry:
         try:
-            new_episode['enclosure'] = entry.link
+            new_episode['enclosure'] = entry['link']
         except AttributeError:
             pass
 
-    if 'updated_parsed' in entry:
-        new_episode['date'] = mktime(entry.updated_parsed)
-    elif 'published_parsed' in entry:
-        new_episode['date'] = mktime(entry.published_parsed)
-    else:
-        new_episode['date'] = mktime(gmtime())
+    new_episode['date'] = get_episode_date(entry)
 
     if 'summary_detail' in entry:
         try:
-            new_episode['description'] = entry.summary_detail.value
+            new_episode['description'] = entry['summary_detail']['value']
         except AttributeError:
             pass
 
@@ -67,27 +89,27 @@ def parse_episode_from_feed_entry(entry: Any, channel_id: int) -> dict[str, Any]
 def parse_episode_for_update(entry: Any) -> Optional[dict[str, Any]]:
     """
     Parse a feed entry for channel update operations.
-    
+
     Args:
         entry: A feedparser entry object
-        
+
     Returns:
         dict or None: Episode data dict, or None if entry has no title
     """
     if 'title' not in entry:
         logger.debug("Episode entry has no title")
         return None
-        
+
     new_episode: dict[str, Any] = {}
-    
-    if entry.title:
-        new_episode['title'] = entry.title
+
+    if entry['title']:
+        new_episode['title'] = entry['title']
     else:
         new_episode['title'] = 'No Title'
-        
+
     if 'enclosures' in entry:
         try:
-            new_episode['enclosure'] = entry.enclosures[0].href
+            new_episode['enclosure'] = entry['enclosures'][0]['href']
         except (IndexError, AttributeError) as e:
             logger.warning("Failed to parse enclosure href: %s", e)
             new_episode['enclosure'] = "None"
@@ -102,31 +124,24 @@ def parse_episode_for_update(entry: Any) -> Optional[dict[str, Any]]:
         new_episode['enclosure'] = 'no file'
         new_episode['size'] = '0'
         new_episode['status'] = 'none'
-        
+
     if 'summary_detail' in entry:
-        new_episode['description'] = entry.summary_detail.value
+        new_episode['description'] = entry['summary_detail']['value']
     else:
         new_episode['description'] = 'No description'
 
-    episode_date = mktime(gmtime())
-    if 'updated' in entry:
-        if entry.updated_parsed:
-            episode_date = mktime(entry.updated_parsed)
-    elif 'published' in entry:
-        episode_date = mktime(entry.published_parsed)
+    new_episode['date'] = get_episode_date(entry)
 
-    new_episode['date'] = episode_date
-    
     return new_episode
 
 
 def episode_dict_to_tuple(episode: dict[str, Any]) -> tuple[str, str, Union[int, str], float, str, str, int]:
     """
     Convert an episode dictionary to a tuple for database insertion.
-    
+
     Args:
         episode: dict with episode data
-        
+
     Returns:
         tuple: (title, enclosure, size, date, description, status, channel_id)
     """

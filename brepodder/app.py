@@ -10,9 +10,11 @@ import os
 import sqlite3
 from typing import Any, Optional, Union
 
+from urllib3.connection import log
+
 from ui.main_window import MainUi
 from workers.download_worker import Download
-from workers.update_worker import UpdateChannelThread, UpdateChannelThread_network, UpdateDatabaseThread
+from workers.update_worker import UpdateChannelThread, UpdateDatabaseThread
 from workers.add_worker import AddChannelThread
 from services.feed_parser import parse_episode_for_update, episode_dict_to_tuple
 from config import DATA_DIR, DATABASE_FILE, USER_AGENT, THUMBNAIL_MAX_SIZE
@@ -26,18 +28,71 @@ DRAGGABLE: QtCore.Qt.ItemFlag = QtCore.Qt.ItemFlag.ItemIsDragEnabled
 DROPPABLE: QtCore.Qt.ItemFlag = QtCore.Qt.ItemFlag.ItemIsDropEnabled
 ENABLED: QtCore.Qt.ItemFlag = QtCore.Qt.ItemFlag.ItemIsEnabled
 SELECTABLE: QtCore.Qt.ItemFlag = QtCore.Qt.ItemFlag.ItemIsSelectable
+REQUEST_TIMEOUT = 10
+
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
+
+# Module-level function (required for multiprocessing)
+import copy
+
+def make_serializable(obj):
+    """Recursively convert feedparser objects to plain dicts/lists."""
+    if isinstance(obj, dict):
+        return {k: make_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [make_serializable(item) for item in obj]
+    elif isinstance(obj, (str, int, float, bool, type(None))):
+        return obj
+    elif hasattr(obj, '__dict__'):
+        return make_serializable(vars(obj))
+    else:
+        return str(obj)  # Fallback: convert to string
+
+
+def fetch_and_parse_channel(channel_dict, headers, timeout):
+    """Fetch and parse a channel - runs in separate process."""
+    import requests
+    import feedparser
+
+    feed_link = channel_dict['link']
+    try:
+        resp = requests.get(feed_link, timeout=timeout, headers=headers)
+        resp.raise_for_status()
+
+        feed = feedparser.parse(resp.content)
+
+        # Convert entire feed to serializable format
+        feed_data = {
+            'entries': [make_serializable(dict(e)) for e in feed.entries],
+            'feed': make_serializable(dict(feed.feed)),
+        }
+
+        return {
+            'channel_row': channel_dict,
+            'channel_feedlink': feed_link,
+            'feed': feed_data
+        }
+    except Exception as e:
+        return {
+            'channel_row': channel_dict,
+            'channel_feedlink': feed_link,
+            'feed': None,
+            'error': str(e)
+        }
 
 
 class BrePodder(MainUi):
     """
     Main application class for brePodder podcast client.
-    
+
     Inherits from MainUi which provides the UI setup.
     This class handles all user interactions and application logic.
     """
 
     def __init__(self, app: QtWidgets.QApplication) -> None:
         MainUi.__init__(self, app)
+        # super().__init__()
         self.headers: dict[str, str] = {
             'User-Agent': USER_AGENT
         }
@@ -45,17 +100,26 @@ class BrePodder(MainUi):
         mainwindow = QtWidgets.QMainWindow()
         self.setup_ui(mainwindow)
         mainwindow.show()
-        
+
         # Give AudioPlayer access to database for position saving
         self.audio_player._db = self.db
-        
+
         self.update_channel_list()
         self.update_latest_episodes_list()
         self.update_newest_episodes_list()
         self.playlist: list[Any] = []
         self.updated_channels_list: list[Any] = []
         self.main_directory: str = str(DATA_DIR) + '/'
-        
+
+        self.update_channel_threads = []
+        self.worker_threads = []  # Keep references to threads
+        self.updated_channels_list = []
+
+        self.executor = None
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.check_futures)
+        self.futures = []
+
         # Load saved playlist from database
         self._load_playlist_from_db()
 
@@ -139,15 +203,15 @@ class BrePodder(MainUi):
     def on_download_finished(self, file_name: str, save_path: str, download_id: int, episode_title: str) -> None:
         """Handle download completion - update database and refresh UI."""
         logger.debug("Download completed for episode: %s", episode_title)
-        
+
         # Get the episode from database
         episode = self.db.get_episode_by_title(episode_title)
-        
+
         if episode:
             # Update the episode with local file path and downloaded status
             self.db.update_episode((save_path, "downloaded", episode["id"]))
             logger.info("Updated episode '%s' with local file: %s", episode_title, save_path)
-            
+
             # Refresh the latest downloads list
             self.update_latest_episodes_list()
         else:
@@ -195,7 +259,7 @@ class BrePodder(MainUi):
         except (TypeError, AttributeError) as e:
             # This can happen when a folder is selected instead of a channel
             logger.debug("Failed to update episode list for '%s': %s", selection, e)
-        
+
         self.actionCancel.setToolTip("Delete Selected Channel")
         self.actionUpdateFeeds.setToolTip("Update Selected Channel")
 
@@ -312,7 +376,7 @@ class BrePodder(MainUi):
     def add_episode_to_playlist(self, episode) -> bool:
         """
         Add an episode to the playlist.
-        
+
         Returns True if added, False if already in playlist or limit reached.
         """
         if len(self.playlist) >= 50:
@@ -323,14 +387,14 @@ class BrePodder(MainUi):
                 "Please remove some episodes before adding more."
             )
             return False
-        
+
         episode_id = episode['id']
-        
+
         # Add to database
         if not self.db.add_to_playlist(episode_id):
             logger.debug("Episode already in playlist or limit reached")
             return False
-        
+
         # Add to local list
         self.playlist.append(episode)
         self.update_playlist(self.playlist)
@@ -346,16 +410,16 @@ class BrePodder(MainUi):
     def play_episode(self, path: str) -> None:
         """
         Play an episode from either local file or remote URL.
-        
+
         Uses the configured player from settings.
-        
+
         Args:
             path: Either a local file path or remote URL
         """
         # Get player settings from database
         player_type = self.db.get_setting('player_type') or 'builtin'
         use_custom = self.db.get_setting('use_custom_player') == 'true'
-        
+
         # Determine which command to use
         if use_custom or player_type == 'custom':
             play_command = self.db.get_setting('custom_play_command')
@@ -389,7 +453,7 @@ class BrePodder(MainUi):
         """Play using built-in player with episode ID for position tracking."""
         # Stop any external player first
         self.audio_player.stop_clicked()
-        
+
         if os.path.exists(path):
             logger.debug("Playing local file with position tracking: %s", path)
             self.audio_player.set_url_local(path, episode_id)
@@ -405,7 +469,7 @@ class BrePodder(MainUi):
         """Play using the built-in GStreamer player."""
         # Stop any external player first
         self.audio_player.stop_clicked()
-        
+
         if path.startswith('http://') or path.startswith('https://'):
             # Remote URL - GStreamer may not support HTTPS
             logger.warning("Streaming from HTTPS not supported by built-in player.")
@@ -439,7 +503,7 @@ class BrePodder(MainUi):
                     f"Cannot find the episode file:\n{path}"
                 )
                 return
-        
+
         # Use AudioPlayer's external player support (handles stopping previous, tracking process)
         if not self.audio_player.play_external(command, path):
             QtWidgets.QMessageBox.warning(
@@ -526,7 +590,7 @@ class BrePodder(MainUi):
                 )
             else:
                 return
-                
+
         self.tree_widget_episodes.clear()
         for t in tt:
             item2 = QtWidgets.QTreeWidgetItem(self.tree_widget_episodes)
@@ -563,7 +627,7 @@ class BrePodder(MainUi):
             item_folder.setIcon(0, QtGui.QIcon(':/icons/folder-blue.png'))
             item_folder.setFlags(ENABLED | DROPPABLE)
             item_folder.setExpanded(True)
-            
+
             child_channels = self.db.get_folder_channels(folder[0])
 
             for child_channel in child_channels:
@@ -583,6 +647,8 @@ class BrePodder(MainUi):
                 item.setIcon(0, QtGui.QIcon(QtGui.QPixmap(str(DATA_DIR / channel[6]))))
                 item.setFlags(ENABLED | DRAGGABLE | SELECTABLE)
 
+
+
     def update_progress_bar_from_thread(self) -> None:
         """Update progress bar from background thread."""
         self.update_progress_bar.setValue(self.update_progress_bar.value() + 1)
@@ -595,6 +661,7 @@ class BrePodder(MainUi):
         if ok:
             self.db.insert_folder(text)
         self.update_channel_list()
+
 
     def update_channel(self) -> None:
         """Update the currently selected channel."""
@@ -615,35 +682,81 @@ class BrePodder(MainUi):
         self.update_channel_threads.append(update_channel_thread)
         update_channel_thread.start()
 
+
     def update_all_channels(self) -> None:
-        """Update all channels in the background."""
+        """Update all channels using process pool."""
+
         self.line_edit_feed_url.hide()
         self.button_add.hide()
         self.update_progress_bar.show()
 
-        update_channel_threads: list[UpdateChannelThread_network] = []
+        self.updated_channels_list.clear()
+
         all_channels = self.db.get_all_channels()
 
-        self.number_of_channels = len(all_channels) - 1
-        self.update_progress_bar.setRange(0, self.number_of_channels + 1)
+        all_channels = all_channels[10:20]  # Test on 10 channels
+
+        self.number_of_channels = len(all_channels)
+        self.update_progress_bar.setRange(0, self.number_of_channels)
         self.update_progress_bar.setValue(0)
-        self.update_progress_bar.setFormat("%v" + " of " + "%m")
-        
-        j = 0
-        for i in all_channels:
-            update_channel_threads.append(UpdateChannelThread_network(i, self, j))
-            self.update_channel_threads.append(update_channel_threads[j])
-            update_channel_threads[j].updateProgressSignal.connect(self.update_progress_bar_from_thread,
-                                                     QtCore.Qt.ConnectionType.QueuedConnection)
-            update_channel_threads[j].updateAllChannelsDoneSignal.connect(self.update_db_with_all_channels,
-                                                            QtCore.Qt.ConnectionType.QueuedConnection)
-            update_channel_threads[j].start()
-            j = j + 1
+        self.update_progress_bar.setFormat("%v of %m")
+
+        # Use ProcessPoolExecutor to avoid GIL
+        self.executor = ProcessPoolExecutor(max_workers=4)
+        self.futures = []
+
+        headers = {'User-Agent': USER_AGENT}
+        for channel in all_channels:
+            # Convert sqlite Row to dict if needed
+            channel_dict = dict(channel) if hasattr(channel, 'keys') else channel
+            future = self.executor.submit(
+                fetch_and_parse_channel,
+                channel_dict,
+                headers,
+                REQUEST_TIMEOUT
+            )
+            self.futures.append(future)
+
+        # Poll for completion using timer (non-blocking)
+        self.completed_count = 0
+        self.timer.start(200)  # Check every 100ms
+
+
+    def check_futures(self):
+        """Check if any futures completed."""
+        for future in self.futures[:]:
+            if future.done():
+                self.futures.remove(future)
+                try:
+                    result = future.result()
+                    if result and result.get('feed'):
+                        self.updated_channels_list.append(result)
+                    elif result and result.get('error'):
+                        logger.warning("Channel %s failed: %s",
+                                    result['channel_feedlink'],
+                                    result['error'])
+                except Exception as e:
+                    logger.error("Future error: %s", e)
+
+                self.completed_count += 1
+                self.update_progress_bar.setValue(self.completed_count)
+
+        if not self.futures:
+            self.timer.stop()
+            self.executor.shutdown(wait=False)
+            self.update_db_with_all_channels()
+
+
+    def on_thread_finished(self, thread, semaphore):
+        """Cleanup when thread finishes"""
+        logger.info(f"on_thread_finished    Thread {thread} finished")
+        semaphore.release(1)
+        thread.deleteLater()
 
     def update_db_with_all_channels(self) -> None:
         """
         Process all fetched channel data and update database.
-        
+
         This is called after all network threads have finished fetching feeds.
         Runs database operations in a background thread to keep UI responsive.
         """
