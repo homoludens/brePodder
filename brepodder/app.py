@@ -273,10 +273,25 @@ class BrePodder(MainUi):
 
         logger.info("First run detected - importing default channels from %s", DEFAULT_OPML_FILE)
         importer = opml.Importer(str(DEFAULT_OPML_FILE))
+
+        # Create folders first
+        for folder_name in importer.get_folders():
+            existing_folder = self.db.get_folder_by_title(folder_name)
+            if not existing_folder:
+                self.db.insert_folder(folder_name)
+                logger.debug("Created folder: %s", folder_name)
+
+        # Initialize pending folder assignments
+        if not hasattr(self, '_pending_folder_assignments'):
+            self._pending_folder_assignments = {}
+
         channels = self.db.get_all_channels_links()
 
         for channel in importer.items:
             if (channel['url'],) not in channels:
+                # Store folder assignment for later
+                if channel.get('folder'):
+                    self._pending_folder_assignments[channel['url']] = channel['folder']
                 self.add_channel(channel['url'])
 
         # Mark first run as complete
