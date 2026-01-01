@@ -10,7 +10,7 @@ from typing import Any, Optional, IO
 import requests
 from PyQt6 import QtCore, QtWidgets
 
-from logger import get_logger
+from brepodder.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 class Download(QtCore.QObject):
     """
     Download manager for a single file.
-    
+
     Supports pause, resume, and cancel operations.
     Uses threading to avoid blocking the UI.
     """
@@ -87,14 +87,14 @@ class Download(QtCore.QObject):
                 mode = 'wb'
 
             response = requests.get(self.link, headers=headers, stream=True, timeout=30)
-            
+
             # Handle redirects
             if response.status_code == 302:
                 self.link = response.headers.get('Location', response.url)
                 logger.debug("Redirected to: %s", self.link)
                 self._download_worker()  # Retry with new URL
                 return
-            
+
             if response.status_code not in (200, 206):
                 self.download_error.emit(f"HTTP {response.status_code}")
                 return
@@ -120,7 +120,7 @@ class Download(QtCore.QObject):
                 if self._pause_event.is_set():
                     logger.debug("Download paused")
                     break
-                
+
                 # Check if cancelled
                 if self._stop_event.is_set():
                     logger.debug("Download cancelled")

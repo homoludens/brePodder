@@ -6,7 +6,7 @@ Defines supported external audio players and their commands.
 import shutil
 from typing import Optional
 
-from logger import get_logger
+from .logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -62,22 +62,22 @@ PLAYERS: dict[str, dict[str, Optional[str]]] = {
 def is_player_installed(player_key: str) -> bool:
     """
     Check if a player is installed on the system.
-    
+
     Args:
         player_key: Key from PLAYERS dict (e.g., 'mpv', 'vlc')
-        
+
     Returns:
         True if player is installed, False otherwise
     """
     if player_key not in PLAYERS:
         return False
-    
+
     check_command = PLAYERS[player_key]['check_command']
-    
+
     # Built-in player is always available
     if check_command is None:
         return True
-    
+
     # Check if the command exists in PATH
     return shutil.which(check_command) is not None
 
@@ -85,7 +85,7 @@ def is_player_installed(player_key: str) -> bool:
 def get_available_players() -> list[str]:
     """
     Get a list of player keys that are installed on the system.
-    
+
     Returns:
         List of player keys (e.g., ['builtin', 'mpv', 'vlc'])
     """
@@ -109,40 +109,40 @@ def get_player_display_name(player_key: str) -> str:
 def get_play_command(player_key: str, file_path: str) -> Optional[str]:
     """
     Get the command to play a file with the specified player.
-    
+
     Args:
         player_key: Key from PLAYERS dict
         file_path: Path to file or URL to play
-        
+
     Returns:
         Command string ready to execute, or None for built-in player
     """
     if player_key not in PLAYERS:
         return None
-    
+
     command_template = PLAYERS[player_key]['play_command']
     if command_template is None:
         return None
-    
+
     return command_template.replace('{file}', file_path)
 
 
 def get_enqueue_command(player_key: str, file_path: str) -> Optional[str]:
     """
     Get the command to add a file to the player's playlist.
-    
+
     Args:
         player_key: Key from PLAYERS dict
         file_path: Path to file or URL to enqueue
-        
+
     Returns:
         Command string ready to execute, or None if not supported
     """
     if player_key not in PLAYERS:
         return None
-    
+
     command_template = PLAYERS[player_key]['enqueue_command']
     if command_template is None:
         return None
-    
+
     return command_template.replace('{file}', file_path)

@@ -12,12 +12,12 @@ import feedparser
 import requests
 from typing import Any, Optional
 
-from config import DATA_DIR, DATABASE_FILE, USER_AGENT, REQUEST_TIMEOUT
-from logger import get_logger
-from services.feed_parser import parse_episode_from_feed_entry
-from utils.favicon import get_icon_url, download_image
-from utils.youtube import is_video_link, get_youtube_rss, get_cover
-from workers.download_worker import Download
+from brepodder.config import DATA_DIR, DATABASE_FILE, USER_AGENT, REQUEST_TIMEOUT
+from brepodder.logger import get_logger
+from brepodder.services.feed_parser import parse_episode_from_feed_entry
+from brepodder.utils.favicon import get_icon_url, download_image
+from brepodder.utils.youtube import is_video_link, get_youtube_rss, get_cover
+from brepodder.workers.download_worker import Download
 
 logger = get_logger(__name__)
 
@@ -25,7 +25,7 @@ logger = get_logger(__name__)
 class AddChannelThread(QtCore.QThread):
     """
     Thread for adding a new channel/podcast subscription.
-    
+
     Handles fetching the feed, downloading channel artwork,
     and adding all episodes to the database.
     """
@@ -44,7 +44,7 @@ class AddChannelThread(QtCore.QThread):
 
     def run(self) -> None:
         self.ui.semaphore.acquire(1)
-        
+
         con = sqlite3.connect(str(DATABASE_FILE), check_same_thread=False)
         con.isolation_level = None
         cur = con.cursor()

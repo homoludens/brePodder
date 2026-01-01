@@ -7,8 +7,8 @@ import sqlite3
 import threading
 from typing import Any, Optional
 
-from config import DATABASE_FILE, DATABASE_TIMEOUT
-from logger import get_logger
+from brepodder.config import DATABASE_FILE, DATABASE_TIMEOUT
+from brepodder.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -18,16 +18,16 @@ class DBOperation:
     Thread-safe database operations class.
     Uses thread-local storage to ensure each thread gets its own connection.
     """
-    
+
     _local = threading.local()
-    
+
     def __init__(self) -> None:
         # Initialize main thread connection
         self._get_connection()
         # Ensure all tables exist (for upgrades)
         self._ensure_settings_table()
         self._ensure_playlist_table()
-    
+
     def _get_connection(self) -> sqlite3.Connection:
         """Get or create a thread-local database connection."""
         if not hasattr(self._local, 'db') or self._local.db is None:
@@ -54,12 +54,12 @@ class DBOperation:
             FOREIGN KEY(episode_id) REFERENCES sql_episode(id)
         )''')
         self.db.commit()
-    
+
     @property
     def db(self) -> sqlite3.Connection:
         """Thread-local database connection."""
         return self._get_connection()
-    
+
     @property
     def cur(self) -> sqlite3.Cursor:
         """Thread-local database cursor."""
@@ -79,7 +79,7 @@ class DBOperation:
         """Insert a new channel into the database."""
         self.cur.execute(
             'INSERT INTO sql_channel(title, link, homepage, description, logo, logobig) '
-            'VALUES (?,?,?,?,?,?)', 
+            'VALUES (?,?,?,?,?,?)',
             channel
         )
 
@@ -91,7 +91,7 @@ class DBOperation:
     def get_channel_by_id(self, channel_id: int) -> Optional[dict[str, Any]]:
         """Get a channel by its ID."""
         channel = self.cur.execute(
-            'SELECT * FROM sql_channel WHERE id = ?', 
+            'SELECT * FROM sql_channel WHERE id = ?',
             (channel_id,)
         ).fetchone()
         return dict(channel) if channel else None
@@ -99,28 +99,28 @@ class DBOperation:
     def get_channel_by_title(self, channel_title: str) -> Optional[sqlite3.Row]:
         """Get a channel by its title."""
         return self.cur.execute(
-            'SELECT * FROM sql_channel WHERE title = ?', 
+            'SELECT * FROM sql_channel WHERE title = ?',
             (channel_title,)
         ).fetchone()
 
     def get_channel_by_link(self, channel_link: str) -> Optional[sqlite3.Row]:
         """Get a channel by its feed link."""
         return self.cur.execute(
-            'SELECT * FROM sql_channel WHERE link = ?', 
+            'SELECT * FROM sql_channel WHERE link = ?',
             (channel_link,)
         ).fetchone()
 
     def get_channel_by_feed(self, channel: str) -> sqlite3.Cursor:
         """Get a channel by its feed title."""
         return self.cur.execute(
-            'SELECT * FROM sql_channel WHERE title = ?', 
+            'SELECT * FROM sql_channel WHERE title = ?',
             (channel,)
         )
 
     def get_episode_by_title(self, episode_title: str) -> Optional[sqlite3.Row]:
         """Get an episode by its title."""
         return self.cur.execute(
-            'SELECT * FROM sql_episode WHERE title = ?', 
+            'SELECT * FROM sql_episode WHERE title = ?',
             (episode_title,)
         ).fetchone()
 
@@ -141,7 +141,7 @@ class DBOperation:
     def is_folder(self, title: str) -> bool:
         """Check if a title corresponds to a folder."""
         test = self.cur.execute(
-            "SELECT * FROM sql_taxonomy WHERE title = ?", 
+            "SELECT * FROM sql_taxonomy WHERE title = ?",
             (title,)
         ).fetchall()
         return bool(test)
@@ -149,12 +149,12 @@ class DBOperation:
     def get_folder_episodes(self, channel_title: str) -> list[sqlite3.Row]:
         """Get all episodes from channels in a folder."""
         query = """
-        SELECT EP.id, (CH.title || " - " || EP.title), EP.enclosure, EP.localfile, 
-               EP.size, EP.date, EP.description, EP.channel_id 
-        FROM sql_episode EP 
+        SELECT EP.id, (CH.title || " - " || EP.title), EP.enclosure, EP.localfile,
+               EP.size, EP.date, EP.description, EP.channel_id
+        FROM sql_episode EP
         JOIN sql_channel CH ON EP.channel_id = CH.id
         JOIN sql_taxonomy FLD ON CH.folder_id = FLD.id
-        WHERE FLD.title = ? 
+        WHERE FLD.title = ?
         ORDER BY date DESC LIMIT 150
         """
         return self.cur.execute(query, (channel_title,)).fetchall()
@@ -169,7 +169,7 @@ class DBOperation:
         """Get a channel and its episodes by title."""
         channel = self.get_channel_by_title(channel_title)
         channel_result = self.cur.execute(
-            'SELECT id, title, status FROM sql_episode WHERE channel_id = ?', 
+            'SELECT id, title, status FROM sql_episode WHERE channel_id = ?',
             (channel[0],)
         )
         result = channel_result.fetchall()
@@ -178,7 +178,7 @@ class DBOperation:
     def insert_folder(self, folder_name: str) -> bool:
         """Insert a new folder."""
         self.cur.execute(
-            'INSERT INTO sql_taxonomy(title) VALUES (?)', 
+            'INSERT INTO sql_taxonomy(title) VALUES (?)',
             (folder_name,)
         )
         return True
@@ -221,14 +221,14 @@ class DBOperation:
     def update_episode(self, episode: tuple[str, str, int]) -> None:
         """Update an episode's localfile and status."""
         self.cur.execute(
-            'UPDATE sql_episode SET localfile = ?, status = ? WHERE id = ?', 
+            'UPDATE sql_episode SET localfile = ?, status = ? WHERE id = ?',
             episode
         )
 
     def update_episode_status(self, episode_id: int) -> None:
         """Mark an episode as 'old'."""
         self.cur.execute(
-            'UPDATE sql_episode SET status = "old" WHERE sql_episode.id = ?', 
+            'UPDATE sql_episode SET status = "old" WHERE sql_episode.id = ?',
             (episode_id,)
         )
         self.db.commit()
@@ -238,7 +238,7 @@ class DBOperation:
         channel_id = self.get_channel_by_title(channel_title)
         try:
             self.cur.execute(
-                'DELETE FROM sql_episode WHERE channel_id = ?', 
+                'DELETE FROM sql_episode WHERE channel_id = ?',
                 (channel_id[0],)
             )
         except (sqlite3.Error, TypeError, IndexError) as e:
@@ -249,7 +249,7 @@ class DBOperation:
         """Delete a channel by title."""
         channel_id = self.get_channel_by_title(channel_title)
         self.cur.execute(
-            'DELETE FROM sql_channel WHERE id = ?', 
+            'DELETE FROM sql_channel WHERE id = ?',
             (channel_id[0],)
         )
         self.db.commit()
@@ -257,7 +257,7 @@ class DBOperation:
     def delete_taxonomy(self, folder_title: str) -> None:
         """Delete a folder by title."""
         self.cur.execute(
-            'DELETE FROM sql_taxonomy WHERE title = ?', 
+            'DELETE FROM sql_taxonomy WHERE title = ?',
             (folder_title,)
         )
         self.db.commit()
@@ -265,32 +265,32 @@ class DBOperation:
     def add_channel_to_folder(self, channel_title: str, folder_title: Optional[str]) -> None:
         """Add a channel to a folder, or remove from folder if folder_title is None."""
         self.cur.execute(
-            'SELECT id FROM sql_channel WHERE title = ?', 
+            'SELECT id FROM sql_channel WHERE title = ?',
             [channel_title]
         )
         channel_id = self.cur.fetchone()[0]
-        
+
         if not folder_title:
             self.cur.execute(
-                'UPDATE sql_channel SET folder_id = NULL WHERE id = :ch_id', 
+                'UPDATE sql_channel SET folder_id = NULL WHERE id = :ch_id',
                 {"ch_id": channel_id}
             )
         else:
             self.cur.execute(
-                'SELECT * FROM sql_channel WHERE title = ?', 
+                'SELECT * FROM sql_channel WHERE title = ?',
                 (folder_title,)
             )
             cc = self.cur.fetchone()
             if not cc:
                 self.cur.execute(
-                    'SELECT id FROM sql_taxonomy WHERE title = ?', 
+                    'SELECT id FROM sql_taxonomy WHERE title = ?',
                     (folder_title,)
                 )
                 tx_id = self.cur.fetchone()[0]
             else:
                 tx_id = cc[7]
             self.cur.execute(
-                'UPDATE sql_channel SET folder_id = :tx_id WHERE id = :ch_id', 
+                'UPDATE sql_channel SET folder_id = :tx_id WHERE id = :ch_id',
                 {"tx_id": tx_id, "ch_id": channel_id}
             )
         self.db.commit()
@@ -325,7 +325,7 @@ class DBOperation:
                 status VARCHAR(16),
                 channel_id INTEGER,
                 PRIMARY KEY (id),
-                CONSTRAINT sql_episode_channel_id_fk 
+                CONSTRAINT sql_episode_channel_id_fk
                     FOREIGN KEY(channel_id) REFERENCES sql_channel (id)
             )''')
         except sqlite3.OperationalError:
@@ -347,7 +347,7 @@ class DBOperation:
             )''')
         except sqlite3.OperationalError:
             logger.debug("Table sql_settings already exists")
-        
+
         self.db.commit()
 
     def get_setting(self, key: str) -> Optional[str]:
@@ -404,12 +404,12 @@ class DBOperation:
         ).fetchone()
         if exists:
             return False
-        
+
         # Check playlist count
         count = self.cur.execute('SELECT COUNT(*) FROM sql_playlist').fetchone()[0]
         if count >= 50:
             return False
-        
+
         self.cur.execute(
             'INSERT INTO sql_playlist (episode_id, position) VALUES (?, 0)',
             (episode_id,)

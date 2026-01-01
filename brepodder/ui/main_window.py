@@ -6,15 +6,14 @@ This module sets up the entire PyQt6 interface for the podcast client.
 from PyQt6 import QtCore, QtGui, QtWidgets, QtNetwork
 import re
 
-from services import opml
-from data.database import DBOperation
-from ui.widgets.tree_view import TreeViewWidget
-from ui.widgets.line_edit import ClearOnFocusLineEdit
-from ui.widgets.audio_player import AudioPlayer
-from ui.dialogs.settings_dialog import SettingsDialog
-import resources
-from config import MAX_CONCURRENT_DOWNLOADS
-from logger import get_logger
+from brepodder.services import opml
+from brepodder.data.database import DBOperation
+from brepodder.ui.widgets.tree_view import TreeViewWidget
+from brepodder.ui.widgets.line_edit import ClearOnFocusLineEdit
+from brepodder.ui.widgets.audio_player import AudioPlayer
+from brepodder.ui.dialogs.settings_dialog import SettingsDialog
+from brepodder.config import MAX_CONCURRENT_DOWNLOADS
+from brepodder.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -22,7 +21,7 @@ logger = get_logger(__name__)
 class MainUi(QtWidgets.QWidget):
     """
     Main window UI class.
-    
+
     Sets up all UI components and connects signals/slots.
     """
 

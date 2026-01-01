@@ -34,7 +34,7 @@ from requests.packages.urllib3.util.retry import Retry
 from html.entities import entitydefs, name2codepoint
 from html.parser import HTMLParser
 
-from logger import get_logger
+from brepodder.logger import get_logger
 
 logger = get_logger(__name__)
 

@@ -10,8 +10,8 @@ import sys
 from typing import Optional
 
 from PyQt6 import QtCore, QtMultimedia, QtWidgets
-from utils.youtube import get_real_download_url, is_video_link, is_channel_url
-from logger import get_logger
+from brepodder.utils.youtube import get_real_download_url, is_video_link, is_channel_url
+from brepodder.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -19,10 +19,10 @@ logger = get_logger(__name__)
 class AudioPlayer(QtWidgets.QWidget):
     """
     An audio player widget with play/pause, seek, and download controls.
-    
+
     Supports both built-in QMediaPlayer and external players (mpv, mplayer, etc.)
     """
-    
+
     def __init__(self, url, parent=None):
         super(AudioPlayer, self).__init__(parent)
         logger.debug("AudioPlayer initialized with URL: %s", url)
@@ -51,7 +51,7 @@ class AudioPlayer(QtWidgets.QWidget):
         self.audio_output = QtMultimedia.QAudioOutput()
         self.player = QtMultimedia.QMediaPlayer()
         self.player.setAudioOutput(self.audio_output)
-        
+
         self.player.positionChanged.connect(self.position_changed)
         self.player.durationChanged.connect(self.duration_changed)
         self.player.setSource(QtCore.QUrl(url))
@@ -102,7 +102,7 @@ class AudioPlayer(QtWidgets.QWidget):
             self.slider.setValue(progress)
 
         self.update_duration_info(progress)
-        
+
         # Save position every 10 seconds
         if self._db and self._current_episode_id and progress - self._last_saved_position >= 10:
             self._last_saved_position = progress
@@ -161,7 +161,7 @@ class AudioPlayer(QtWidgets.QWidget):
         uri = QtCore.QUrl.fromLocalFile(url)
         # PyQt6: Use setSource() instead of setMedia(QMediaContent())
         self.player.setSource(uri)
-        
+
         # Seek to saved position if available
         if self._db and episode_id:
             saved_pos = self._db.get_playback_position(episode_id)
@@ -171,27 +171,27 @@ class AudioPlayer(QtWidgets.QWidget):
                 self.player.mediaStatusChanged.connect(self._on_media_status_changed)
             else:
                 self._pending_seek = None
-        
+
         self.player.play()
         self.status.setText("Built-in")
 
     def play_external(self, command: str, file_path: str) -> bool:
         """
         Play using an external player command.
-        
+
         Args:
             command: The command to execute (with {file} already substituted)
             file_path: The file being played (for display/tracking)
-            
+
         Returns:
             True if player started successfully, False otherwise
         """
         # Stop any currently playing content first
         self.stop_clicked()
-        
+
         self._current_file = file_path
         self._using_external = True
-        
+
         logger.info("Playing with external player: %s", command)
         try:
             self._external_process = subprocess.Popen(
@@ -203,12 +203,12 @@ class AudioPlayer(QtWidgets.QWidget):
             )
             self.play_pause.setText("Playing...")
             self.status.setText("External")
-            
+
             # Start a timer to check if process is still running
             self._check_timer = QtCore.QTimer(self)
             self._check_timer.timeout.connect(self._check_external_process)
             self._check_timer.start(1000)  # Check every second
-            
+
             return True
         except Exception as e:
             logger.error("Failed to start external player: %s", e)
@@ -257,12 +257,12 @@ class AudioPlayer(QtWidgets.QWidget):
             current_pos = self.player.position() // 1000
             if current_pos > 0:
                 self._db.set_playback_position(self._current_episode_id, current_pos)
-                logger.debug("Saved playback position: %s seconds for episode %s", 
+                logger.debug("Saved playback position: %s seconds for episode %s",
                            current_pos, self._current_episode_id)
-        
+
         # Stop built-in player
         self.player.stop()
-        
+
         # Stop external player if running
         if self._external_process is not None:
             try:
@@ -278,7 +278,7 @@ class AudioPlayer(QtWidgets.QWidget):
             finally:
                 self._external_process = None
                 self._using_external = False
-        
+
         self.play_pause.setText("Play")
         self.status.setText("")
         if hasattr(self, '_check_timer'):

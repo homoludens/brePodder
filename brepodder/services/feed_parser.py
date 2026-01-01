@@ -4,7 +4,7 @@ Feed parsing utilities for extracting episode data from RSS/Atom feeds.
 from time import gmtime, mktime
 from typing import Any, Optional, Union
 
-from logger import get_logger
+from brepodder.logger import get_logger
 
 logger = get_logger(__name__)
 

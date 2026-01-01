@@ -8,8 +8,8 @@ import datetime
 import requests
 from typing import Any, Union
 
-from config import USER_AGENT
-from logger import get_logger
+from brepodder.config import USER_AGENT
+from brepodder.logger import get_logger
 
 logger = get_logger(__name__)
 

@@ -8,3 +8,5 @@ venv/
 .zed/
 CLAUDE_*.md
 uv.lock
+dist
+brepodder.egg-info

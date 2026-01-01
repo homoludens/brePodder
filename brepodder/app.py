@@ -13,14 +13,14 @@ from typing import Any, Optional, Union
 
 from urllib3.connection import log
 
-from ui.main_window import MainUi
-from workers.download_worker import Download
-from workers.update_worker import UpdateChannelThread, UpdateDatabaseThread
-from workers.add_worker import AddChannelThread
-from services.feed_parser import parse_episode_for_update, episode_dict_to_tuple
-from config import DATA_DIR, DATABASE_FILE, USER_AGENT, THUMBNAIL_MAX_SIZE
-from config_players import PLAYERS, get_play_command
-from logger import get_logger
+from .ui.main_window import MainUi
+from .workers.download_worker import Download
+from .workers.update_worker import UpdateDatabaseThread
+from .workers.add_worker import AddChannelThread
+# from .services.feed_parser import parse_episode_for_update, episode_dict_to_tuple
+from .config import DATA_DIR, DATABASE_FILE, USER_AGENT, THUMBNAIL_MAX_SIZE
+from .config_players import PLAYERS, get_play_command
+from .logger import get_logger
 
 logger = get_logger(__name__)
 

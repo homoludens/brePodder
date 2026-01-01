@@ -5,14 +5,14 @@ Allows configuration of audio player and other preferences.
 """
 from PyQt6 import QtCore, QtGui, QtWidgets
 
-from config import DEFAULT_FONT_SIZE
-from config_players import (
+from brepodder.config import DEFAULT_FONT_SIZE
+from brepodder.config_players import (
     PLAYERS,
     get_available_players,
     get_player_display_name,
 )
-from data.database import DBOperation
-from logger import get_logger
+from brepodder.data.database import DBOperation
+from brepodder.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -114,7 +114,7 @@ class SettingsDialog(QtWidgets.QDialog):
 
         # Button box
         self.buttonBox = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.StandardButton.Ok | 
+            QtWidgets.QDialogButtonBox.StandardButton.Ok |
             QtWidgets.QDialogButtonBox.StandardButton.Cancel |
             QtWidgets.QDialogButtonBox.StandardButton.Apply
         )
@@ -126,18 +126,18 @@ class SettingsDialog(QtWidgets.QDialog):
     def populatePlayerCombo(self):
         """Populate the player combo box with available players."""
         available = get_available_players()
-        
+
         for player_key in available:
             display_name = get_player_display_name(player_key)
             self.playerCombo.addItem(display_name, player_key)
-        
+
         # Add "Custom" option at the end
         self.playerCombo.addItem("Custom...", "custom")
 
     def onPlayerChanged(self, index):
         """Handle player selection change."""
         player_key = self.playerCombo.currentData()
-        
+
         if player_key == "custom":
             self.customPlayerCheck.setChecked(True)
             self.customPlayerCheck.setEnabled(False)
@@ -149,7 +149,7 @@ class SettingsDialog(QtWidgets.QDialog):
                 if player_key in PLAYERS:
                     desc = PLAYERS[player_key].get('description', '')
                     self.playerDescription.setText(desc)
-                    
+
                     # Pre-fill custom commands with selected player's defaults
                     play_cmd = PLAYERS[player_key].get('play_command', '')
                     enqueue_cmd = PLAYERS[player_key].get('enqueue_command', '')
@@ -160,7 +160,7 @@ class SettingsDialog(QtWidgets.QDialog):
         """Handle custom player checkbox toggle."""
         self.customPlayCommand.setEnabled(checked)
         self.customEnqueueCommand.setEnabled(checked)
-        
+
         if checked:
             self.playerDescription.setText("Enter custom commands below.")
         else:
@@ -170,7 +170,7 @@ class SettingsDialog(QtWidgets.QDialog):
         """Load settings from database."""
         # Load player type
         player_type = self.db.getSetting('player_type') or 'builtin'
-        
+
         # Find and select the player in combo box
         index = self.playerCombo.findData(player_type)
         if index >= 0:
@@ -179,27 +179,27 @@ class SettingsDialog(QtWidgets.QDialog):
             index = self.playerCombo.findData('custom')
             if index >= 0:
                 self.playerCombo.setCurrentIndex(index)
-        
+
         # Load custom commands
         custom_play = self.db.getSetting('custom_play_command') or ''
         custom_enqueue = self.db.getSetting('custom_enqueue_command') or ''
         self.customPlayCommand.setText(custom_play)
         self.customEnqueueCommand.setText(custom_enqueue)
-        
+
         # Check if using custom player
         use_custom = self.db.getSetting('use_custom_player') == 'true'
         self.customPlayerCheck.setChecked(use_custom)
-        
+
         # Update UI state
         self.onPlayerChanged(self.playerCombo.currentIndex())
-        
+
         # Load GUI settings
         font_size = self.db.getSetting('gui_font_size')
         if font_size:
             self.fontSizeSpinner.setValue(int(font_size))
         else:
             self.fontSizeSpinner.setValue(DEFAULT_FONT_SIZE)
-        
+
         # Load theme setting
         theme = self.db.getSetting('gui_theme') or 'system'
         theme_index = self.themeCombo.findData(theme)
@@ -209,17 +209,17 @@ class SettingsDialog(QtWidgets.QDialog):
     def saveSettings(self):
         """Save settings to database."""
         player_key = self.playerCombo.currentData()
-        
+
         self.db.setSetting('player_type', player_key)
         self.db.setSetting('use_custom_player', 'true' if self.customPlayerCheck.isChecked() else 'false')
         self.db.setSetting('custom_play_command', self.customPlayCommand.text())
         self.db.setSetting('custom_enqueue_command', self.customEnqueueCommand.text())
-        
+
         # Save GUI settings
         self.db.setSetting('gui_font_size', str(self.fontSizeSpinner.value()))
         self.db.setSetting('gui_theme', self.themeCombo.currentData())
-        
-        logger.info("Settings saved: player=%s, custom=%s, font_size=%d, theme=%s", 
+
+        logger.info("Settings saved: player=%s, custom=%s, font_size=%d, theme=%s",
                     player_key, self.customPlayerCheck.isChecked(), self.fontSizeSpinner.value(),
                     self.themeCombo.currentData())
 

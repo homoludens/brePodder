@@ -11,9 +11,9 @@ import feedparser
 import requests
 from typing import Any, Optional, Union
 
-from config import DATA_DIR, DATABASE_FILE, USER_AGENT, REQUEST_TIMEOUT
-from logger import get_logger
-from services.feed_parser import parse_episode_for_update, episode_dict_to_tuple
+from brepodder.config import DATA_DIR, DATABASE_FILE, USER_AGENT, REQUEST_TIMEOUT
+from brepodder.logger import get_logger
+from brepodder.services.feed_parser import parse_episode_for_update, episode_dict_to_tuple
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
 logger = get_logger(__name__)
