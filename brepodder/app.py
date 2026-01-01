@@ -753,16 +753,29 @@ class BrePodder(MainUi):
         semaphore.release(1)
         thread.deleteLater()
 
-    def update_db_with_all_channels(self) -> None:
-        """
-        Process all fetched channel data and update database.
 
-        This is called after all network threads have finished fetching feeds.
-        Runs database operations in a background thread to keep UI responsive.
-        """
+    def update_db_with_all_channels(self) -> None:
+        """Process all fetched channel data and update database."""
+        self.update_progress_bar.setValue(0)
+        self.update_progress_bar.setFormat("Updating database: %v of %m")
+
         self.db_update_thread = UpdateDatabaseThread(self.updated_channels_list, self.db)
+        self.db_update_thread.progressSignal.connect(self.on_db_progress)
+        self.db_update_thread.channelUpdatedSignal.connect(self.on_channel_updated)
         self.db_update_thread.updateDoneSignal.connect(self.update_done)
         self.db_update_thread.start()
+
+    def on_db_progress(self, current: int, total: int) -> None:
+        """Update progress bar during database update."""
+        self.update_progress_bar.setRange(0, total)
+        self.update_progress_bar.setValue(current)
+
+    def on_channel_updated(self, channel_name: str) -> None:
+        """Show which channel is being processed."""
+        self.listWidget.setStatusTip(f"Processing: {channel_name}")
+        # Or update a label
+        # self.status_label.setText(f"Processing: {channel_name}")
+
 
     def send_message(self, message: str) -> None:
         """Log a message."""
