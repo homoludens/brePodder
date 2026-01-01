@@ -24,9 +24,8 @@ class DBOperation:
     def __init__(self) -> None:
         # Initialize main thread connection
         self._get_connection()
-        # Ensure all tables exist (for upgrades)
-        self._ensure_settings_table()
-        self._ensure_playlist_table()
+        # Create all tables if they don't exist
+        self.create_db()
 
     def _get_connection(self) -> sqlite3.Connection:
         """Get or create a thread-local database connection."""
@@ -36,24 +35,6 @@ class DBOperation:
             self._local.cur = self._local.db.cursor()
             self._local.cur.row_factory = sqlite3.Row
         return self._local.db
-
-    def _ensure_settings_table(self) -> None:
-        """Ensure the settings table exists (for database upgrades)."""
-        self.cur.execute('''CREATE TABLE IF NOT EXISTS sql_settings (
-            key VARCHAR(60) PRIMARY KEY,
-            value TEXT
-        )''')
-        self.db.commit()
-
-    def _ensure_playlist_table(self) -> None:
-        """Ensure the playlist table exists (for database upgrades)."""
-        self.cur.execute('''CREATE TABLE IF NOT EXISTS sql_playlist (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            episode_id INTEGER NOT NULL,
-            position INTEGER NOT NULL DEFAULT 0,
-            FOREIGN KEY(episode_id) REFERENCES sql_episode(id)
-        )''')
-        self.db.commit()
 
     @property
     def db(self) -> sqlite3.Connection:
@@ -347,6 +328,16 @@ class DBOperation:
             )''')
         except sqlite3.OperationalError:
             logger.debug("Table sql_settings already exists")
+
+        try:
+            self.cur.execute('''CREATE TABLE IF NOT EXISTS sql_playlist (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                episode_id INTEGER NOT NULL,
+                position INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY(episode_id) REFERENCES sql_episode(id)
+            )''')
+        except sqlite3.OperationalError:
+            logger.debug("Table sql_playlist already exists")
 
         self.db.commit()
 
