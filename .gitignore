@@ -11,3 +11,5 @@ uv.lock
 dist
 brepodder.egg-info
 build
+AppDir
+*.AppImage
