@@ -7,11 +7,12 @@ This is the main entry point for the application.
 import os
 import sys
 from PyQt6 import QtWidgets, QtGui
-from config import DATA_DIR, DEFAULT_FONT_SIZE, ensure_data_dir
-from logger import setup_logging, get_logger
+from brepodder.config import DATA_DIR, DEFAULT_FONT_SIZE, ensure_data_dir
+from brepodder.logger import setup_logging, get_logger
 
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for brePodder application."""
     ensure_data_dir()
     os.chdir(str(DATA_DIR))
 
@@ -21,8 +22,8 @@ if __name__ == "__main__":
     logger.info("Starting brePodder")
 
     # Import after logging is set up
-    from app import BrePodder
-    from data.database import DBOperation
+    from brepodder.app import BrePodder
+    from brepodder.data.database import DBOperation
 
     app = QtWidgets.QApplication(sys.argv)
 
@@ -89,3 +90,7 @@ if __name__ == "__main__":
     ui = BrePodder(app)
 
     sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()
