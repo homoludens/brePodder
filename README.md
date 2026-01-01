@@ -186,10 +186,19 @@ This project is open source. See the LICENSE file for details.
 
 ## Acknowledgments
 
-- Built with [PyQt5](https://www.riverbankcomputing.com/software/pyqt/)
+- Built with [PyQt6](https://www.riverbankcomputing.com/software/pyqt/)
 - Feed parsing by [feedparser](https://feedparser.readthedocs.io/)
 - HTTP requests with [requests](https://requests.readthedocs.io/)
 
 # Run tests
     uv run pytest tests/ -v           # Run all tests
     uv run pytest tests/ --cov        # Run with coverage
+
+
+# Make wheels
+  python -m build
+  pip install --force-reinstall  ../brePodder/dist/brepodder-0.1.0-py3-none-any.whl
+
+# PyInstaller
+
+pyinstaller --name brepodder --exclude-module pytest --exclude-module tests --strip --onefile brepodder/main.py
