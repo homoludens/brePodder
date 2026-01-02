@@ -1,61 +1,28 @@
 #!/bin/bash
-# build-appimage.sh
-
 set -e
 
-APP_NAME="brepodder"
-VERSION="0.1.0"
+echo "=== running build-appimage-opus.sh ==="
 
-echo "Building PyInstaller executable..."
-pyinstaller brepodder.spec
+IMAGE_NAME="brepodder-builder"
+CONTAINER_NAME="brepodder-build-$$"
 
-echo "Creating AppDir structure..."
-rm -rf AppDir
-mkdir -p AppDir/usr/bin
+echo "==> Building Docker image..."
+docker build -f Dockerfile.appimage -t "$IMAGE_NAME" .
 
-cp dist/${APP_NAME} AppDir/usr/bin/
+echo "==> Running PyInstaller build..."
+docker run --rm \
+    --name "$CONTAINER_NAME" \
+    -v "$(pwd)/dist:/app/dist" \
+    -v "$(pwd)/output:/app/output" \
+    "$IMAGE_NAME"
 
-# Create AppRun
-cat > AppDir/AppRun << 'EOF'
-#!/bin/bash
-SELF=$(readlink -f "$0")
-HERE=${SELF%/*}
-export PATH="${HERE}/usr/bin/:${PATH}"
-exec "${HERE}/usr/bin/brepodder" "$@"
-EOF
-chmod +x AppDir/AppRun
+echo "==> Build complete!"
+echo "Output: dist/brepodder"
 
-# Create .desktop file
-cat > AppDir/${APP_NAME}.desktop << EOF
-[Desktop Entry]
-Type=Application
-Name=Brepodder
-Comment=Podcast RSS feed aggregator
-Exec=${APP_NAME}
-Icon=${APP_NAME}
-Categories=AudioVideo;Audio;
-Terminal=false
-EOF
-
-# Create a simple icon if you don't have one
-if [ ! -f icon.png ]; then
-    echo "Creating placeholder icon..."
-    convert -size 256x256 -gravity center -pointsize 72 \
-        -fill white -background blue label:BR AppDir/${APP_NAME}.png
-else
-    cp icon.png AppDir/${APP_NAME}.png
+# Show file info
+if [ -f "dist/brepodder" ]; then
+    echo ""
+    echo "==> Binary info:"
+    file dist/brepodder
+    ls -lh dist/brepodder
 fi
-
-# Download appimagetool if not present
-if [ ! -f appimagetool-x86_64.AppImage ]; then
-    echo "Downloading appimagetool..."
-    wget "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
-    chmod +x appimagetool-x86_64.AppImage
-fi
-
-# Build AppImage
-echo "Building AppImage..."
-ARCH=x86_64 ./appimagetool-x86_64.AppImage AppDir ${APP_NAME}-${VERSION}-x86_64.AppImage
-
-echo "Done! AppImage created: ${APP_NAME}-${VERSION}-x86_64.AppImage"
-echo "Test it with: ./${APP_NAME}-${VERSION}-x86_64.AppImage"

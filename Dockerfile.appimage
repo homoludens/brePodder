@@ -1,0 +1,41 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-dev \
+    build-essential \
+    python3-pyqt6 \
+    python3-pyqt6.qtmultimedia \
+    libtiff6 \
+    libxcb-cursor0 \
+    upx \
+    binutils \
+    file \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements-dev.txt .
+
+# Create venv and install dependencies (Ubuntu 24.04 enforces PEP 668)
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN pip install --upgrade pip && \
+    pip install -r requirements-dev.txt && \
+    pip install pyinstaller
+
+# Copy the rest of the project
+COPY . .
+
+# Build command
+# CMD ["pyinstaller", "brepodder.spec", "--clean"]
+# CMD ["/bin/bash", "-c", "echo 'Hello from Bash!' && ls -l"]
+# CMD ["sleep", "infinity"]
+CMD ["/bin/bash", "build-in-container.sh"]
