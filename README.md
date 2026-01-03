@@ -205,13 +205,13 @@ pyinstaller --name brepodder --exclude-module pytest --exclude-module tests --st
 pyinstaller brepodder.spec
 
 # AppImage
+./build-appimage-opus.sh  
 
-./build-appimage.sh
 ## Make it executable
-chmod +x brepodder-1.0.0-x86_64.AppImage
+chmod +x output/brepodder-1.0.0-x86_64.AppImage
 
 ## Run it
-./brepodder-1.0.0-x86_64.AppImage
+./output/brepodder-1.0.0-x86_64.AppImage
 
 ## Test on different distros using Docker
 docker run -it -v $(pwd):/app ubuntu:latest /app/brepodder-1.0.0-x86_64.AppImage

@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -8,9 +8,11 @@ RUN apt-get update && apt-get install -y \
     python3-venv \
     python3-dev \
     build-essential \
-    python3-pyqt6 \
-    python3-pyqt6.qtmultimedia \
-    libtiff6 \
+    libglu1-mesa-dev \
+    libx11-xcb-dev \
+    python3-pyqt5 \
+    python3-pyqt5.qtmultimedia \
+    libtiff5 \
     libxcb-cursor0 \
     upx \
     binutils \
