@@ -69,8 +69,15 @@ class AddChannelThread(QtCore.QThread):
         os.chdir(self.main_directory)
 
         feed_link = new_url
+
+
+        if self.ui.db.get_channel_by_link(feed_link):
+            logger.info("Channel already exists: %s", feed_link)
+            return
+
         if is_video_link(feed_link):
             feed_link = get_youtube_rss(feed_link)
+
 
         headers: dict[str, str] = {
             'User-Agent': USER_AGENT
@@ -98,10 +105,6 @@ class AddChannelThread(QtCore.QThread):
             channel_title = feed_content.feed.link
         else:
             channel_title = feed_link
-
-        if self.ui.db.get_channel_by_link(feed_link):
-            logger.info("Channel already exists: %s", feed_link)
-            return
 
         if self.ui.db.get_channel_by_title(channel_title):
             logger.info("Channel already exists: %s", channel_title)
