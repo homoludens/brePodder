@@ -9,8 +9,12 @@ from io import BytesIO
 import sqlite3
 import feedparser
 import requests
+import os
 from typing import Any, Optional, Union
 
+from urllib3.connection import log
+
+from brepodder.services.feed_parser import parse_episode_from_feed_entry
 from brepodder.config import DATA_DIR, DATABASE_FILE, USER_AGENT, REQUEST_TIMEOUT
 from brepodder.logger import get_logger
 from brepodder.services.feed_parser import parse_episode_for_update, episode_dict_to_tuple
@@ -72,25 +76,38 @@ class UpdateDatabaseThread(QtCore.QThread):
             old_episodes = {row[0] for row in cur.fetchall()}
 
             # Collect new episodes
+            logger.info(f"Collecting new episodes for %s, new episodes %s", ch['title'], len(feed.get('entries', [])))
+            # logger.info(feed.get('entries', []))
+
+            # for episode in feed.get('entries', []):
+            #     self.add_episode(channel_id, episode)
+
             for entry in feed.get('entries', []):
                 title = entry.get('title')
                 if not title:
                     continue
 
                 if title not in old_episodes:
+                    # self.add_episode(channel_id, entry)
+
                     new_episode = parse_episode_for_update(entry)
                     if new_episode:
+
                         new_episode['channel_id'] = channel_id
+                        # logger.info(f"Adding episode {entry} to channel {channel_id}")
                         new_episodes_batch.append(episode_dict_to_tuple(new_episode))
+
+        os.chdir(str(DATA_DIR))
 
         # Batch insert all new episodes in one transaction
         if new_episodes_batch:
             try:
                 cur.executemany(
-                    'INSERT INTO sql_episode (title, description, enclosure, status, channel_id, date, size) '
+                    'INSERT INTO sql_episode  (title, enclosure, size, date, description, status, channel_id) '
                     'VALUES (?, ?, ?, ?, ?, ?, ?)',
                     new_episodes_batch
                 )
+
                 con.commit()
                 logger.info("Inserted %d new episodes", len(new_episodes_batch))
             except sqlite3.Error as ex:
@@ -102,3 +119,24 @@ class UpdateDatabaseThread(QtCore.QThread):
 
         logger.info("Database update completed")
         self.updateDoneSignal.emit()
+
+
+    def add_episode(self, channel_id: int, episode: Any) -> None:
+        """Add an episode to the database."""
+        new_episode = parse_episode_from_feed_entry(episode, channel_id)
+        self.insert_episode(tuple(new_episode.values()))
+
+    def insert_episode(self, ep: tuple[str, str, int, str, str, str, int]) -> None:
+        con = sqlite3.connect(str(DATABASE_FILE), check_same_thread=False)
+        cur = con.cursor()
+
+        """Insert a new episode."""
+        cur.execute(
+            'INSERT INTO sql_episode(title, enclosure, size, date, description, status, channel_id) '
+            'VALUES (?,?,?,?,?,?,?)',
+            ep
+        )
+
+        con.commit()
+        cur.close()
+        con.close()

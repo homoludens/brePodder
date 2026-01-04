@@ -65,9 +65,14 @@ def fetch_and_parse_channel(channel_dict, headers, timeout):
         feed = feedparser.parse(resp.content)
 
         # Convert entire feed to serializable format
+        # feed_data = {
+        #     'entries': [make_serializable(dict(e)) for e in feed.entries],
+        #     'feed': make_serializable(dict(feed.feed)),
+        # }
+
         feed_data = {
-            'entries': [make_serializable(dict(e)) for e in feed.entries],
-            'feed': make_serializable(dict(feed.feed)),
+            'entries': feed.entries,
+            'feed': feed.feed,
         }
 
         return {

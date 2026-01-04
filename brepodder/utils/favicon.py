@@ -1,6 +1,7 @@
 """
 Favicon fetching utilities for brePodder.
 """
+from _pytest._code.code import E
 import requests
 import favicon
 import os
@@ -35,6 +36,8 @@ def get_icon_url(url: str) -> Optional[str]:
         logger.debug("Missing schema for %s: %s", url, e)
     except requests.exceptions.InvalidURL as e:
         logger.debug("Invalid URL %s: %s", url, e)
+    except Exception as e:
+        logger.debug("Unexpected error for %s: %s", url, e)
     return None
 
 

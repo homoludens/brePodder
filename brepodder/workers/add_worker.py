@@ -12,6 +12,8 @@ import feedparser
 import requests
 from typing import Any, Optional
 
+from urllib3.connection import log
+
 from brepodder.config import DATA_DIR, DATABASE_FILE, USER_AGENT, REQUEST_TIMEOUT
 from brepodder.logger import get_logger
 from brepodder.services.feed_parser import parse_episode_from_feed_entry
@@ -49,7 +51,10 @@ class AddChannelThread(QtCore.QThread):
         con.isolation_level = None
         cur = con.cursor()
 
-        self.add_channel(self.channel_url, cur)
+        try:
+            self.add_channel(self.channel_url, cur)
+        except Exception as e:
+            logger.error("Unexpected error for %s: %s", self.channel_url, e)
 
         con.commit()
         cur.close()
@@ -196,7 +201,7 @@ class AddChannelThread(QtCore.QThread):
 
         channel_id = self.ui.db.get_channel_by_title(channel_title)
 
-        for episode in feed_content.entries:
+        for episode in feed_content.entries[-2:]:
             self.add_episode(channel_id[0], episode)
 
         os.chdir(str(DATA_DIR))
@@ -204,4 +209,6 @@ class AddChannelThread(QtCore.QThread):
     def add_episode(self, channel_id: int, episode: Any) -> None:
         """Add an episode to the database."""
         new_episode = parse_episode_from_feed_entry(episode, channel_id)
+        # logger.info(f"2222 Adding episode {episode} to channel {channel_id}")
+        # logger.info(f"3333 Adding new_episode {new_episode} to channel {channel_id}")
         self.ui.db.insert_episode(tuple(new_episode.values()))
